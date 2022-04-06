@@ -5,10 +5,4 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Reference Include="Ionic.Zip.CF">
-      <HintPath>..\..\TerraAngel\Ionic.Zip.CF.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 </Project>
