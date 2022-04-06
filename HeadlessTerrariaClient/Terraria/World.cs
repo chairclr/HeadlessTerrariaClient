@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Ionic.Zlib;
 using System.Text;
 
 namespace Terraria
