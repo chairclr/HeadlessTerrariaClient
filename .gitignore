@@ -364,3 +364,4 @@ FodyWeavers.xsd
 
 # Ignore debug client
 Examples/DebugClient.cs
+/HeadlessTerrariaClient/Examples/DebugClient.cs
