@@ -16,7 +16,6 @@ namespace ArkNetwork
         public delegate void ConnectionClosed(Socket handler);
         public delegate int OnRecieveBytes(Socket handler, int bytesRead);
 
-
         public Socket client;
         public IPAddress IPAddress;
         public int port;

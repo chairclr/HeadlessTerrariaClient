@@ -113,7 +113,7 @@ namespace Terraria.ID
 
 		public const byte LiquidUpdate = 48;
 
-		public const byte Unknown49 = 49;
+		public const byte CompleteConnectionAndSpawn = 49;
 
 		public const byte SyncPlayerBuffs = 50;
 

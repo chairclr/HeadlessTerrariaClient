@@ -25,7 +25,9 @@ namespace HeadlessTerrariaClient
         public delegate void OnSomethingHappened<T1, T2>(HeadlessClient hc, T1 e, T2 e2);
         public delegate void OnSomethingHappened<T1, T2, T3>(HeadlessClient hc, T1 e, T2 e2, T3 e3);
         public OnSomethingHappened WorldDataRecieved = null;
-        public OnSomethingHappened JoinedWorld = null;
+        public OnSomethingHappened FinishedConnectingToServer = null;
+        public OnSomethingHappened ClientConnectionCompleted = null;
+        public OnSomethingHappened OnUpdate = null;
         public OnSomethingHappened<ChatMessage> ChatMessageRecieved = null;
         public OnSomethingHappened<RawIncomingPacket> NetMessageRecieved = null;
         public OnSomethingHappened<RawOutgoingPacket> NetMessageSent = null;
@@ -39,8 +41,14 @@ namespace HeadlessTerrariaClient
             Settings.PrintWorldJoinMessages = true;
             Settings.PrintConnectionMessages = true;
             Settings.PrintUnknownPackets = false;
+            Settings.PrintKickMessage = true;
             Settings.SpawnPlayer = true;
             Settings.AwaitConnectToServerCall = true;
+            Settings.RunGameLoop = true;
+            Settings.AutoSyncPlayerZoneAndControl = false;
+            Settings.AutoSyncPeriod = 2000;
+            Settings.LastSyncPeriod = DateTime.Now;
+            Settings.UpdateTimeout = 200;
         }
 
         public void Connect(string address, short port)
@@ -73,6 +81,19 @@ namespace HeadlessTerrariaClient
             else
             {
                 ConnectToServer();
+            }
+
+            if (Settings.RunGameLoop)
+            {
+                Task.Run(
+                    async () =>
+                    {
+                        while (true)
+                        {
+                            Update();
+                            await Task.Delay(Settings.UpdateTimeout);
+                        }
+                    });
             }
         }
         private async Task ConnectToServer()
@@ -151,6 +172,21 @@ namespace HeadlessTerrariaClient
             return -1;
         }
 
+        public void Update()
+        {
+            if (Settings.AutoSyncPlayerZoneAndControl && IsInWorld)
+            {
+                // This can bypass some anti-cheats that attempt to block headless clients
+                if ((int)(DateTime.Now - (DateTime)Settings.LastSyncPeriod).TotalMilliseconds > Settings.AutoSyncPeriod)
+                {
+                    SendData(MessageID.PlayerControls, myPlayer);
+                    SendData(MessageID.SyncPlayerZone, myPlayer);
+                    SendData(MessageID.PlayerLife, myPlayer);
+                    Settings.LastSyncPeriod = DateTime.Now;
+                }
+            }
+            OnUpdate?.Invoke(this);
+        }
 
         public Player[] player = new Player[256];
         public int myPlayer;
@@ -166,9 +202,14 @@ namespace HeadlessTerrariaClient
         public bool ServerSideCharacter;
         public ulong LobbyId;
         public int VersionNumber = 248;
-        private bool joined = false;
         public PlayerData PlayerFile = new PlayerData();
         public object UserData;
+        private bool initalWorldData = false;
+        public bool IsInWorld
+        {
+            get;
+            private set;
+        }
 
         public T GetUserData<T>()
         {
@@ -239,7 +280,6 @@ namespace HeadlessTerrariaClient
                     case MessageID.NetModules:
                     {
                         ushort num = MessageReader.ReadUInt16();
-
                         switch (num)
                         {
                             case 0:
@@ -447,26 +487,50 @@ namespace HeadlessTerrariaClient
 
                         //CurrentWorld.tile = new Tile[CurrentWorld.maxTilesX,CurrentWorld.maxTilesY];
 
-                        SendData(MessageID.SpawnTileData, CurrentWorld.spawnTileX, CurrentWorld.spawnTileY);
 
-                        if (!joined)
+                        if (!initalWorldData)
                         {
-                            joined = true;
+                            initalWorldData = true;
                             if (Settings.PrintAnyOutput && Settings.PrintWorldJoinMessages)
                             {
                                 Console.WriteLine($"Joining world \"{ CurrentWorld.worldName}\"");
                             }
-                            if (Settings.SpawnPlayer)
-                            {
-                                SendData(MessageID.PlayerSpawn, myPlayer, 1);
-                            }
+                            
                             WorldDataRecieved?.Invoke(this);
+                            SendData(MessageID.SpawnTileData, CurrentWorld.spawnTileX, CurrentWorld.spawnTileY);
                         }
                         break;
                     }
                     case MessageID.FinishedConnectingToServer:
                     {
-                        JoinedWorld?.Invoke(this);
+                        FinishedConnectingToServer?.Invoke(this);
+                        break;
+                    }
+                    case MessageID.CompleteConnectionAndSpawn:
+                    {
+                        if (Settings.SpawnPlayer)
+                        {
+                            SendData(MessageID.PlayerSpawn, myPlayer, 1);
+
+                            for (int i = 0; i < 40; i++)
+                            {
+                                SendData(MessageID.SyncEquipment, myPlayer, i, 0, 0, 0);
+                            }
+                            SendData(MessageID.SyncPlayerZone, myPlayer);
+                            SendData(MessageID.PlayerControls, myPlayer);
+                            SendData(MessageID.ClientSyncedInventory, myPlayer);
+                        }
+                        IsInWorld = true;
+                        ClientConnectionCompleted?.Invoke(this);
+                        break;
+                    }
+                    case MessageID.Kick:
+                    {
+                        IsInWorld = false;
+                        if (Settings.PrintAnyOutput && Settings.PrintKickMessage)
+                        {
+                            Console.WriteLine($"Kicked from world {CurrentWorld?.worldName}");
+                        }
                         break;
                     }
                     case MessageID.StatusText:
@@ -596,6 +660,12 @@ namespace HeadlessTerrariaClient
                     case MessageID.SyncNPC:
                     {
                         int npcIndex = reader.ReadInt16();
+                        break;
+                    }
+                    case MessageID.ReleaseItemOwnership:
+                    {
+                        int itemIndex = reader.ReadInt16();
+                        SendData(MessageID.ItemOwner, itemIndex);
                         break;
                     }
                     case MessageID.SyncProjectile:
@@ -806,7 +876,22 @@ namespace HeadlessTerrariaClient
                         writer.Write(plr.velocity.Y);
 
                         break;
-                    }    
+                    }
+                    case MessageID.SyncPlayerZone:
+                    {
+                        writer.Write((byte)number);
+                        writer.Write((byte)0);
+                        writer.Write((byte)0);
+                        writer.Write((byte)0);
+                        writer.Write((byte)0);
+                        break;
+                    }
+                    case MessageID.ItemOwner:
+                    {
+                        writer.Write((short)number);
+                        writer.Write((short)255);
+                        break;
+                    }
                 }
 
                 int length = (int)MemoryStreamWrite.Position;

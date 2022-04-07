@@ -19,9 +19,11 @@ namespace HeadlessTerrariaClient.Examples
         {
             HeadlessClient HeadlessClient = new HeadlessClient();
             HeadlessClient.clientUUID = Guid.NewGuid().ToString();
-            HeadlessClient.PlayerFile.name = $"ExampleClient";
+            HeadlessClient.PlayerFile.name = $"ExampleChatClient";  
             HeadlessClient.PlayerFile.difficulty = PlayerDifficultyID.SoftCore;
 
+            // This can bypass some anti-cheats that attempt to block headless clients
+            HeadlessClient.Settings.AutoSyncPlayerZoneAndControl = true;
             HeadlessClient.ChatMessageRecieved += (HeadlessClient client, ChatMessage message) =>
             {
                 // Messages of id 255 are not from another player
@@ -35,7 +37,6 @@ namespace HeadlessTerrariaClient.Examples
                     Console.WriteLine(message.message);
                 }
             };
-
             HeadlessClient.Connect(ServerIP, ServerPort);
         }
 
