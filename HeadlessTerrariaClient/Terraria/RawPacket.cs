@@ -8,8 +8,16 @@ namespace Terraria
     public class RawPacket
     {
         public int MessageType;
-        public BinaryReader Reader;
-        public byte[] ReadBuffer;
         public bool ContinueWithPacket;
+    }
+    public class RawIncomingPacket : RawPacket
+    {
+        public byte[] ReadBuffer;
+        public BinaryReader Reader;
+    }
+    public class RawOutgoingPacket : RawPacket
+    {
+        public byte[] WriteBuffer;
+        public BinaryWriter Writer;
     }
 }

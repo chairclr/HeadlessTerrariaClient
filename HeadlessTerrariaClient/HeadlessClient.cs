@@ -27,7 +27,8 @@ namespace HeadlessTerrariaClient
         public OnSomethingHappened WorldDataRecieved = null;
         public OnSomethingHappened JoinedWorld = null;
         public OnSomethingHappened<ChatMessage> ChatMessageRecieved = null;
-        public OnSomethingHappened<RawPacket> NetMessageRecieved = null;
+        public OnSomethingHappened<RawIncomingPacket> NetMessageRecieved = null;
+        public OnSomethingHappened<RawOutgoingPacket> NetMessageSent = null;
 
         public dynamic Settings = new Settings();
 
@@ -188,7 +189,7 @@ namespace HeadlessTerrariaClient
 
                 if (NetMessageRecieved != null)
                 {
-                    RawPacket packet = new RawPacket();
+                    RawIncomingPacket packet = new RawIncomingPacket();
                     packet.ReadBuffer = ReadBuffer;
                     packet.Reader = reader;
                     packet.MessageType = messageType;
@@ -631,7 +632,7 @@ namespace HeadlessTerrariaClient
             }
         }
 
-        public void SendData(int msid, int number = 0, float number2 = 0, float number3 = 0, float number4 = 0, int number5 = 0)
+        public void SendData(int messageType, int number = 0, float number2 = 0, float number3 = 0, float number4 = 0, int number5 = 0)
         {
             lock (WriteBuffer)
             {
@@ -639,8 +640,8 @@ namespace HeadlessTerrariaClient
 
                 writer.Seek(2, SeekOrigin.Begin);
 
-                writer.Write((byte)msid);
-                switch (msid)
+                writer.Write((byte)messageType);
+                switch (messageType)
                 {
                     case MessageID.Hello:
                         writer.Write("Terraria" + 248);
@@ -811,6 +812,23 @@ namespace HeadlessTerrariaClient
                 int length = (int)MemoryStreamWrite.Position;
                 writer.Seek(0, SeekOrigin.Begin);
                 writer.Write((short)length);
+
+
+                if (NetMessageSent != null)
+                {
+                    RawOutgoingPacket packet = new RawOutgoingPacket();
+                    packet.WriteBuffer = WriteBuffer;
+                    packet.Writer = writer;
+                    packet.MessageType = messageType;
+                    packet.ContinueWithPacket = true;
+
+                    NetMessageSent?.Invoke(this, packet);
+
+                    if (!packet.ContinueWithPacket)
+                    {
+                        return;
+                    }
+                }
 
                 TCPClient.Send(WriteBuffer, length);
             }
