@@ -6,6 +6,7 @@ using ArkNetwork;
 using System.Threading.Tasks;
 using Terraria;
 using Terraria.ID;
+using System.Net.Sockets;
 
 // Much of packet documentation is from Terraria's NetMessage.cs and from https://tshock.readme.io/docs/multiplayer-packet-structure
 namespace HeadlessTerrariaClient
@@ -26,6 +27,7 @@ namespace HeadlessTerrariaClient
         public OnSomethingHappened WorldDataRecieved = null;
         public OnSomethingHappened JoinedWorld = null;
         public OnSomethingHappened<ChatMessage> ChatMessageRecieved = null;
+        public OnSomethingHappened<RawPacket> NetMessageRecieved = null;
 
         public dynamic Settings = new Settings();
 
@@ -37,11 +39,17 @@ namespace HeadlessTerrariaClient
             Settings.PrintConnectionMessages = true;
             Settings.PrintUnknownPackets = false;
             Settings.SpawnPlayer = true;
+            Settings.AwaitConnectToServerCall = true;
         }
 
         public void Connect(string address, short port)
         {
-            TCPClient = new ArkTCPClient(IPAddress.Parse(address), ReadBuffer, port, (x, y) => { return OnRecieve(y); });
+            if (!SetIP(address, out IPAddress ipAddress))
+            {
+                throw new ArgumentException($"Could not resolve ip {address}");
+            }
+
+            TCPClient = new ArkTCPClient(ipAddress, ReadBuffer, port, (x, y) => { return OnRecieve(y); });
             MemoryStreamWrite = new MemoryStream(WriteBuffer);
             MessageWriter = new BinaryWriter(MemoryStreamWrite);
             if (Settings.PrintAnyOutput && Settings.PrintConnectionMessages)
@@ -57,7 +65,14 @@ namespace HeadlessTerrariaClient
                 player[i].name = "";
             }
 
-            ConnectToServer();
+            if (Settings.AwaitConnectToServerCall)
+            {
+                ConnectToServer().Wait();
+            }
+            else
+            {
+                ConnectToServer();
+            }
         }
         private async Task ConnectToServer()
         {
@@ -84,6 +99,24 @@ namespace HeadlessTerrariaClient
             MessageReader = new BinaryReader(MemoryStreamRead);
 
             SendData(MessageID.Hello);
+        }
+        public bool SetIP(string remoteAddress, out IPAddress address)
+        {
+            if (IPAddress.TryParse(remoteAddress, out address))
+            {
+                return true;
+            }
+            IPAddress[] addressList = Dns.GetHostEntry(remoteAddress).AddressList;
+            for (int i = 0; i < addressList.Length; i++)
+            {
+                if (addressList[i].AddressFamily == AddressFamily.InterNetwork)
+                {
+                    address = addressList[i];
+                    return true;
+                }
+            }
+
+            return false;
         }
         public int OnRecieve(int bytesRead)
         {
@@ -152,6 +185,22 @@ namespace HeadlessTerrariaClient
                 MessageReader.BaseStream.Position = realBalls;
 
                 BinaryReader reader = MessageReader;
+
+                if (NetMessageRecieved != null)
+                {
+                    RawPacket packet = new RawPacket();
+                    packet.ReadBuffer = ReadBuffer;
+                    packet.Reader = reader;
+                    packet.MessageType = messageType;
+                    packet.ContinueWithPacket = true;
+
+                    NetMessageRecieved?.Invoke(this, packet);
+
+                    if (!packet.ContinueWithPacket)
+                    {
+                        return;
+                    }
+                }
                 switch (messageType)
                 {
                     case MessageID.PlayerInfo:
