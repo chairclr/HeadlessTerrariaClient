@@ -81,5 +81,10 @@ namespace Terraria
 
         public int statMana = 20;
         public int statManaMax = 20;
+
+        public void RandomizeAppearence()
+        {
+            // implement later ok
+        }
     }
 }
