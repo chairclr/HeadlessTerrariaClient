@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Numerics;
 using System.Text;
-
+using HeadlessTerrariaClient;
+using Terraria.ID;
 namespace Terraria
 {
     public class Player
@@ -56,6 +56,44 @@ namespace Terraria
             statManaMax = data.statManaMax;
         }
 
+        public void LoadDefaultAppearence()
+        {
+            skinVariant = 0;
+            hairType = 0;
+            hairDye = 0;
+            hairColor = new Color(215, 90, 55, 255);
+            skinColor = new Color(255, 125, 90, 255);
+            eyeColor = new Color(105, 90, 75, 255);
+            shirtColor = new Color(175, 165, 140, 255);
+            underShirtColor = new Color(160, 180, 215, 255);
+            pantsColor = new Color(255, 230, 175, 255);
+            shoeColor = new Color(160, 105, 60, 255);
+        }
+        public void RandomizeAppearence()
+        {
+            HairStyles.Rebuild();
+            hairType = HairStyles.GetRandomHair();
+            skinVariant = PlayerVariantID.GetRandomSkin();
+
+            eyeColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
+            while (eyeColor.R + eyeColor.G + eyeColor.B > 300)
+            {
+                eyeColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
+            }
+            float num = (float)Util.rand.Next(60, 120) * 0.01f;
+            if (num > 1f)
+            {
+                num = 1f;
+            }
+            skinColor.R = (byte)((float)Util.rand.Next(240, 255) * num);
+            skinColor.G = (byte)((float)Util.rand.Next(110, 140) * num);
+            skinColor.B = (byte)((float)Util.rand.Next(75, 110) * num);
+            hairColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
+            shirtColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
+            underShirtColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
+            pantsColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
+            shoeColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
+        }
     }
 
     public class PlayerData
@@ -82,9 +120,44 @@ namespace Terraria
         public int statMana = 20;
         public int statManaMax = 20;
 
+        public void LoadDefaultAppearence()
+        {
+            skinVariant = 0;
+            hairType = 0;
+            hairDye = 0;
+            hairColor = new Color(215, 90, 55, 255);
+            skinColor = new Color(255, 125, 90, 255);
+            eyeColor = new Color(105, 90, 75, 255);
+            shirtColor = new Color(175 ,165 ,140 ,255);
+            underShirtColor = new Color(160, 180, 215, 255);
+            pantsColor = new Color(255 ,230 ,175, 255);
+            shoeColor = new Color(160, 105, 60, 255);
+        }
         public void RandomizeAppearence()
         {
-            // implement later ok
+            // implemented cringeface 🤨 📸
+            HairStyles.Rebuild();
+            hairType = HairStyles.GetRandomHair();
+            skinVariant = PlayerVariantID.GetRandomSkin();
+
+            eyeColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
+            while (eyeColor.R + eyeColor.G + eyeColor.B > 300)
+            {
+                eyeColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
+            }
+            float num = (float)Util.rand.Next(60, 120) * 0.01f;
+            if (num > 1f)
+            {
+                num = 1f;
+            }
+            skinColor.R = (byte)((float)Util.rand.Next(240, 255) * num);
+            skinColor.G = (byte)((float)Util.rand.Next(110, 140) * num);
+            skinColor.B = (byte)((float)Util.rand.Next(75, 110) * num);
+            hairColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
+            shirtColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
+            underShirtColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
+            pantsColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
+            shoeColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
         }
     }
 }

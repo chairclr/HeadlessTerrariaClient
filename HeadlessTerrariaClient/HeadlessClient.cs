@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using System.IO;
 using System.Net;
 using ArkNetwork;
@@ -7,6 +6,7 @@ using System.Threading.Tasks;
 using Terraria;
 using Terraria.ID;
 using System.Net.Sockets;
+using System.Numerics;
 
 // Much of packet documentation is from Terraria's NetMessage.cs and from https://tshock.readme.io/docs/multiplayer-packet-structure
 namespace HeadlessTerrariaClient
@@ -46,7 +46,9 @@ namespace HeadlessTerrariaClient
             Settings.SpawnPlayer = true;
             Settings.AwaitConnectToServerCall = true;
             Settings.RunGameLoop = true;
-            Settings.AutoSyncPlayerZoneAndControl = false;
+            Settings.AutoSyncPlayerZone = true;
+            Settings.AutoSyncPlayerControl = false;
+            Settings.AutoSyncPlayerLife = true;
             Settings.AutoSyncPeriod = 2000;
             Settings.LastSyncPeriod = DateTime.Now;
             Settings.UpdateTimeout = 200;
@@ -175,14 +177,23 @@ namespace HeadlessTerrariaClient
 
         public void Update()
         {
-            if (Settings.AutoSyncPlayerZoneAndControl && IsInWorld)
+            if (IsInWorld)
             {
                 // This can bypass some anti-cheats that attempt to block headless clients
                 if ((int)(DateTime.Now - (DateTime)Settings.LastSyncPeriod).TotalMilliseconds > Settings.AutoSyncPeriod)
                 {
-                    SendData(MessageID.PlayerControls, myPlayer);
-                    SendData(MessageID.SyncPlayerZone, myPlayer);
-                    SendData(MessageID.PlayerLife, myPlayer);
+                    if (Settings.AutoSyncPlayerControl)
+                    {
+                        SendData(MessageID.PlayerControls, myPlayer);
+                    }
+                    if (Settings.AutoSyncPlayerZone)
+                    {
+                        SendData(MessageID.SyncPlayerZone, myPlayer);
+                    }
+                    if (Settings.AutoSyncPlayerLife)
+                    {
+                        SendData(MessageID.PlayerLife, myPlayer);
+                    }
                     Settings.LastSyncPeriod = DateTime.Now;
                 }
             }
@@ -532,6 +543,7 @@ namespace HeadlessTerrariaClient
                             }
                             
                             WorldDataRecieved?.Invoke(this);
+                            LocalPlayer.position = new Vector2(CurrentWorld.spawnTileX * 16f, CurrentWorld.spawnTileY * 16f);
                             SendData(MessageID.SpawnTileData, CurrentWorld.spawnTileX, CurrentWorld.spawnTileY);
                         }
                         break;

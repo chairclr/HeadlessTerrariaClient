@@ -1,5 +1,6 @@
 ﻿using System;
 using Terraria;
+using Terraria.ID;
 using HeadlessTerrariaClient;
 
 namespace HeadlessTerrariaClient.Examples
@@ -21,6 +22,9 @@ namespace HeadlessTerrariaClient.Examples
             HeadlessClient.clientUUID = Guid.NewGuid().ToString();
             HeadlessClient.PlayerFile.name = $"ExampleChatClient";  
             HeadlessClient.PlayerFile.difficulty = PlayerDifficultyID.SoftCore;
+
+            // Load default player style so we arent some weird white goblin
+            HeadlessClient.PlayerFile.LoadDefaultAppearence();
 
             // This can bypass some anti-cheats that attempt to block headless clients
             HeadlessClient.Settings.AutoSyncPlayerZoneAndControl = true;
