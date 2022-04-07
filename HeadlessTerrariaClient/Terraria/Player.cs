@@ -84,7 +84,24 @@ namespace Terraria
 
         public void RandomizeAppearence()
         {
-            // implement later ok
+            // implement now 🤨 📸
+
+            Random rnd = new Random();
+
+            skinVariant = rnd.Next(11);
+            hairType = rnd.Next(164);
+            hairDye = rnd.Next(12);
+
+            // Use the AARRGGBB system if you want here idk
+            // too much thinking work for me im also lazy so cope 
+
+            hairColor = Color.FromArgb(rnd.Next(255), rnd.Next(255), rnd.Next(255));
+            skinColor = Color.FromArgb(rnd.Next(255), rnd.Next(255), rnd.Next(255));
+            eyeColor = Color.FromArgb(rnd.Next(255), rnd.Next(255), rnd.Next(255));
+            shirtColor = Color.FromArgb(rnd.Next(255), rnd.Next(255), rnd.Next(255));
+            underShirtColor = Color.FromArgb(rnd.Next(255), rnd.Next(255), rnd.Next(255));
+            pantsColor = Color.FromArgb(rnd.Next(255), rnd.Next(255), rnd.Next(255));
+            shoeColor = Color.FromArgb(rnd.Next(255), rnd.Next(255), rnd.Next(255));
         }
     }
 }
