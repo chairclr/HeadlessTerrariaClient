@@ -42,6 +42,7 @@ namespace HeadlessTerrariaClient
             Settings.PrintConnectionMessages = true;
             Settings.PrintUnknownPackets = false;
             Settings.PrintKickMessage = true;
+            Settings.PrintDisconnectMessage = true;
             Settings.SpawnPlayer = true;
             Settings.AwaitConnectToServerCall = true;
             Settings.RunGameLoop = true;
@@ -187,6 +188,35 @@ namespace HeadlessTerrariaClient
             }
             OnUpdate?.Invoke(this);
         }
+        public void Disconnect()
+        {
+            if (Settings.PrintAnyOutput && Settings.PrintDisconnectMessage)
+            {
+                Console.WriteLine($"Disconnected from world {CurrentWorld?.worldName}");
+            }
+
+            try
+            {
+                TCPClient.client.Close();
+            } catch { }
+            TCPClient.Exit = true;
+            try
+            {
+                UserData = null;
+                TCPClient = null;
+                player = null;
+                CurrentWorld = null;
+                Settings = null;
+            } catch { }
+            try
+            {
+                MemoryStreamWrite.Close();
+            } catch { }
+            try
+            {
+                MemoryStreamRead.Close();
+            } catch { }
+        }
 
         public Player[] player = new Player[256];
         public int myPlayer;
@@ -218,6 +248,11 @@ namespace HeadlessTerrariaClient
 
         public void GetData(int start, int length, out int msgType)
         {
+            if (TCPClient == null)
+            {
+                msgType = 0;
+                return;
+            }
             lock (ReadBuffer)
             {
                 byte messageType = ReadBuffer[start];
@@ -704,6 +739,8 @@ namespace HeadlessTerrariaClient
 
         public void SendData(int messageType, int number = 0, float number2 = 0, float number3 = 0, float number4 = 0, int number5 = 0)
         {
+            if (TCPClient == null)
+                return;
             lock (WriteBuffer)
             {
                 BinaryWriter writer = MessageWriter;

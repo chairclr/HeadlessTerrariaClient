@@ -22,6 +22,8 @@ namespace ArkNetwork
         public OnRecieveBytes OnRecieve;
         public byte[] ReadBuffer;
         public NetworkStream NetworkStream;
+        public Task ClientLoop;
+        public bool Exit = false;
 
         public ArkTCPClient(IPAddress ip, byte[] readBuffer, int port, OnRecieveBytes OnRecieve)
         {
@@ -35,7 +37,7 @@ namespace ArkNetwork
         public async Task Connect()
         {
             client.Connect(IPAddress, port);
-            Task.Run(RunClientLoop);
+            ClientLoop = Task.Run(RunClientLoop);
             return;
         }
 
@@ -47,6 +49,8 @@ namespace ArkNetwork
                 int lastPacketLength = 0;
                 while (client.Connected)
                 {
+                    if (Exit)
+                        return;
                     try
                     {
                         int dataLength = nextPacketLength;
@@ -85,6 +89,10 @@ namespace ArkNetwork
                     catch (AggregateException ae)
                     {
                         Console.WriteLine(ae.ToString());
+                    }
+                    catch (ObjectDisposedException ode)
+                    {
+                        break;
                     }
                     catch (Exception e)
                     {

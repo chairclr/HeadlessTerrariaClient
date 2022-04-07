@@ -6,7 +6,7 @@ namespace HeadlessTerrariaClient.Examples
 {
     public class SimpleChatClient
     {
-        const string ServerIP = "127.0.0.1";
+        const string ServerIP = "terraformserver.com";
         const int ServerPort = 7777;
         static void Main(string[] args)
         {
@@ -24,6 +24,7 @@ namespace HeadlessTerrariaClient.Examples
 
             // This can bypass some anti-cheats that attempt to block headless clients
             HeadlessClient.Settings.AutoSyncPlayerZoneAndControl = true;
+
             HeadlessClient.ChatMessageRecieved += (HeadlessClient client, ChatMessage message) =>
             {
                 // Messages of id 255 are not from another player
