@@ -27,7 +27,7 @@ namespace HeadlessTerrariaClient.Examples
             HeadlessClient.PlayerFile.LoadDefaultAppearence();
 
             // This can bypass some anti-cheats that attempt to block headless clients
-            HeadlessClient.Settings.AutoSyncPlayerZoneAndControl = true;
+            HeadlessClient.Settings.AutoSyncPlayerZone = true;
 
             HeadlessClient.ChatMessageRecieved += (HeadlessClient client, ChatMessage message) =>
             {

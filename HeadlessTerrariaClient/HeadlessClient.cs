@@ -61,7 +61,7 @@ namespace HeadlessTerrariaClient
                 throw new ArgumentException($"Could not resolve ip {address}");
             }
 
-            TCPClient = new ArkTCPClient(ipAddress, ReadBuffer, port, (x, y) => { return OnRecieve(y); });
+            TCPClient = new ArkTCPClient(ipAddress, ReadBuffer, port, (x, y) => { OnRecieve(y); });
             MemoryStreamWrite = new MemoryStream(WriteBuffer);
             MessageWriter = new BinaryWriter(MemoryStreamWrite);
             if (Settings.PrintAnyOutput && Settings.PrintConnectionMessages)
@@ -143,7 +143,7 @@ namespace HeadlessTerrariaClient
 
             return false;
         }
-        public int OnRecieve(int bytesRead)
+        public void OnRecieve(int bytesRead)
         {
             if (MemoryStreamRead == null)
             {
@@ -161,18 +161,14 @@ namespace HeadlessTerrariaClient
                 if (dataLeftToRecieve >= nextPacketLength)
                 {
                     long position = MemoryStreamRead.Position;
-                    GetData(currentReadIndex + 2, nextPacketLength - 2, out var _);
+                    GetData(currentReadIndex + 2, nextPacketLength - 2, out int _);
                     MemoryStreamRead.Position = position + nextPacketLength;
                     dataLeftToRecieve -= nextPacketLength;
                     currentReadIndex += nextPacketLength;
                     continue;
                 }
-                if (dataLeftToRecieve == 2)
-                    return BitConverter.ToUInt16(ReadBuffer, currentReadIndex);
                 break;
             }
-
-            return -1;
         }
 
         public void Update()

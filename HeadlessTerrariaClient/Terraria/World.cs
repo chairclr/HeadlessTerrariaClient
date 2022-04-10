@@ -112,7 +112,7 @@ namespace Terraria
 
         public void DecompressTileSection(byte[] buffer, int start, int length)
         {
-
+            // implement later ok
         }
     }
 }

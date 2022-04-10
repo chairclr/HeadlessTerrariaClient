@@ -14,7 +14,7 @@ namespace ArkNetwork
     {
         public delegate void ConnectionAccepted(Socket handler);
         public delegate void ConnectionClosed(Socket handler);
-        public delegate int OnRecieveBytes(Socket handler, int bytesRead);
+        public delegate void OnRecieveBytes(Socket handler, int bytesRead);
 
         public Socket client;
         public IPAddress IPAddress;
@@ -23,6 +23,7 @@ namespace ArkNetwork
         public byte[] ReadBuffer;
         public NetworkStream NetworkStream;
         public Task ClientLoop;
+        public bool IsReading = false;
         public bool Exit = false;
 
         public ArkTCPClient(IPAddress ip, byte[] readBuffer, int port, OnRecieveBytes OnRecieve)
@@ -45,46 +46,38 @@ namespace ArkNetwork
         {
             using (NetworkStream = new NetworkStream(client))
             {
-                int nextPacketLength = -1;
-                int lastPacketLength = 0;
                 while (client.Connected)
                 {
+                    if (IsReading)
+                    {
+                        await Task.Delay(16);
+                        continue;
+                    }
+                    if (client.Available <= 2)
+                    {
+                        await Task.Delay(16);
+                        continue;
+                    }
                     if (Exit)
                         return;
                     try
                     {
-                        int dataLength = nextPacketLength;
-                        if (nextPacketLength == -1)
-                        {
-                            // read the length of the packet from the network into the first 2 bytes of the ReadBuffer
-                            NetworkStream.Read(ReadBuffer, 0, 2);
-                            int len = BitConverter.ToInt16(ReadBuffer);
+                        IsReading = true;
 
-                            int bytesRead = 2;
-                            while (bytesRead < len)
-                            {
-                                int bytesReceived = NetworkStream.Read(ReadBuffer, 2, len - bytesRead);
-                                bytesRead += bytesReceived;
-                            }
-                            lastPacketLength = bytesRead + 2;
-                            nextPacketLength = this.OnRecieve(client, bytesRead);
-                        }
-                        else
-                        {
-                            // copy the length of the packet from the last 2 bytes of the ReadBuffer into the first 2 bytes of the ReadBuffer
-                            ReadBuffer[0] = ReadBuffer[lastPacketLength - 2];
-                            ReadBuffer[1] = ReadBuffer[lastPacketLength - 1];
-                            int len = BitConverter.ToInt16(ReadBuffer);
 
-                            int bytesRead = 0;
-                            while (bytesRead < len)
-                            {
-                                int bytesReceived = NetworkStream.Read(ReadBuffer, 2, len - bytesRead);
-                                bytesRead += bytesReceived;
-                            }
-                            lastPacketLength = bytesRead;
-                            nextPacketLength = this.OnRecieve(client, bytesRead);
+                        // read the length of the packet from the network into the first 2 bytes of the ReadBuffer
+                        NetworkStream.Read(ReadBuffer, 0, 2);
+                        int len = BitConverter.ToInt16(ReadBuffer);
+
+                        int bytesRead = 2;
+                        while (bytesRead < len)
+                        {
+                            int bytesReceived = NetworkStream.Read(ReadBuffer, 2, len - bytesRead);
+                            bytesRead += bytesReceived;
                         }
+                        this.OnRecieve(client, bytesRead);
+
+                        IsReading = false;
                     }
                     catch (AggregateException ae)
                     {
