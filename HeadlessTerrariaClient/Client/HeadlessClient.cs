@@ -751,7 +751,7 @@ namespace HeadlessTerrariaClient.Client
                 switch (messageType)
                 {
                     case MessageID.Hello:
-                        writer.Write("Terraria" + 248);
+                        writer.Write("Terraria" + VersionNumber.ToString());
                         break;
                     case MessageID.SyncPlayer:
                     {
