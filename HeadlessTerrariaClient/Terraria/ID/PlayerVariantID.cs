@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Terraria.ID
+namespace HeadlessTerrariaClient.Terraria.ID
 {
 	public static class PlayerVariantID
 	{
@@ -32,7 +32,7 @@ namespace Terraria.ID
 
 		public static int GetRandomSkin()
 		{
-			return HeadlessTerrariaClient.Util.rand.Next(Count);
+			return HeadlessTerrariaClient.Util.ClientUtil.rand.Next(Count);
 		}
 	}
 	public static class HairStyles
@@ -101,7 +101,7 @@ namespace Terraria.ID
 		}
 		public static int GetRandomHair()
         {
-			return AvailableHairstyles[HeadlessTerrariaClient.Util.rand.Next(AvailableHairstyles.Count)];
+			return AvailableHairstyles[HeadlessTerrariaClient.Util.ClientUtil.rand.Next(AvailableHairstyles.Count)];
         }
 	}
 }

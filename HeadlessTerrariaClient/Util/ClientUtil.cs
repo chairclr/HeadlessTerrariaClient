@@ -6,9 +6,9 @@ using System.IO;
 using System.Numerics;
 using System.Text;
 
-namespace HeadlessTerrariaClient
+namespace HeadlessTerrariaClient.Util
 {
-    public static class Util
+    public static class ClientUtil
     {
 		public static void WriteRGB(this BinaryWriter bb, Color c)
 		{
@@ -150,17 +150,7 @@ namespace HeadlessTerrariaClient
 
 		public static ThreadSafeRandom rand = new ThreadSafeRandom();
 	}
-	public class ChatMessage
-	{
-		public int author;
-		public string message;
-
-		public ChatMessage(int a, string m)
-		{
-			author = a;
-			message = m;
-		}
-	}
+	
 
 	public class PlayerDifficultyID
 	{
@@ -185,7 +175,7 @@ namespace HeadlessTerrariaClient
 			}
 			else
             {
-				result = Util.GetDefault(binder.ReturnType);
+				result = ClientUtil.GetDefault(binder.ReturnType);
             }
 
 

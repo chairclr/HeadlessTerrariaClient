@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 
-namespace Terraria
+namespace HeadlessTerrariaClient.Terraria
 {
 	public class NetworkText
 	{

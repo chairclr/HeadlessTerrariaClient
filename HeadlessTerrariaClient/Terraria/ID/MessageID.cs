@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 
-namespace Terraria.ID
+namespace HeadlessTerrariaClient.Terraria.ID
 {
 	public class MessageID
 	{

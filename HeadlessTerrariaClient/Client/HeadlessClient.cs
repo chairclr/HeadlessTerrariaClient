@@ -3,13 +3,15 @@ using System.IO;
 using System.Net;
 using ArkNetwork;
 using System.Threading.Tasks;
-using Terraria;
-using Terraria.ID;
+using HeadlessTerrariaClient.Terraria;
+using HeadlessTerrariaClient.Terraria.ID;
+using HeadlessTerrariaClient.Terraria.Chat;
+using HeadlessTerrariaClient.Util;
 using System.Net.Sockets;
 using System.Numerics;
 
 // Much of packet documentation is from Terraria's NetMessage.cs and from https://tshock.readme.io/docs/multiplayer-packet-structure
-namespace HeadlessTerrariaClient
+namespace HeadlessTerrariaClient.Client
 {
     public class HeadlessClient
     {
@@ -69,13 +71,7 @@ namespace HeadlessTerrariaClient
                 Console.WriteLine($"Connecting to {address}:{port}");
             }
 
-            for (int i = 0; i < 255; i++)
-            {
-                player[i] = new Player();
-                player[i].whoAmI = i;
-                player[i].active = false;
-                player[i].name = "";
-            }
+            
 
             if (Settings.AwaitConnectToServerCall)
             {
@@ -199,7 +195,7 @@ namespace HeadlessTerrariaClient
         {
             if (Settings.PrintAnyOutput && Settings.PrintDisconnectMessage)
             {
-                Console.WriteLine($"Disconnected from world {CurrentWorld?.worldName}");
+                Console.WriteLine($"Disconnected from world {World.CurrentWorld?.worldName}");
             }
 
             try
@@ -211,8 +207,6 @@ namespace HeadlessTerrariaClient
             {
                 UserData = null;
                 TCPClient = null;
-                player = null;
-                CurrentWorld = null;
                 Settings = null;
             } catch { }
             try
@@ -225,16 +219,15 @@ namespace HeadlessTerrariaClient
             } catch { }
         }
 
-        public Player[] player = new Player[256];
+        public ClientWorld World;
         public int myPlayer;
         public Player LocalPlayer
         {
             get
             {
-                return player[myPlayer];
+                return World.player[myPlayer];
             }
         }
-        public World CurrentWorld;
         public string clientUUID;
         public bool ServerSideCharacter;
         public ulong LobbyId;
@@ -353,25 +346,24 @@ namespace HeadlessTerrariaClient
                     }
                     case MessageID.WorldData:
                     {
-                        CurrentWorld = new World();
-                        CurrentWorld.time = reader.ReadInt32();
+                        World.CurrentWorld.time = reader.ReadInt32();
                         BitsByte bitsByte20 = reader.ReadByte();
-                        CurrentWorld.dayTime = bitsByte20[0];
-                        CurrentWorld.bloodMoon = bitsByte20[1];
-                        CurrentWorld.eclipse = bitsByte20[2];
-                        CurrentWorld.moonPhase = reader.ReadByte();
-                        CurrentWorld.maxTilesX = reader.ReadInt16();
-                        CurrentWorld.maxTilesY = reader.ReadInt16();
-                        CurrentWorld.spawnTileX = reader.ReadInt16();
-                        CurrentWorld.spawnTileY = reader.ReadInt16();
-                        CurrentWorld.worldSurface = reader.ReadInt16();
-                        CurrentWorld.rockLayer = reader.ReadInt16();
-                        CurrentWorld.worldID = reader.ReadInt32();
-                        CurrentWorld.worldName = reader.ReadString();
-                        CurrentWorld.GameMode = reader.ReadByte();
-                        CurrentWorld.worldUUID = new Guid(reader.ReadBytes(16));
-                        CurrentWorld.worldGenVer = reader.ReadUInt64();
-                        CurrentWorld.moonType = reader.ReadByte();
+                        World.CurrentWorld.dayTime = bitsByte20[0];
+                        World.CurrentWorld.bloodMoon = bitsByte20[1];
+                        World.CurrentWorld.eclipse = bitsByte20[2];
+                        World.CurrentWorld.moonPhase = reader.ReadByte();
+                        World.CurrentWorld.maxTilesX = reader.ReadInt16();
+                        World.CurrentWorld.maxTilesY = reader.ReadInt16();
+                        World.CurrentWorld.spawnTileX = reader.ReadInt16();
+                        World.CurrentWorld.spawnTileY = reader.ReadInt16();
+                        World.CurrentWorld.worldSurface = reader.ReadInt16();
+                        World.CurrentWorld.rockLayer = reader.ReadInt16();
+                        World.CurrentWorld.worldID = reader.ReadInt32();
+                        World.CurrentWorld.worldName = reader.ReadString();
+                        World.CurrentWorld.GameMode = reader.ReadByte();
+                        World.CurrentWorld.worldUUID = new Guid(reader.ReadBytes(16));
+                        World.CurrentWorld.worldGenVer = reader.ReadUInt64();
+                        World.CurrentWorld.moonType = reader.ReadByte();
 
                         /*WorldGen.setBG(0, */
                         reader.ReadByte()/*)*/;
@@ -400,11 +392,11 @@ namespace HeadlessTerrariaClient
                         /*WorldGen.setBG(9, */
                         reader.ReadByte()/*)*/;
 
-                        CurrentWorld.iceBackStyle = reader.ReadByte();
-                        CurrentWorld.jungleBackStyle = reader.ReadByte();
-                        CurrentWorld.hellBackStyle = reader.ReadByte();
-                        CurrentWorld.windSpeedTarget = reader.ReadSingle();
-                        CurrentWorld.numClouds = reader.ReadByte();
+                        World.CurrentWorld.iceBackStyle = reader.ReadByte();
+                        World.CurrentWorld.jungleBackStyle = reader.ReadByte();
+                        World.CurrentWorld.hellBackStyle = reader.ReadByte();
+                        World.CurrentWorld.windSpeedTarget = reader.ReadSingle();
+                        World.CurrentWorld.numClouds = reader.ReadByte();
 
                         for (int num261 = 0; num261 < 3; num261++)
                         {
@@ -433,88 +425,88 @@ namespace HeadlessTerrariaClient
                             reader.ReadByte();
                         }
 
-                        CurrentWorld.maxRaining = reader.ReadSingle();
-                        CurrentWorld.raining = CurrentWorld.maxRaining > 0f;
+                        World.CurrentWorld.maxRaining = reader.ReadSingle();
+                        World.CurrentWorld.raining = World.CurrentWorld.maxRaining > 0f;
 
                         BitsByte bitsByte21 = reader.ReadByte();
-                        CurrentWorld.shadowOrbSmashed = bitsByte21[0];
-                        CurrentWorld.downedBoss1 = bitsByte21[1];
-                        CurrentWorld.downedBoss2 = bitsByte21[2];
-                        CurrentWorld.downedBoss3 = bitsByte21[3];
-                        CurrentWorld.hardMode = bitsByte21[4];
-                        CurrentWorld.downedClown = bitsByte21[5];
+                        World.CurrentWorld.shadowOrbSmashed = bitsByte21[0];
+                        World.CurrentWorld.downedBoss1 = bitsByte21[1];
+                        World.CurrentWorld.downedBoss2 = bitsByte21[2];
+                        World.CurrentWorld.downedBoss3 = bitsByte21[3];
+                        World.CurrentWorld.hardMode = bitsByte21[4];
+                        World.CurrentWorld.downedClown = bitsByte21[5];
                         ServerSideCharacter = bitsByte21[6];
-                        CurrentWorld.downedPlantBoss = bitsByte21[7];
+                        World.CurrentWorld.downedPlantBoss = bitsByte21[7];
                         //if (Main.ServerSideCharacter)
                         //{
                         //    Main.ActivePlayerFileData.MarkAsServerSide();
                         //}
                         BitsByte bitsByte22 = reader.ReadByte();
-                        CurrentWorld.downedMechBoss1 = bitsByte22[0];
-                        CurrentWorld.downedMechBoss2 = bitsByte22[1];
-                        CurrentWorld.downedMechBoss3 = bitsByte22[2];
-                        CurrentWorld.downedMechBossAny = bitsByte22[3];
-                        CurrentWorld.cloudBGActive = (bitsByte22[4] ? 1 : 0);
-                        CurrentWorld.crimson = bitsByte22[5];
-                        CurrentWorld.pumpkinMoon = bitsByte22[6];
-                        CurrentWorld.snowMoon = bitsByte22[7];
+                        World.CurrentWorld.downedMechBoss1 = bitsByte22[0];
+                        World.CurrentWorld.downedMechBoss2 = bitsByte22[1];
+                        World.CurrentWorld.downedMechBoss3 = bitsByte22[2];
+                        World.CurrentWorld.downedMechBossAny = bitsByte22[3];
+                        World.CurrentWorld.cloudBGActive = (bitsByte22[4] ? 1 : 0);
+                        World.CurrentWorld.crimson = bitsByte22[5];
+                        World.CurrentWorld.pumpkinMoon = bitsByte22[6];
+                        World.CurrentWorld.snowMoon = bitsByte22[7];
                         BitsByte bitsByte23 = reader.ReadByte();
-                        CurrentWorld.fastForwardTime = bitsByte23[1];
+                        World.CurrentWorld.fastForwardTime = bitsByte23[1];
                         //UpdateTimeRate();
                         bool num265 = bitsByte23[2];
-                        CurrentWorld.downedSlimeKing = bitsByte23[3];
-                        CurrentWorld.downedQueenBee = bitsByte23[4];
-                        CurrentWorld.downedFishron = bitsByte23[5];
-                        CurrentWorld.downedMartians = bitsByte23[6];
-                        CurrentWorld.downedAncientCultist = bitsByte23[7];
+                        World.CurrentWorld.downedSlimeKing = bitsByte23[3];
+                        World.CurrentWorld.downedQueenBee = bitsByte23[4];
+                        World.CurrentWorld.downedFishron = bitsByte23[5];
+                        World.CurrentWorld.downedMartians = bitsByte23[6];
+                        World.CurrentWorld.downedAncientCultist = bitsByte23[7];
                         BitsByte bitsByte24 = reader.ReadByte();
-                        CurrentWorld.downedMoonlord = bitsByte24[0];
-                        CurrentWorld.downedHalloweenKing = bitsByte24[1];
-                        CurrentWorld.downedHalloweenTree = bitsByte24[2];
-                        CurrentWorld.downedChristmasIceQueen = bitsByte24[3];
-                        CurrentWorld.downedChristmasSantank = bitsByte24[4];
-                        CurrentWorld.downedChristmasTree = bitsByte24[5];
-                        CurrentWorld.downedGolemBoss = bitsByte24[6];
-                        CurrentWorld.BirthdayPartyManualParty = bitsByte24[7];
+                        World.CurrentWorld.downedMoonlord = bitsByte24[0];
+                        World.CurrentWorld.downedHalloweenKing = bitsByte24[1];
+                        World.CurrentWorld.downedHalloweenTree = bitsByte24[2];
+                        World.CurrentWorld.downedChristmasIceQueen = bitsByte24[3];
+                        World.CurrentWorld.downedChristmasSantank = bitsByte24[4];
+                        World.CurrentWorld.downedChristmasTree = bitsByte24[5];
+                        World.CurrentWorld.downedGolemBoss = bitsByte24[6];
+                        World.CurrentWorld.BirthdayPartyManualParty = bitsByte24[7];
                         BitsByte bitsByte25 = reader.ReadByte();
-                        CurrentWorld.downedPirates = bitsByte25[0];
-                        CurrentWorld.downedFrost = bitsByte25[1];
-                        CurrentWorld.downedGoblins = bitsByte25[2];
-                        CurrentWorld.Sandstorm.Happening = bitsByte25[3];
-                        CurrentWorld.DD2.Ongoing = bitsByte25[4];
-                        CurrentWorld.DD2.DownedInvasionT1 = bitsByte25[5];
-                        CurrentWorld.DD2.DownedInvasionT2 = bitsByte25[6];
-                        CurrentWorld.DD2.DownedInvasionT3 = bitsByte25[7];
+                        World.CurrentWorld.downedPirates = bitsByte25[0];
+                        World.CurrentWorld.downedFrost = bitsByte25[1];
+                        World.CurrentWorld.downedGoblins = bitsByte25[2];
+                        World.CurrentWorld.Sandstorm.Happening = bitsByte25[3];
+                        World.CurrentWorld.DD2.Ongoing = bitsByte25[4];
+                        World.CurrentWorld.DD2.DownedInvasionT1 = bitsByte25[5];
+                        World.CurrentWorld.DD2.DownedInvasionT2 = bitsByte25[6];
+                        World.CurrentWorld.DD2.DownedInvasionT3 = bitsByte25[7];
                         BitsByte bitsByte26 = reader.ReadByte();
-                        CurrentWorld.combatBookWasUsed = bitsByte26[0];
-                        CurrentWorld.LanternNightManualLanterns = bitsByte26[1];
-                        CurrentWorld.downedTowerSolar = bitsByte26[2];
-                        CurrentWorld.downedTowerVortex = bitsByte26[3];
-                        CurrentWorld.downedTowerNebula = bitsByte26[4];
-                        CurrentWorld.downedTowerStardust = bitsByte26[5];
-                        CurrentWorld.forceHalloweenForToday = bitsByte26[6];
-                        CurrentWorld.forceXMasForToday = bitsByte26[7];
+                        World.CurrentWorld.combatBookWasUsed = bitsByte26[0];
+                        World.CurrentWorld.LanternNightManualLanterns = bitsByte26[1];
+                        World.CurrentWorld.downedTowerSolar = bitsByte26[2];
+                        World.CurrentWorld.downedTowerVortex = bitsByte26[3];
+                        World.CurrentWorld.downedTowerNebula = bitsByte26[4];
+                        World.CurrentWorld.downedTowerStardust = bitsByte26[5];
+                        World.CurrentWorld.forceHalloweenForToday = bitsByte26[6];
+                        World.CurrentWorld.forceXMasForToday = bitsByte26[7];
                         BitsByte bitsByte27 = reader.ReadByte();
-                        CurrentWorld.boughtCat = bitsByte27[0];
-                        CurrentWorld.boughtDog = bitsByte27[1];
-                        CurrentWorld.boughtBunny = bitsByte27[2];
-                        CurrentWorld.freeCake = bitsByte27[3];
-                        CurrentWorld.drunkWorld = bitsByte27[4];
-                        CurrentWorld.downedEmpressOfLight = bitsByte27[5];
-                        CurrentWorld.downedQueenSlime = bitsByte27[6];
-                        CurrentWorld.getGoodWorld = bitsByte27[7];
+                        World.CurrentWorld.boughtCat = bitsByte27[0];
+                        World.CurrentWorld.boughtDog = bitsByte27[1];
+                        World.CurrentWorld.boughtBunny = bitsByte27[2];
+                        World.CurrentWorld.freeCake = bitsByte27[3];
+                        World.CurrentWorld.drunkWorld = bitsByte27[4];
+                        World.CurrentWorld.downedEmpressOfLight = bitsByte27[5];
+                        World.CurrentWorld.downedQueenSlime = bitsByte27[6];
+                        World.CurrentWorld.getGoodWorld = bitsByte27[7];
                         BitsByte bitsByte28 = reader.ReadByte();
-                        CurrentWorld.tenthAnniversaryWorld = bitsByte28[0];
-                        CurrentWorld.dontStarveWorld = bitsByte28[1];
-                        CurrentWorld.downedDeerclops = bitsByte28[2];
-                        CurrentWorld.notTheBeesWorld = bitsByte28[3];
-                        CurrentWorld.SavedOreTiers_Copper = reader.ReadInt16();
-                        CurrentWorld.SavedOreTiers_Iron = reader.ReadInt16();
-                        CurrentWorld.SavedOreTiers_Silver = reader.ReadInt16();
-                        CurrentWorld.SavedOreTiers_Gold = reader.ReadInt16();
-                        CurrentWorld.SavedOreTiers_Cobalt = reader.ReadInt16();
-                        CurrentWorld.SavedOreTiers_Mythril = reader.ReadInt16();
-                        CurrentWorld.SavedOreTiers_Adamantite = reader.ReadInt16();
+                        World.CurrentWorld.tenthAnniversaryWorld = bitsByte28[0];
+                        World.CurrentWorld.dontStarveWorld = bitsByte28[1];
+                        World.CurrentWorld.downedDeerclops = bitsByte28[2];
+                        World.CurrentWorld.notTheBeesWorld = bitsByte28[3];
+                        World.CurrentWorld.SavedOreTiers_Copper = reader.ReadInt16();
+                        World.CurrentWorld.SavedOreTiers_Iron = reader.ReadInt16();
+                        World.CurrentWorld.SavedOreTiers_Silver = reader.ReadInt16();
+                        World.CurrentWorld.SavedOreTiers_Gold = reader.ReadInt16();
+                        World.CurrentWorld.SavedOreTiers_Cobalt = reader.ReadInt16();
+                        World.CurrentWorld.SavedOreTiers_Mythril = reader.ReadInt16();
+                        World.CurrentWorld.SavedOreTiers_Adamantite = reader.ReadInt16();
                         if (num265)
                         {
                             //Main.StartSlimeRain();
@@ -523,9 +515,9 @@ namespace HeadlessTerrariaClient
                         {
                             //Main.StopSlimeRain();
                         }
-                        CurrentWorld.invasionType = reader.ReadSByte();
+                        World.CurrentWorld.invasionType = reader.ReadSByte();
                         LobbyId = reader.ReadUInt64();
-                        CurrentWorld.Sandstorm.IntendedSeverity = reader.ReadSingle();
+                        World.CurrentWorld.Sandstorm.IntendedSeverity = reader.ReadSingle();
 
                         //CurrentWorld.tile = new Tile[CurrentWorld.maxTilesX,CurrentWorld.maxTilesY];
 
@@ -535,12 +527,12 @@ namespace HeadlessTerrariaClient
                             initalWorldData = true;
                             if (Settings.PrintAnyOutput && Settings.PrintWorldJoinMessages)
                             {
-                                Console.WriteLine($"Joining world \"{ CurrentWorld.worldName}\"");
+                                Console.WriteLine($"Joining world \"{World.CurrentWorld.worldName}\"");
                             }
                             
                             WorldDataRecieved?.Invoke(this);
-                            LocalPlayer.position = new Vector2(CurrentWorld.spawnTileX * 16f, CurrentWorld.spawnTileY * 16f);
-                            SendData(MessageID.SpawnTileData, CurrentWorld.spawnTileX, CurrentWorld.spawnTileY);
+                            LocalPlayer.position = new Vector2(World.CurrentWorld.spawnTileX * 16f, World.CurrentWorld.spawnTileY * 16f);
+                            SendData(MessageID.SpawnTileData, World.CurrentWorld.spawnTileX, World.CurrentWorld.spawnTileY);
                         }
                         break;
                     }
@@ -572,7 +564,7 @@ namespace HeadlessTerrariaClient
                         IsInWorld = false;
                         if (Settings.PrintAnyOutput && Settings.PrintKickMessage)
                         {
-                            Console.WriteLine($"Kicked from world {CurrentWorld?.worldName}");
+                            Console.WriteLine($"Kicked from world {World.CurrentWorld?.worldName}");
                         }
                         break;
                     }
@@ -594,7 +586,7 @@ namespace HeadlessTerrariaClient
                     {
                         // well documented code btw
                         // 🤨 📸
-                        CurrentWorld.DecompressTileSection(ReadBuffer, start, length);
+                        World.CurrentWorld.DecompressTileSection(ReadBuffer, start, length);
                         break;
                     }
                     case MessageID.TileManipulation:
@@ -612,15 +604,15 @@ namespace HeadlessTerrariaClient
 
 
                         // skin variant
-                        player[whoAreThey].skinVariant = reader.ReadByte();
+                        World.player[whoAreThey].skinVariant = reader.ReadByte();
 
                         // hair
                         reader.ReadByte();
 
-                        player[whoAreThey].name = reader.ReadString();
+                        World.player[whoAreThey].name = reader.ReadString();
 
                         // hair dye
-                        player[whoAreThey].hairDye = reader.ReadByte();
+                        World.player[whoAreThey].hairDye = reader.ReadByte();
 
                         // accessory/armor visibility 1
                         BitsByte hideVisibleAccessory = reader.ReadByte();
@@ -632,25 +624,25 @@ namespace HeadlessTerrariaClient
                         reader.ReadByte();
 
                         // hairColor
-                        player[whoAreThey].hairColor = reader.ReadRGB();
+                        World.player[whoAreThey].hairColor = reader.ReadRGB();
 
                         // skinColor
-                        player[whoAreThey].skinColor = reader.ReadRGB();
+                        World.player[whoAreThey].skinColor = reader.ReadRGB();
 
                         // eyeColor
-                        player[whoAreThey].eyeColor = reader.ReadRGB();
+                        World.player[whoAreThey].eyeColor = reader.ReadRGB();
 
                         // shirtColor
-                        player[whoAreThey].shirtColor = reader.ReadRGB();
+                        World.player[whoAreThey].shirtColor = reader.ReadRGB();
 
                         // underShirtColor
-                        player[whoAreThey].underShirtColor = reader.ReadRGB();
+                        World.player[whoAreThey].underShirtColor = reader.ReadRGB();
 
                         // pantsColor
-                        player[whoAreThey].pantsColor = reader.ReadRGB();
+                        World.player[whoAreThey].pantsColor = reader.ReadRGB();
 
                         // shoeColor
-                        player[whoAreThey].shoeColor = reader.ReadRGB();
+                        World.player[whoAreThey].shoeColor = reader.ReadRGB();
 
                         BitsByte bitsByte7 = reader.ReadByte();
 
@@ -663,14 +655,14 @@ namespace HeadlessTerrariaClient
                         byte whoAreThey = reader.ReadByte();
                         bool active = reader.ReadByte() == 1;
 
-                        player[whoAreThey].active = active;
+                        World.player[whoAreThey].active = active;
                         break;
                     }
                     case MessageID.PlayerControls:
                     {
                         byte whoAreThey = reader.ReadByte();
 
-                        Player plr = player[whoAreThey];
+                        Player plr = World.player[whoAreThey];
                         BitsByte control = reader.ReadByte();
                         BitsByte pulley = reader.ReadByte();
                         BitsByte misc = reader.ReadByte();
@@ -685,7 +677,7 @@ namespace HeadlessTerrariaClient
                     case MessageID.PlayerLife:
                     {
                         byte whoAreThey = reader.ReadByte();
-                        Player plr = player[whoAreThey];
+                        Player plr = World.player[whoAreThey];
 
                         plr.statLife = reader.ReadInt16();
                         plr.statLifeMax = reader.ReadInt16();
@@ -694,7 +686,7 @@ namespace HeadlessTerrariaClient
                     case MessageID.PlayerMana:
                     {
                         byte whoAreThey = reader.ReadByte();
-                        Player plr = player[whoAreThey];
+                        Player plr = World.player[whoAreThey];
 
                         plr.statMana = reader.ReadInt16();
                         plr.statManaMax = reader.ReadInt16();
@@ -763,7 +755,7 @@ namespace HeadlessTerrariaClient
                         break;
                     case MessageID.SyncPlayer:
                     {
-                        Player plr = player[number];
+                        Player plr = World.player[number];
                         writer.Write((byte)number);
 
                         // skin variant
@@ -843,7 +835,7 @@ namespace HeadlessTerrariaClient
                         break;
                     case MessageID.PlayerLife:
                     {
-                        Player plr = player[number];
+                        Player plr = World.player[number];
                         writer.Write((byte)number);
                         //statLife
                         writer.Write((short)plr.statLife);
@@ -853,7 +845,7 @@ namespace HeadlessTerrariaClient
                     }
                     case MessageID.PlayerMana:
                     {
-                        Player plr = player[number];
+                        Player plr = World.player[number];
                         writer.Write((byte)number);
                         //statMana
                         writer.Write((short)plr.statMana);
@@ -893,15 +885,15 @@ namespace HeadlessTerrariaClient
                     case MessageID.PlayerSpawn:
                     {
                         writer.Write((byte)number);
-                        writer.Write((short)CurrentWorld.spawnTileX);
-                        writer.Write((short)CurrentWorld.spawnTileY);
+                        writer.Write((short)World.CurrentWorld.spawnTileX);
+                        writer.Write((short)World.CurrentWorld.spawnTileY);
                         writer.Write(0);
                         writer.Write((byte)number2);
                         break;
                     }
                     case MessageID.PlayerControls:
                     {
-                        Player plr = player[number];
+                        Player plr = World.player[number];
                         writer.Write((byte)number);
                         // Control
                         writer.Write((byte)0);
@@ -991,7 +983,7 @@ namespace HeadlessTerrariaClient
         {
             for (int i = 0; i < 255; i++)
             {
-                if (player[i].active && player[i].name == name)
+                if (World.player[i].active && World.player[i].name == name)
                 {
                     return i;
                 }
