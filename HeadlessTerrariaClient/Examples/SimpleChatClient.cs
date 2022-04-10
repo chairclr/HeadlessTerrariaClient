@@ -7,7 +7,7 @@ namespace HeadlessTerrariaClient.Examples
 {
     public class SimpleChatClient
     {
-        const string ServerIP = "terraformserver.com";
+        const string ServerIP = "127.0.0.1";
         const int ServerPort = 7777;
         static void Main(string[] args)
         {
