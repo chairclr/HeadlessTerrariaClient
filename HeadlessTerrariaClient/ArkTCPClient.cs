@@ -23,8 +23,9 @@ namespace ArkNetwork
         public byte[] ReadBuffer;
         public NetworkStream NetworkStream;
         public Task ClientLoop;
-        public bool IsReading = false;
         public bool Exit = false;
+        public bool IsReading = false;
+        public bool IsWriting = false;
 
         public ArkTCPClient(IPAddress ip, byte[] readBuffer, int port, OnRecieveBytes OnRecieve)
         {
@@ -66,16 +67,22 @@ namespace ArkNetwork
 
 
                         // read the length of the packet from the network into the first 2 bytes of the ReadBuffer
-                        NetworkStream.Read(ReadBuffer, 0, 2);
+                        int bytesRead = NetworkStream.Read(ReadBuffer, 0, 2);
+
+                        if (bytesRead < 2)
+                        {
+                            break;
+                        }
+
                         int len = BitConverter.ToInt16(ReadBuffer);
 
-                        int bytesRead = 2;
                         while (bytesRead < len)
                         {
                             int bytesReceived = NetworkStream.Read(ReadBuffer, 2, len - bytesRead);
                             bytesRead += bytesReceived;
                         }
                         this.OnRecieve(client, bytesRead);
+
 
                         IsReading = false;
                     }
@@ -98,9 +105,13 @@ namespace ArkNetwork
 
         public void Send(byte[] data, int length = -1)
         {
+            while (IsWriting)
+                Thread.Sleep(16);
+            IsWriting = true;
             if (length == -1)
                 length = data.Length;
             NetworkStream.Write(data, 0, length);
+            IsWriting = false;
         }
     }
 }

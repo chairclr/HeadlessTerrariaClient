@@ -42,6 +42,7 @@ namespace HeadlessTerrariaClient.Examples
                     Console.WriteLine(message.message);
                 }
             };
+            
             HeadlessClient.Connect(ServerIP, ServerPort);
         }
 
