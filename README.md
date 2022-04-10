@@ -13,7 +13,7 @@ Connecting to TShock and Vanilla servers
 [42] PlayerMana \
 [49] CompleteConnectionAndSpawn \
 [68] ClientUUID \
-[129] FinishedConnectingToServer \
+[129] FinishedConnectingToServer 
 
 ## Partially Supported Packets
 [7] WorldData \
