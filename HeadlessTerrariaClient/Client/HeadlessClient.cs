@@ -31,6 +31,7 @@ namespace HeadlessTerrariaClient.Client
         public OnSomethingHappened ClientConnectionCompleted = null;
         public OnSomethingHappened OnUpdate = null;
         public OnSomethingHappened<ChatMessage> ChatMessageRecieved = null;
+        public OnSomethingHappened<TileManipulation> TileManipulationMessageRecieved = null;
         public OnSomethingHappened<RawIncomingPacket> NetMessageRecieved = null;
         public OnSomethingHappened<RawOutgoingPacket> NetMessageSent = null;
 
@@ -72,7 +73,6 @@ namespace HeadlessTerrariaClient.Client
             }
 
             
-
             if (Settings.AwaitConnectToServerCall)
             {
                 ConnectToServer().Wait();
@@ -596,6 +596,8 @@ namespace HeadlessTerrariaClient.Client
                         int tileY = reader.ReadInt16();
                         int flags = reader.ReadInt16();
                         int flags2 = reader.ReadByte();
+
+                        TileManipulationMessageRecieved?.Invoke(this, new TileManipulation(action, tileX, tileY, flags, flags2));
                         break;
                     }
                     case MessageID.SyncPlayer:
@@ -929,6 +931,20 @@ namespace HeadlessTerrariaClient.Client
                         writer.Write((short)255);
                         break;
                     }
+                    case MessageID.TileManipulation:
+                    {
+                        // TileManipulationID
+                        writer.Write((byte)number);
+                        // tileX
+                        writer.Write((short)number2);
+                        // tileY
+                        writer.Write((short)number3);
+                        // flags 1
+                        writer.Write((short)number4);
+                        // flags 2
+                        writer.Write((byte)number5);
+                        break;
+                    }    
                 }
 
                 int length = (int)MemoryStreamWrite.Position;
@@ -956,39 +972,6 @@ namespace HeadlessTerrariaClient.Client
             }
         }
 
-        public void SendChatMessage(string msg)
-        {
-            lock (WriteBuffer)
-            {
-                BinaryWriter writer = MessageWriter;
-
-                writer.Seek(2, SeekOrigin.Begin);
-
-                writer.Write((byte)MessageID.NetModules);
-
-                // module type
-                writer.Write((ushort)1);
-                writer.Write((ushort)1);
-                writer.Write(msg);
-
-                int length = (int)MemoryStreamWrite.Position;
-                writer.Seek(0, SeekOrigin.Begin);
-                writer.Write((short)length);
-
-                TCPClient.Send(WriteBuffer, length);
-            }
-        }
-
-        public int FindPlayerByName(string name)
-        {
-            for (int i = 0; i < 255; i++)
-            {
-                if (World.player[i].active && World.player[i].name == name)
-                {
-                    return i;
-                }
-            }
-            return -1;
-        }
+        
     }
 }

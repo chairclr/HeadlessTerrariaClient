@@ -59,7 +59,7 @@ namespace HeadlessTerrariaClient.Examples
                     Console.WriteLine(message.message);
                 }
             };
-            
+
             // Connect to a server
             HeadlessClient.Connect(ServerIP, ServerPort);
         }

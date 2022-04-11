@@ -151,17 +151,6 @@ namespace HeadlessTerrariaClient.Util
 		public static ThreadSafeRandom rand = new ThreadSafeRandom();
 	}
 	
-
-	public class PlayerDifficultyID
-	{
-		public const byte SoftCore = 0;
-
-		public const byte MediumCore = 1;
-
-		public const byte Hardcore = 2;
-
-		public const byte Creative = 3;
-	}
 	class Settings : DynamicObject
 	{
 		private Dictionary<string, object> SettingValues = new Dictionary<string, object>();
