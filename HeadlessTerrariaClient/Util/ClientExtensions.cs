@@ -26,13 +26,12 @@ namespace HeadlessTerrariaClient.Util
                 writer.Write((byte)MessageID.NetModules);
 
                 // module type
-                writer.Write((ushort)1);
+                writer.Write((ushort)NetModuleID.Text);
 
                 // NetworkText mode
-                writer.Write((byte)0);
+                NetworkText networkText = new NetworkText(msg);
 
-                // text
-                writer.Write(msg);
+                networkText.Serialize(writer);
 
                 int length = (int)client.MemoryStreamWrite.Position;
                 writer.Seek(0, SeekOrigin.Begin);

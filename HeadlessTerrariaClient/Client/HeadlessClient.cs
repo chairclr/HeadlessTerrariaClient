@@ -255,13 +255,12 @@ namespace HeadlessTerrariaClient.Client
             }
             lock (ReadBuffer)
             {
-                byte messageType = ReadBuffer[start];
-                msgType = messageType;
-
-                int realBalls = start + 1;
-                MessageReader.BaseStream.Position = realBalls;
-
                 BinaryReader reader = MessageReader;
+
+                MessageReader.BaseStream.Position = start;
+
+                byte messageType = reader.ReadByte();
+                msgType = messageType;
 
                 if (NetMessageRecieved != null)
                 {
@@ -282,8 +281,8 @@ namespace HeadlessTerrariaClient.Client
                 {
                     case MessageID.PlayerInfo:
                     {
-                        int playerIndex = MessageReader.ReadByte();
-                        bool ServerWantsToRunCheckBytesInClientLoopThread = MessageReader.ReadBoolean();
+                        int playerIndex = reader.ReadByte();
+                        bool ServerWantsToRunCheckBytesInClientLoopThread = reader.ReadBoolean();
 
                         if (Settings.PrintAnyOutput && Settings.PrintPlayerId)
                         {
@@ -314,13 +313,13 @@ namespace HeadlessTerrariaClient.Client
                     }
                     case MessageID.NetModules:
                     {
-                        ushort num = MessageReader.ReadUInt16();
-                        switch (num)
+                        ushort netModule = reader.ReadUInt16();
+                        switch (netModule)
                         {
-                            case 0:
+                            case NetModuleID.Liquid:
                             {
-                                int num420420 = MessageReader.ReadUInt16();
-                                for (int i = 0; i < num420420; i++)
+                                int liquidUpdateCount = MessageReader.ReadUInt16();
+                                for (int i = 0; i < liquidUpdateCount; i++)
                                 {
                                     int num2 = MessageReader.ReadInt32();
                                     byte liquid = MessageReader.ReadByte();
@@ -334,7 +333,7 @@ namespace HeadlessTerrariaClient.Client
                                 }
                             break;
                             }
-                            case 1:
+                            case NetModuleID.Text:
                             {
                                 int authorIndex = reader.ReadByte();
                                 NetworkText networkText = NetworkText.Deserialize(reader);

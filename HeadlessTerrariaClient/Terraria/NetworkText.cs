@@ -21,6 +21,12 @@ namespace HeadlessTerrariaClient.Terraria
 
 		private Mode _mode;
 
+		public NetworkText(string text)
+        {
+			_text = text;
+			_mode = Mode.Literal;
+		}
+
 		private NetworkText(string text, Mode mode)
 		{
 			_text = text;
