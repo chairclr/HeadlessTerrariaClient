@@ -22,7 +22,7 @@ Connecting to TShock and Vanilla servers programmatically
 [13] PlayerControls \
 [17] TileManipulation \
 [39] ReleaseItemOwnership \
-[82] NetModules \
+[82] NetModules 
 
 ## Planned Features and Packets
 Worlds and tiles \
