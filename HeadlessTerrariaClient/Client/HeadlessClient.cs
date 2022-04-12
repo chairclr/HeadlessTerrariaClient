@@ -301,7 +301,7 @@ namespace HeadlessTerrariaClient.Client
 
                         for (int i = 0; i < 260; i++)
                         {
-                            SendData(MessageID.SyncEquipment, playerIndex, i, 0, 0, 0);
+                            SendData(MessageID.SyncEquipment, playerIndex, i);
                         }
 
                         if (Settings.PrintAnyOutput && Settings.PrintWorldJoinMessages)
