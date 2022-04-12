@@ -6,15 +6,15 @@ Is a 3rd party Terraria client meant to be used programmatically, similar to a d
 Connecting to TShock and Vanilla servers programmatically
 
 ## Fully Supported Packets
-[3] PlayerInfo \
+[3] PlayerInfo \ 
 [4] SyncPlayer \ 
-[5] SyncEquipment \
-[9] StatusText \
+[5] SyncEquipment \ 
+[9] StatusText \ 
 [14] PlayerActive \
-[16] PlayerLife \
-[42] PlayerMana \
-[49] CompleteConnectionAndSpawn \
-[68] ClientUUID \
+[16] PlayerLife \ 
+[42] PlayerMana \ 
+[49] CompleteConnectionAndSpawn \ 
+[68] ClientUUID \ 
 [129] FinishedConnectingToServer 
 
 ## Partially Supported Packets
