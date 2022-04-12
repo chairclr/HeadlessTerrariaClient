@@ -34,6 +34,8 @@ namespace HeadlessTerrariaClient.Terraria
         public int statMana;
         public int statManaMax;
 
+        public Item[] inventory = new Item[260];
+
         public Vector2 position;
         public Vector2 velocity;
 
@@ -56,6 +58,18 @@ namespace HeadlessTerrariaClient.Terraria
             statLifeMax = data.statLifeMax;
             statMana = data.statMana;
             statManaMax = data.statManaMax;
+
+            for (int i = 0; i < 260; i++)
+            {
+                if (data.inventory[i] != null)
+                {
+                    inventory[i] = data.inventory[i].Clone();
+                }
+                else
+                {
+                    inventory[i] = new Item(ItemID.None, 0, 0);
+                }
+            }
         }
 
         public void LoadDefaultAppearence()
@@ -122,6 +136,8 @@ namespace HeadlessTerrariaClient.Terraria
         public int statMana = 20;
         public int statManaMax = 20;
 
+        public Item[] inventory = new Item[260];
+
         public void LoadDefaultAppearence()
         {
             skinVariant = 0;
@@ -160,6 +176,12 @@ namespace HeadlessTerrariaClient.Terraria
             underShirtColor = ClientUtil.ScaledHslToRgb(ClientUtil.GetRandomColorVector());
             pantsColor = ClientUtil.ScaledHslToRgb(ClientUtil.GetRandomColorVector());
             shoeColor = ClientUtil.ScaledHslToRgb(ClientUtil.GetRandomColorVector());
+        }
+        public void LoadDefaultInventory()
+        {
+            inventory[0] = new Item(ItemID.CopperShortsword);
+            inventory[1] = new Item(ItemID.CopperPickaxe);
+            inventory[2] = new Item(ItemID.CopperAxe);
         }
     }
 }

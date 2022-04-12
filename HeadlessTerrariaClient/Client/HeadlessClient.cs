@@ -570,9 +570,8 @@ namespace HeadlessTerrariaClient.Client
                     case MessageID.StatusText:
                     {
                         int statusMax = reader.ReadInt32();
-                        string statusText = reader.ReadString();
+                        NetworkText statusText = NetworkText.Deserialize(reader);
                         byte flags = reader.ReadByte();
-
                         break;
                     }
                     case MessageID.NPCKillCountDeathTally:
@@ -714,6 +713,25 @@ namespace HeadlessTerrariaClient.Client
                     }
                     case MessageID.SyncEquipment:
                     {
+                        byte whoAreThey = reader.ReadByte();
+                        Player plr = World.player[whoAreThey];
+                        short inventorySlot = reader.ReadInt16();
+                        Item item = plr.inventory[inventorySlot];
+
+                        short stack = reader.ReadInt16();
+                        byte prefix = reader.ReadByte();
+                        short type = reader.ReadInt16();
+
+                        if (item == null)
+                        {
+                            item = new Item(type, stack, prefix);
+                        }
+                        else
+                        {
+                            item.type = type;
+                            item.prefix = prefix;
+                            item.stack = stack;
+                        }
                         break;
                     }
                     case MessageID.SyncItem:
@@ -868,15 +886,20 @@ namespace HeadlessTerrariaClient.Client
                         break;
                     case MessageID.SyncEquipment:
                     {
+                        Player plr = World.player[number];
+                        Item item = plr.inventory[(int)number2];
+                        // player index
                         writer.Write((byte)number);
+
+                        // inventory index
                         writer.Write((short)number2);
 
-                        // type?
-                        writer.Write((short)number3);
-                        // prefix?
-                        writer.Write((byte)number4);
                         // stack?
-                        writer.Write((short)number5);
+                        writer.Write((short)item.stack);
+                        // prefix?
+                        writer.Write((byte)item.prefix);
+                        // type?
+                        writer.Write((short)item.type);
                     }
                     break;
                     case MessageID.SpawnTileData:
@@ -970,7 +993,5 @@ namespace HeadlessTerrariaClient.Client
                 TCPClient.Send(WriteBuffer, length);
             }
         }
-
-        
     }
 }

@@ -41,6 +41,7 @@ namespace HeadlessTerrariaClient.Examples
 
             // Load default player style so we arent some weird white goblin
             HeadlessClient.PlayerFile.LoadDefaultAppearence();
+            HeadlessClient.PlayerFile.LoadDefaultInventory();
 
             // This can bypass some anti-cheats that attempt to block headless clients
             HeadlessClient.Settings.AutoSyncPlayerZone = true;

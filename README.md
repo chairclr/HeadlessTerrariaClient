@@ -7,7 +7,9 @@ Connecting to TShock and Vanilla servers programmatically
 
 ## Fully Supported Packets
 [3] PlayerInfo \
-[4] SyncPlayer \
+[4] SyncPlayer \ 
+[5] SyncEquipment \
+[9] StatusText \
 [14] PlayerActive \
 [16] PlayerLife \
 [42] PlayerMana \
@@ -17,11 +19,10 @@ Connecting to TShock and Vanilla servers programmatically
 
 ## Partially Supported Packets
 [7] WorldData \
-[9] StatusText \
 [13] PlayerControls \
+[17] TileManipulation \
 [39] ReleaseItemOwnership \
 [82] NetModules \
-[17] TileManipulation
 
 ## Planned Features and Packets
 Worlds and tiles \
