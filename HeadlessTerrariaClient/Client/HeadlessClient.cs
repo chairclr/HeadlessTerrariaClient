@@ -26,14 +26,14 @@ namespace HeadlessTerrariaClient.Client
         public delegate Task OnSomethingHappenedAsync<T>(HeadlessClient hc, T e);
         public delegate Task OnSomethingHappenedAsync<T1, T2>(HeadlessClient hc, T1 e, T2 e2);
         public delegate Task OnSomethingHappenedAsync<T1, T2, T3>(HeadlessClient hc, T1 e, T2 e2, T3 e3);
-        public OnSomethingHappenedAsync WorldDataRecieved = null;
-        public OnSomethingHappenedAsync FinishedConnectingToServer = null;
-        public OnSomethingHappenedAsync ClientConnectionCompleted = null;
-        public OnSomethingHappenedAsync OnUpdate = null;
-        public OnSomethingHappenedAsync<ChatMessage> ChatMessageRecieved = null;
-        public OnSomethingHappenedAsync<TileManipulation> TileManipulationMessageRecieved = null;
-        public OnSomethingHappenedAsync<RawIncomingPacket> NetMessageRecieved = null;
-        public OnSomethingHappenedAsync<RawOutgoingPacket> NetMessageSent = null;
+        public OnSomethingHappenedAsync WorldDataRecievedAsync = null;
+        public OnSomethingHappenedAsync FinishedConnectingToServerAsync = null;
+        public OnSomethingHappenedAsync ClientConnectionCompletedAsync = null;
+        public OnSomethingHappenedAsync OnUpdateAsync = null;
+        public OnSomethingHappenedAsync<ChatMessage> ChatMessageRecievedAsync = null;
+        public OnSomethingHappenedAsync<TileManipulation> TileManipulationMessageRecievedAsync = null;
+        public OnSomethingHappenedAsync<RawIncomingPacket> NetMessageRecievedAsync = null;
+        public OnSomethingHappenedAsync<RawOutgoingPacket> NetMessageSentAsync = null;
 
         public dynamic Settings = new Settings();
 
@@ -189,7 +189,7 @@ namespace HeadlessTerrariaClient.Client
                     Settings.LastSyncPeriod = DateTime.Now;
                 }
             }
-            OnUpdate?.Invoke(this);
+            await OnUpdateAsync?.Invoke(this);
         }
         public void Disconnect()
         {
@@ -258,7 +258,7 @@ namespace HeadlessTerrariaClient.Client
 
             byte messageType = reader.ReadByte();
 
-            if (NetMessageRecieved != null)
+            if (NetMessageRecievedAsync != null)
             {
                 RawIncomingPacket packet = new RawIncomingPacket();
                 packet.ReadBuffer = ReadBuffer;
@@ -266,7 +266,7 @@ namespace HeadlessTerrariaClient.Client
                 packet.MessageType = messageType;
                 packet.ContinueWithPacket = true;
 
-                NetMessageRecieved?.Invoke(this, packet);
+                NetMessageRecievedAsync?.Invoke(this, packet).Wait();
 
                 if (!packet.ContinueWithPacket)
                 {
@@ -333,7 +333,7 @@ namespace HeadlessTerrariaClient.Client
                         {
                             int authorIndex = reader.ReadByte();
                             NetworkText networkText = NetworkText.Deserialize(reader);
-                            ChatMessageRecieved?.Invoke(this, new ChatMessage(authorIndex, networkText.ToString()));
+                            await ChatMessageRecievedAsync?.Invoke(this, new ChatMessage(authorIndex, networkText.ToString()));
                             break;
                         }
                     }
@@ -525,7 +525,7 @@ namespace HeadlessTerrariaClient.Client
                             Console.WriteLine($"Joining world \"{World.CurrentWorld.worldName}\"");
                         }
 
-                        WorldDataRecieved?.Invoke(this);
+                        await WorldDataRecievedAsync?.Invoke(this);
                         LocalPlayer.position = new Vector2(World.CurrentWorld.spawnTileX * 16f, World.CurrentWorld.spawnTileY * 16f);
                         await SendDataAsync(MessageID.SpawnTileData, World.CurrentWorld.spawnTileX, World.CurrentWorld.spawnTileY);
                     }
@@ -533,7 +533,7 @@ namespace HeadlessTerrariaClient.Client
                 }
                 case MessageID.FinishedConnectingToServer:
                 {
-                    FinishedConnectingToServer?.Invoke(this);
+                    await FinishedConnectingToServerAsync?.Invoke(this);
                     break;
                 }
                 case MessageID.CompleteConnectionAndSpawn:
@@ -551,7 +551,7 @@ namespace HeadlessTerrariaClient.Client
                         await SendDataAsync(MessageID.ClientSyncedInventory, myPlayer);
                     }
                     IsInWorld = true;
-                    ClientConnectionCompleted?.Invoke(this);
+                    await ClientConnectionCompletedAsync?.Invoke(this);
                     break;
                 }
                 case MessageID.Kick:
@@ -591,7 +591,7 @@ namespace HeadlessTerrariaClient.Client
                     int flags = reader.ReadInt16();
                     int flags2 = reader.ReadByte();
 
-                    TileManipulationMessageRecieved?.Invoke(this, new TileManipulation(action, tileX, tileY, flags, flags2));
+                    await TileManipulationMessageRecievedAsync?.Invoke(this, new TileManipulation(action, tileX, tileY, flags, flags2));
                     break;
                 }
                 case MessageID.SyncPlayer:
@@ -969,7 +969,7 @@ namespace HeadlessTerrariaClient.Client
                 writer.Write((short)length);
 
 
-                if (NetMessageSent != null)
+                if (NetMessageSentAsync != null)
                 {
                     RawOutgoingPacket packet = new RawOutgoingPacket();
                     packet.WriteBuffer = WriteBuffer;
@@ -977,7 +977,7 @@ namespace HeadlessTerrariaClient.Client
                     packet.MessageType = messageType;
                     packet.ContinueWithPacket = true;
 
-                    NetMessageSent?.Invoke(this, packet);
+                    NetMessageSentAsync?.Invoke(this, packet).Wait();
 
                     if (!packet.ContinueWithPacket)
                     {

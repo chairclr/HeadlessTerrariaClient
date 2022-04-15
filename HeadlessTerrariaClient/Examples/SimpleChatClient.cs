@@ -45,7 +45,7 @@ namespace HeadlessTerrariaClient.Examples
             HeadlessClient.Settings.AutoSyncPlayerZone = true;
 
             // Run code when a chat message is recived
-            HeadlessClient.ChatMessageRecieved += async (HeadlessClient client, ChatMessage message) =>
+            HeadlessClient.ChatMessageRecievedAsync += async (HeadlessClient client, ChatMessage message) =>
             {
                 // Messages of id 255 are not from another player
                 if (message.author != 255)
