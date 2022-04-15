@@ -15,7 +15,7 @@ namespace HeadlessTerrariaClient.Util
 {
     public static class ClientExtensions
     {
-        public static void SendChatMessage(this HeadlessClient client, string msg)
+        public static async Task SendChatMessageAsync(this HeadlessClient client, string msg)
         {
             lock (client.WriteBuffer)
             {
@@ -37,7 +37,7 @@ namespace HeadlessTerrariaClient.Util
                 writer.Seek(0, SeekOrigin.Begin);
                 writer.Write((short)length);
 
-                client.TCPClient.Send(client.WriteBuffer, length);
+                client.TCPClient.SendAsync(client.WriteBuffer, length);
             }
         }
         public static int FindPlayerByName(this HeadlessClient client, string name)
@@ -54,43 +54,43 @@ namespace HeadlessTerrariaClient.Util
 
         public static async Task SendBreakTile(this HeadlessClient client, int tileX, int tileY)
         {
-            client.SendDataAsync(MessageID.TileManipulation, TileManipulationID.KillTileNoItem, tileX, tileY);
+            await client.SendDataAsync(MessageID.TileManipulation, TileManipulationID.KillTileNoItem, tileX, tileY);
         }
         public static async Task SendPlaceTile(this HeadlessClient client, int tileX, int tileY, int type)
         {
-            client.SendDataAsync(MessageID.TileManipulation, TileManipulationID.PlaceTile, tileX, tileY, type);
+            await client.SendDataAsync(MessageID.TileManipulation, TileManipulationID.PlaceTile, tileX, tileY, type);
         }
         public static async Task SendPlaceTile_TShockBypass(this HeadlessClient client, int tileX, int tileY, int type)
         {
-            client.CustomSendData(MessageID.PlayerControls, client.myPlayer, tileX * 16f, tileY * 16f);
-            client.CustomSendData(MessageID.SyncEquipment, client.myPlayer, 0, 1, 0, BlockTypeItem.TileToItem[type]);
+            await client.CustomSendDataAsync(MessageID.PlayerControls, client.myPlayer, tileX * 16f, tileY * 16f);
+            await client.CustomSendDataAsync(MessageID.SyncEquipment, client.myPlayer, 0, 1, 0, BlockTypeItem.TileToItem[type]);
 
-            client.SendDataAsync(MessageID.TileManipulation, TileManipulationID.PlaceTile, tileX, tileY, type);
+            await client.SendDataAsync(MessageID.TileManipulation, TileManipulationID.PlaceTile, tileX, tileY, type);
 
-            client.SendDataAsync(MessageID.PlayerControls, client.myPlayer);
-            client.SendDataAsync(MessageID.SyncEquipment, client.myPlayer, 0);
+            await client.SendDataAsync(MessageID.PlayerControls, client.myPlayer);
+            await client.SendDataAsync(MessageID.SyncEquipment, client.myPlayer, 0);
         }
 
         public static async Task SendBreakWall(this HeadlessClient client, int tileX, int tileY)
         {
-            client.SendDataAsync(MessageID.TileManipulation, TileManipulationID.KillWall, tileX, tileY);
+            await client.SendDataAsync(MessageID.TileManipulation, TileManipulationID.KillWall, tileX, tileY);
         }
         public static async Task SendPlaceWall(this HeadlessClient client, int tileX, int tileY, int type)
         {
-            client.SendDataAsync(MessageID.TileManipulation, TileManipulationID.PlaceWall, tileX, tileY, type);
+            await client.SendDataAsync(MessageID.TileManipulation, TileManipulationID.PlaceWall, tileX, tileY, type);
         }
         public static async Task SendPlaceWall_TShockBypass(this HeadlessClient client, int tileX, int tileY, int type)
         {
-            client.CustomSendData(MessageID.PlayerControls, client.myPlayer, tileX * 16f, tileY * 16f);
-            client.CustomSendData(MessageID.SyncEquipment, client.myPlayer, 0, 1, 0, BlockTypeItem.WallToItem[type]);
+            await client.CustomSendDataAsync(MessageID.PlayerControls, client.myPlayer, tileX * 16f, tileY * 16f);
+            await client.CustomSendDataAsync(MessageID.SyncEquipment, client.myPlayer, 0, 1, 0, BlockTypeItem.WallToItem[type]);
 
-            client.SendDataAsync(MessageID.TileManipulation, TileManipulationID.PlaceWall, tileX, tileY, type);
+            await client.SendDataAsync(MessageID.TileManipulation, TileManipulationID.PlaceWall, tileX, tileY, type);
 
-            client.SendDataAsync(MessageID.PlayerControls, client.myPlayer);
-            client.SendDataAsync(MessageID.SyncEquipment, client.myPlayer, 0);
+            await client.SendDataAsync(MessageID.PlayerControls, client.myPlayer);
+            await client.SendDataAsync(MessageID.SyncEquipment, client.myPlayer, 0);
         }
 
-        public static void CustomSendData(this HeadlessClient client, int messageType, int number = 0, float number2 = 0, float number3 = 0, float number4 = 0, float number5 = 0, float number6 = 0, float number7 = 0, float number8 = 0)
+        public static async Task CustomSendDataAsync(this HeadlessClient client, int messageType, int number = 0, float number2 = 0, float number3 = 0, float number4 = 0, float number5 = 0, float number6 = 0, float number7 = 0, float number8 = 0)
         {
             if (client.TCPClient == null)
                 return;
@@ -172,7 +172,7 @@ namespace HeadlessTerrariaClient.Util
                     }
                 }
 
-                client.TCPClient.Send(client.WriteBuffer, length);
+                client.TCPClient.SendAsync(client.WriteBuffer, length);
             }
         }
     }
