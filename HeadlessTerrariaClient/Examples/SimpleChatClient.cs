@@ -27,9 +27,6 @@ namespace HeadlessTerrariaClient.Examples
 
         public async Task Start()
         {
-            // Create an empty world
-            ClientWorld clientWorld = new ClientWorld();
-
             // Create a new client
             HeadlessClient HeadlessClient = new HeadlessClient();
 
@@ -37,23 +34,19 @@ namespace HeadlessTerrariaClient.Examples
             HeadlessClient.clientUUID = Guid.NewGuid().ToString();
 
             // Assaign world reference
-            HeadlessClient.World = clientWorld;
+            HeadlessClient.World = new ClientWorld();
 
             // Name the player
             HeadlessClient.PlayerFile.name = $"ExampleChatClient";  
 
-            // Softcore player
-            HeadlessClient.PlayerFile.difficulty = PlayerDifficultyID.SoftCore;
-
-            // Load default player style so we arent some weird white goblin
-            HeadlessClient.PlayerFile.LoadDefaultAppearence();
-            HeadlessClient.PlayerFile.LoadDefaultInventory();
+            // Softcore player, Default appearence, and Default inventory
+            HeadlessClient.PlayerFile.LoadDefaultPlayer();
 
             // This can bypass some anti-cheats that attempt to block headless clients
             HeadlessClient.Settings.AutoSyncPlayerZone = true;
 
             // Run code when a chat message is recived
-            HeadlessClient.ChatMessageRecieved += async (HeadlessClient client, ChatMessage message) =>
+            HeadlessClient.ChatMessageRecieved += (HeadlessClient client, ChatMessage message) =>
             {
                 // Messages of id 255 are not from another player
                 if (message.author != 255)
