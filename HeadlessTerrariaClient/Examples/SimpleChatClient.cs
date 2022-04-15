@@ -1,10 +1,10 @@
 ﻿using System;
 using HeadlessTerrariaClient;
 using HeadlessTerrariaClient.Terraria;
-using HeadlessTerrariaClient.Terraria.ID;
 using HeadlessTerrariaClient.Terraria.Chat;
 using HeadlessTerrariaClient.Client;
 using HeadlessTerrariaClient.Util;
+using System.Threading;
 
 namespace HeadlessTerrariaClient.Examples
 {
@@ -12,14 +12,9 @@ namespace HeadlessTerrariaClient.Examples
     {
         const string ServerIP = "127.0.0.1";
         const int ServerPort = 7777;
-        static void Main(string[] args)
-        {
-            Start();
+        
 
-            System.Threading.Thread.Sleep(-1);
-        }
-
-        public static void Start()
+        public async Task Start()
         {
             // Create an empty world
             ClientWorld clientWorld = new ClientWorld();
@@ -47,7 +42,7 @@ namespace HeadlessTerrariaClient.Examples
             HeadlessClient.Settings.AutoSyncPlayerZone = true;
 
             // Run code when a chat message is recived
-            HeadlessClient.ChatMessageRecieved += (HeadlessClient client, ChatMessage message) =>
+            HeadlessClient.ChatMessageRecieved += async (HeadlessClient client, ChatMessage message) =>
             {
                 // Messages of id 255 are not from another player
                 if (message.author != 255)
@@ -64,6 +59,5 @@ namespace HeadlessTerrariaClient.Examples
             // Connect to a server
             HeadlessClient.Connect(ServerIP, ServerPort);
         }
-
     }
 }

@@ -189,7 +189,7 @@ namespace HeadlessTerrariaClient.Client
                     Settings.LastSyncPeriod = DateTime.Now;
                 }
             }
-            OnUpdate?.Invoke(this);
+            await OnUpdateAsync?.Invoke(this);
         }
         public void Disconnect()
         {
@@ -258,15 +258,17 @@ namespace HeadlessTerrariaClient.Client
 
             byte messageType = reader.ReadByte();
 
-            if (NetMessageRecieved != null)
+            if (NetMessageRecievedAsync != null)
             {
-                RawIncomingPacket packet = new RawIncomingPacket();
-                packet.ReadBuffer = ReadBuffer;
-                packet.Reader = reader;
-                packet.MessageType = messageType;
-                packet.ContinueWithPacket = true;
+                RawIncomingPacket packet = new RawIncomingPacket
+                {
+                    ReadBuffer = ReadBuffer,
+                    Reader = reader,
+                    MessageType = messageType,
+                    ContinueWithPacket = true
+                };
 
-                NetMessageRecieved?.Invoke(this, packet);
+                NetMessageRecievedAsync?.Invoke(this, packet).Wait();
 
                 if (!packet.ContinueWithPacket)
                 {
@@ -333,7 +335,7 @@ namespace HeadlessTerrariaClient.Client
                         {
                             int authorIndex = reader.ReadByte();
                             NetworkText networkText = NetworkText.Deserialize(reader);
-                            ChatMessageRecieved?.Invoke(this, new ChatMessage(authorIndex, networkText.ToString()));
+                            await ChatMessageRecievedAsync?.Invoke(this, new ChatMessage(authorIndex, networkText.ToString()));
                             break;
                         }
                     }
@@ -525,7 +527,7 @@ namespace HeadlessTerrariaClient.Client
                             Console.WriteLine($"Joining world \"{World.CurrentWorld.worldName}\"");
                         }
 
-                        WorldDataRecieved?.Invoke(this);
+                        await WorldDataRecievedAsync?.Invoke(this);
                         LocalPlayer.position = new Vector2(World.CurrentWorld.spawnTileX * 16f, World.CurrentWorld.spawnTileY * 16f);
                         await SendDataAsync(MessageID.SpawnTileData, World.CurrentWorld.spawnTileX, World.CurrentWorld.spawnTileY);
                     }
@@ -533,7 +535,7 @@ namespace HeadlessTerrariaClient.Client
                 }
                 case MessageID.FinishedConnectingToServer:
                 {
-                    FinishedConnectingToServer?.Invoke(this);
+                    await FinishedConnectingToServerAsync?.Invoke(this);
                     break;
                 }
                 case MessageID.CompleteConnectionAndSpawn:
@@ -551,7 +553,7 @@ namespace HeadlessTerrariaClient.Client
                         await SendDataAsync(MessageID.ClientSyncedInventory, myPlayer);
                     }
                     IsInWorld = true;
-                    ClientConnectionCompleted?.Invoke(this);
+                    await ClientConnectionCompletedAsync?.Invoke(this);
                     break;
                 }
                 case MessageID.Kick:
@@ -591,7 +593,7 @@ namespace HeadlessTerrariaClient.Client
                     int flags = reader.ReadInt16();
                     int flags2 = reader.ReadByte();
 
-                    TileManipulationMessageRecieved?.Invoke(this, new TileManipulation(action, tileX, tileY, flags, flags2));
+                    await TileManipulationMessageRecievedAsync?.Invoke(this, new TileManipulation(action, tileX, tileY, flags, flags2));
                     break;
                 }
                 case MessageID.SyncPlayer:
@@ -969,15 +971,17 @@ namespace HeadlessTerrariaClient.Client
                 writer.Write((short)length);
 
 
-                if (NetMessageSent != null)
+                if (NetMessageSentAsync != null)
                 {
-                    RawOutgoingPacket packet = new RawOutgoingPacket();
-                    packet.WriteBuffer = WriteBuffer;
-                    packet.Writer = writer;
-                    packet.MessageType = messageType;
-                    packet.ContinueWithPacket = true;
+                    RawOutgoingPacket packet = new RawOutgoingPacket
+                    {
+                        WriteBuffer = WriteBuffer,
+                        Writer = writer,
+                        MessageType = messageType,
+                        ContinueWithPacket = true
+                    };
 
-                    NetMessageSent?.Invoke(this, packet);
+                    NetMessageSentAsync?.Invoke(this, packet).Wait();
 
                     if (!packet.ContinueWithPacket)
                     {
