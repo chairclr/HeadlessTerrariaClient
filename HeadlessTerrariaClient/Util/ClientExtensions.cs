@@ -156,11 +156,13 @@ namespace HeadlessTerrariaClient.Util
 
                 if (client.NetMessageSentAsync != null)
                 {
-                    RawOutgoingPacket packet = new RawOutgoingPacket();
-                    packet.WriteBuffer = client.WriteBuffer;
-                    packet.Writer = writer;
-                    packet.MessageType = messageType;
-                    packet.ContinueWithPacket = true;
+                    RawOutgoingPacket packet = new RawOutgoingPacket
+                    {
+                        WriteBuffer = client.WriteBuffer,
+                        Writer = writer,
+                        MessageType = messageType,
+                        ContinueWithPacket = true
+                    };
 
                     client.NetMessageSentAsync?.Invoke(client, packet).Wait();
 

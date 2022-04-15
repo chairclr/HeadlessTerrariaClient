@@ -260,11 +260,13 @@ namespace HeadlessTerrariaClient.Client
 
             if (NetMessageRecievedAsync != null)
             {
-                RawIncomingPacket packet = new RawIncomingPacket();
-                packet.ReadBuffer = ReadBuffer;
-                packet.Reader = reader;
-                packet.MessageType = messageType;
-                packet.ContinueWithPacket = true;
+                RawIncomingPacket packet = new RawIncomingPacket
+                {
+                    ReadBuffer = ReadBuffer,
+                    Reader = reader,
+                    MessageType = messageType,
+                    ContinueWithPacket = true
+                };
 
                 NetMessageRecievedAsync?.Invoke(this, packet).Wait();
 
@@ -971,11 +973,13 @@ namespace HeadlessTerrariaClient.Client
 
                 if (NetMessageSentAsync != null)
                 {
-                    RawOutgoingPacket packet = new RawOutgoingPacket();
-                    packet.WriteBuffer = WriteBuffer;
-                    packet.Writer = writer;
-                    packet.MessageType = messageType;
-                    packet.ContinueWithPacket = true;
+                    RawOutgoingPacket packet = new RawOutgoingPacket
+                    {
+                        WriteBuffer = WriteBuffer,
+                        Writer = writer,
+                        MessageType = messageType,
+                        ContinueWithPacket = true
+                    };
 
                     NetMessageSentAsync?.Invoke(this, packet).Wait();
 
