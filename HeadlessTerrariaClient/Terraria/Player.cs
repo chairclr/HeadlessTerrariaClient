@@ -183,5 +183,11 @@ namespace HeadlessTerrariaClient.Terraria
             inventory[1] = new Item(ItemID.CopperPickaxe);
             inventory[2] = new Item(ItemID.CopperAxe);
         }
+        public void LoadDefaultPlayer()
+        {
+            LoadDefaultAppearence();
+            LoadDefaultInventory();
+            difficulty = PlayerDifficultyID.SoftCore;
+        }
     }
 }
