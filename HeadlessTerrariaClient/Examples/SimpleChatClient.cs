@@ -5,9 +5,20 @@ using HeadlessTerrariaClient.Terraria.Chat;
 using HeadlessTerrariaClient.Client;
 using HeadlessTerrariaClient.Util;
 using System.Threading;
+using System.Threading.Tasks;
+using HeadlessTerrariaClient.Terraria.ID;
 
 namespace HeadlessTerrariaClient.Examples
 {
+    public static class Program
+    {
+        static void Main(string[] args)
+        {
+            SimpleChatClient chatClient = new SimpleChatClient();
+
+            chatClient.Start().Wait();
+        }
+    }
     public class SimpleChatClient
     {
         const string ServerIP = "127.0.0.1";
@@ -57,7 +68,9 @@ namespace HeadlessTerrariaClient.Examples
             };
 
             // Connect to a server
-            HeadlessClient.Connect(ServerIP, ServerPort);
+            await HeadlessClient.Connect(ServerIP, ServerPort);
+
+            await Task.Delay(Timeout.Infinite);
         }
     }
 }

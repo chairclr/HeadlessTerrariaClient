@@ -189,7 +189,7 @@ namespace HeadlessTerrariaClient.Client
                     Settings.LastSyncPeriod = DateTime.Now;
                 }
             }
-            await OnUpdateAsync?.Invoke(this);
+            OnUpdate?.Invoke(this);
         }
         public void Disconnect()
         {
@@ -258,7 +258,7 @@ namespace HeadlessTerrariaClient.Client
 
             byte messageType = reader.ReadByte();
 
-            if (NetMessageRecievedAsync != null)
+            if (NetMessageRecieved != null)
             {
                 RawIncomingPacket packet = new RawIncomingPacket
                 {
@@ -268,7 +268,7 @@ namespace HeadlessTerrariaClient.Client
                     ContinueWithPacket = true
                 };
 
-                NetMessageRecievedAsync?.Invoke(this, packet).Wait();
+                NetMessageRecieved?.Invoke(this, packet);
 
                 if (!packet.ContinueWithPacket)
                 {
@@ -335,7 +335,7 @@ namespace HeadlessTerrariaClient.Client
                         {
                             int authorIndex = reader.ReadByte();
                             NetworkText networkText = NetworkText.Deserialize(reader);
-                            await ChatMessageRecievedAsync?.Invoke(this, new ChatMessage(authorIndex, networkText.ToString()));
+                            ChatMessageRecieved?.Invoke(this, new ChatMessage(authorIndex, networkText.ToString()));
                             break;
                         }
                     }
@@ -527,7 +527,7 @@ namespace HeadlessTerrariaClient.Client
                             Console.WriteLine($"Joining world \"{World.CurrentWorld.worldName}\"");
                         }
 
-                        await WorldDataRecievedAsync?.Invoke(this);
+                        WorldDataRecieved?.Invoke(this);
                         LocalPlayer.position = new Vector2(World.CurrentWorld.spawnTileX * 16f, World.CurrentWorld.spawnTileY * 16f);
                         await SendDataAsync(MessageID.SpawnTileData, World.CurrentWorld.spawnTileX, World.CurrentWorld.spawnTileY);
                     }
@@ -535,7 +535,7 @@ namespace HeadlessTerrariaClient.Client
                 }
                 case MessageID.FinishedConnectingToServer:
                 {
-                    await FinishedConnectingToServerAsync?.Invoke(this);
+                    FinishedConnectingToServer?.Invoke(this);
                     break;
                 }
                 case MessageID.CompleteConnectionAndSpawn:
@@ -553,7 +553,7 @@ namespace HeadlessTerrariaClient.Client
                         await SendDataAsync(MessageID.ClientSyncedInventory, myPlayer);
                     }
                     IsInWorld = true;
-                    await ClientConnectionCompletedAsync?.Invoke(this);
+                    ClientConnectionCompleted?.Invoke(this);
                     break;
                 }
                 case MessageID.Kick:
@@ -593,7 +593,7 @@ namespace HeadlessTerrariaClient.Client
                     int flags = reader.ReadInt16();
                     int flags2 = reader.ReadByte();
 
-                    await TileManipulationMessageRecievedAsync?.Invoke(this, new TileManipulation(action, tileX, tileY, flags, flags2));
+                    TileManipulationMessageRecieved?.Invoke(this, new TileManipulation(action, tileX, tileY, flags, flags2));
                     break;
                 }
                 case MessageID.SyncPlayer:
@@ -971,7 +971,7 @@ namespace HeadlessTerrariaClient.Client
                 writer.Write((short)length);
 
 
-                if (NetMessageSentAsync != null)
+                if (NetMessageSent != null)
                 {
                     RawOutgoingPacket packet = new RawOutgoingPacket
                     {
@@ -981,7 +981,7 @@ namespace HeadlessTerrariaClient.Client
                         ContinueWithPacket = true
                     };
 
-                    NetMessageSentAsync?.Invoke(this, packet).Wait();
+                    NetMessageSent?.Invoke(this, packet);
 
                     if (!packet.ContinueWithPacket)
                     {

@@ -154,7 +154,7 @@ namespace HeadlessTerrariaClient.Util
                 writer.Write((short)length);
 
 
-                if (client.NetMessageSentAsync != null)
+                if (client.NetMessageSent != null)
                 {
                     RawOutgoingPacket packet = new RawOutgoingPacket
                     {
@@ -164,7 +164,7 @@ namespace HeadlessTerrariaClient.Util
                         ContinueWithPacket = true
                     };
 
-                    client.NetMessageSentAsync?.Invoke(client, packet).Wait();
+                    client.NetMessageSent?.Invoke(client, packet);
 
                     if (!packet.ContinueWithPacket)
                     {
