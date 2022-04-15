@@ -34,7 +34,6 @@ namespace HeadlessTerrariaClient.Client
         public OnSomethingHappenedAsync<TileManipulation> TileManipulationMessageRecieved = null;
         public OnSomethingHappenedAsync<RawIncomingPacket> NetMessageRecieved = null;
         public OnSomethingHappenedAsync<RawOutgoingPacket> NetMessageSent = null;
-
         public dynamic Settings = new Settings();
 
         public HeadlessClient()
