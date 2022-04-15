@@ -22,18 +22,19 @@ namespace HeadlessTerrariaClient.Client
         public BinaryWriter MessageWriter;
         public MemoryStream MemoryStreamRead;
         public BinaryReader MessageReader;
-        public delegate void OnSomethingHappenedAsync(HeadlessClient hc);
-        public delegate void OnSomethingHappenedAsync<T>(HeadlessClient hc, T e);
-        public delegate void OnSomethingHappenedAsync<T1, T2>(HeadlessClient hc, T1 e, T2 e2);
-        public delegate void OnSomethingHappenedAsync<T1, T2, T3>(HeadlessClient hc, T1 e, T2 e2, T3 e3);
-        public OnSomethingHappenedAsync WorldDataRecieved = null;
-        public OnSomethingHappenedAsync FinishedConnectingToServer = null;
-        public OnSomethingHappenedAsync ClientConnectionCompleted = null;
-        public OnSomethingHappenedAsync OnUpdate = null;
-        public OnSomethingHappenedAsync<ChatMessage> ChatMessageRecieved = null;
-        public OnSomethingHappenedAsync<TileManipulation> TileManipulationMessageRecieved = null;
-        public OnSomethingHappenedAsync<RawIncomingPacket> NetMessageRecieved = null;
-        public OnSomethingHappenedAsync<RawOutgoingPacket> NetMessageSent = null;
+        public delegate void OnSomethingHappened(HeadlessClient hc);
+        public delegate void OnSomethingHappened<T>(HeadlessClient hc, T e);
+        public delegate void OnSomethingHappened<T1, T2>(HeadlessClient hc, T1 e, T2 e2);
+        public delegate void OnSomethingHappened<T1, T2, T3>(HeadlessClient hc, T1 e, T2 e2, T3 e3);
+        public OnSomethingHappened WorldDataRecieved = null;
+        public OnSomethingHappened FinishedConnectingToServer = null;
+        public OnSomethingHappened ClientConnectionCompleted = null;
+        public OnSomethingHappened OnUpdate = null;
+        public OnSomethingHappened<ChatMessage> ChatMessageRecieved = null;
+        public OnSomethingHappened<TileManipulation> TileManipulationMessageRecieved = null;
+        public OnSomethingHappened<RawIncomingPacket> NetMessageRecieved = null;
+        public OnSomethingHappened<RawOutgoingPacket> NetMessageSent = null;
+
         public dynamic Settings = new Settings();
 
         public HeadlessClient()

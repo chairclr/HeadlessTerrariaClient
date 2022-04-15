@@ -1,45 +1,47 @@
 ﻿using System;
-using System.Threading.Tasks;
 using HeadlessTerrariaClient;
 using HeadlessTerrariaClient.Terraria;
 using HeadlessTerrariaClient.Terraria.ID;
 using HeadlessTerrariaClient.Terraria.Chat;
 using HeadlessTerrariaClient.Client;
 using HeadlessTerrariaClient.Util;
-using System.Threading;
 
 namespace HeadlessTerrariaClient.Examples
 {
-    public class Program
-    {
-        static void Main(string[] args)
-        {
-            SimpleChatClient chatClient = new SimpleChatClient();
-            chatClient.Start().Wait();
-        }
-    }
     public class SimpleChatClient
     {
         const string ServerIP = "127.0.0.1";
         const int ServerPort = 7777;
-        
-
-        public async Task Start()
+        static void Main(string[] args)
         {
+            Start();
+
+            System.Threading.Thread.Sleep(-1);
+        }
+
+        public static void Start()
+        {
+            // Create an empty world
+            ClientWorld clientWorld = new ClientWorld();
+
             // Create a new client
             HeadlessClient HeadlessClient = new HeadlessClient();
 
             // Random client UUID
-            HeadlessClient.SetRandomUUID();
+            HeadlessClient.clientUUID = Guid.NewGuid().ToString();
 
             // Assaign world reference
-            HeadlessClient.World = new ClientWorld();
+            HeadlessClient.World = clientWorld;
 
             // Name the player
-            HeadlessClient.PlayerFile.name = $"ExampleChatClient";
+            HeadlessClient.PlayerFile.name = $"ExampleChatClient";  
 
-            // Softcore player, Defualt inventory, Default appearence 
-            HeadlessClient.PlayerFile.LoadDefaultPlayer();
+            // Softcore player
+            HeadlessClient.PlayerFile.difficulty = PlayerDifficultyID.SoftCore;
+
+            // Load default player style so we arent some weird white goblin
+            HeadlessClient.PlayerFile.LoadDefaultAppearence();
+            HeadlessClient.PlayerFile.LoadDefaultInventory();
 
             // This can bypass some anti-cheats that attempt to block headless clients
             HeadlessClient.Settings.AutoSyncPlayerZone = true;
@@ -60,10 +62,7 @@ namespace HeadlessTerrariaClient.Examples
             };
 
             // Connect to a server
-            await HeadlessClient.Connect(ServerIP, ServerPort);
-
-            // Stop the console from closing
-            await Task.Delay(Timeout.Infinite);
+            HeadlessClient.Connect(ServerIP, ServerPort);
         }
 
     }
