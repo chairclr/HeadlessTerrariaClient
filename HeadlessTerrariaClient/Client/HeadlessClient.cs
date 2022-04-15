@@ -546,7 +546,7 @@ namespace HeadlessTerrariaClient.Client
 
                         for (int i = 0; i < 40; i++)
                         {
-                            await SendDataAsync(MessageID.SyncEquipment, myPlayer, i, 0, 0, 0);
+                            await SendDataAsync(MessageID.SyncEquipment, myPlayer, i);
                         }
                         await SendDataAsync(MessageID.SyncPlayerZone, myPlayer);
                         await SendDataAsync(MessageID.PlayerControls, myPlayer);
