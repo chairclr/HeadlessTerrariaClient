@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
-using HeadlessTerrariaClient;
-using HeadlessTerrariaClient.Terraria;
-using HeadlessTerrariaClient.Terraria.ID;
-using HeadlessTerrariaClient.Terraria.Chat;
 using HeadlessTerrariaClient.Client;
 using HeadlessTerrariaClient.Util;
+using HeadlessTerrariaClient.Terraria;
+using HeadlessTerrariaClient.Terraria.Chat;
 using System.Threading;
 
 namespace HeadlessTerrariaClient.Examples
@@ -22,7 +20,6 @@ namespace HeadlessTerrariaClient.Examples
     {
         const string ServerIP = "127.0.0.1";
         const int ServerPort = 7777;
-        
 
         public async Task Start()
         {
@@ -65,6 +62,5 @@ namespace HeadlessTerrariaClient.Examples
             // Stop the console from closing
             await Task.Delay(Timeout.Infinite);
         }
-
     }
 }
