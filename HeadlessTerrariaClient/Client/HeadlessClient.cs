@@ -22,10 +22,10 @@ namespace HeadlessTerrariaClient.Client
         public BinaryWriter MessageWriter;
         public MemoryStream MemoryStreamRead;
         public BinaryReader MessageReader;
-        public delegate Task OnSomethingHappenedAsync(HeadlessClient hc);
-        public delegate Task OnSomethingHappenedAsync<T>(HeadlessClient hc, T e);
-        public delegate Task OnSomethingHappenedAsync<T1, T2>(HeadlessClient hc, T1 e, T2 e2);
-        public delegate Task OnSomethingHappenedAsync<T1, T2, T3>(HeadlessClient hc, T1 e, T2 e2, T3 e3);
+        public delegate void OnSomethingHappenedAsync(HeadlessClient hc);
+        public delegate void OnSomethingHappenedAsync<T>(HeadlessClient hc, T e);
+        public delegate void OnSomethingHappenedAsync<T1, T2>(HeadlessClient hc, T1 e, T2 e2);
+        public delegate void OnSomethingHappenedAsync<T1, T2, T3>(HeadlessClient hc, T1 e, T2 e2, T3 e3);
         public OnSomethingHappenedAsync WorldDataRecieved = null;
         public OnSomethingHappenedAsync FinishedConnectingToServer = null;
         public OnSomethingHappenedAsync ClientConnectionCompleted = null;
