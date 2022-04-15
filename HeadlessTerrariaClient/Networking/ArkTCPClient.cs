@@ -113,5 +113,16 @@ namespace ArkNetwork
             NetworkStream.Write(data, 0, length);
             IsWriting = false;
         }
+
+        public async Task SendAsync(byte[] data, int length = -1)
+        {
+            while (IsWriting)
+                Thread.Sleep(16);
+            IsWriting = true;
+            if (length == -1)
+                length = data.Length;
+            await NetworkStream.WriteAsync(data, 0, length);
+            IsWriting = false;
+        }
     }
 }

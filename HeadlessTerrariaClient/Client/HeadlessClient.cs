@@ -57,14 +57,14 @@ namespace HeadlessTerrariaClient.Client
             Settings.UpdateTimeout = 200;
         }
 
-        public void Connect(string address, short port)
+        public async Task Connect(string address, short port)
         {
             if (!SetIP(address, out IPAddress ipAddress))
             {
                 throw new ArgumentException($"Could not resolve ip {address}");
             }
 
-            TCPClient = new ArkTCPClient(ipAddress, ReadBuffer, port, (x, y) => { OnRecieve(y); });
+            TCPClient = new ArkTCPClient(ipAddress, ReadBuffer, port, (x, y) => { OnRecieve(y).Wait(); });
             MemoryStreamWrite = new MemoryStream(WriteBuffer);
             MessageWriter = new BinaryWriter(MemoryStreamWrite);
             if (Settings.PrintAnyOutput && Settings.PrintConnectionMessages)
@@ -75,7 +75,7 @@ namespace HeadlessTerrariaClient.Client
             
             if (Settings.AwaitConnectToServerCall)
             {
-                ConnectToServer().Wait();
+                await ConnectToServer();
             }
             else
             {
@@ -89,7 +89,7 @@ namespace HeadlessTerrariaClient.Client
                     {
                         while (true)
                         {
-                            Update();
+                            await Update();
                             await Task.Delay(Settings.UpdateTimeout);
                         }
                     });
@@ -119,7 +119,7 @@ namespace HeadlessTerrariaClient.Client
             MemoryStreamRead = new MemoryStream(ReadBuffer);
             MessageReader = new BinaryReader(MemoryStreamRead);
 
-            SendData(MessageID.Hello);
+            await SendDataAsync(MessageID.Hello);
         }
         public bool SetIP(string remoteAddress, out IPAddress address)
         {
@@ -139,7 +139,7 @@ namespace HeadlessTerrariaClient.Client
 
             return false;
         }
-        public void OnRecieve(int bytesRead)
+        public async Task OnRecieve(int bytesRead)
         {
             if (MemoryStreamRead == null)
             {
@@ -157,7 +157,7 @@ namespace HeadlessTerrariaClient.Client
                 if (dataLeftToRecieve >= nextPacketLength)
                 {
                     long position = MemoryStreamRead.Position;
-                    GetData(currentReadIndex + 2, nextPacketLength - 2, out int _);
+                    await GetData(currentReadIndex + 2, nextPacketLength - 2);
                     MemoryStreamRead.Position = position + nextPacketLength;
                     dataLeftToRecieve -= nextPacketLength;
                     currentReadIndex += nextPacketLength;
@@ -167,7 +167,7 @@ namespace HeadlessTerrariaClient.Client
             }
         }
 
-        public void Update()
+        public async Task Update()
         {
             if (IsInWorld)
             {
@@ -176,15 +176,15 @@ namespace HeadlessTerrariaClient.Client
                 {
                     if (Settings.AutoSyncPlayerControl)
                     {
-                        SendData(MessageID.PlayerControls, myPlayer);
+                        await SendDataAsync(MessageID.PlayerControls, myPlayer);
                     }
                     if (Settings.AutoSyncPlayerZone)
                     {
-                        SendData(MessageID.SyncPlayerZone, myPlayer);
+                        await SendDataAsync(MessageID.SyncPlayerZone, myPlayer);
                     }
                     if (Settings.AutoSyncPlayerLife)
                     {
-                        SendData(MessageID.PlayerLife, myPlayer);
+                        await SendDataAsync(MessageID.PlayerLife, myPlayer);
                     }
                     Settings.LastSyncPeriod = DateTime.Now;
                 }
@@ -246,517 +246,512 @@ namespace HeadlessTerrariaClient.Client
             return (T)UserData;
         }
 
-        public void GetData(int start, int length, out int msgType)
+        public async Task GetData(int start, int length)
         {
             if (TCPClient == null)
             {
-                msgType = 0;
                 return;
             }
-            lock (ReadBuffer)
+            BinaryReader reader = MessageReader;
+
+            MessageReader.BaseStream.Position = start;
+
+            byte messageType = reader.ReadByte();
+
+            if (NetMessageRecieved != null)
             {
-                BinaryReader reader = MessageReader;
+                RawIncomingPacket packet = new RawIncomingPacket();
+                packet.ReadBuffer = ReadBuffer;
+                packet.Reader = reader;
+                packet.MessageType = messageType;
+                packet.ContinueWithPacket = true;
 
-                MessageReader.BaseStream.Position = start;
+                NetMessageRecieved?.Invoke(this, packet);
 
-                byte messageType = reader.ReadByte();
-                msgType = messageType;
-
-                if (NetMessageRecieved != null)
+                if (!packet.ContinueWithPacket)
                 {
-                    RawIncomingPacket packet = new RawIncomingPacket();
-                    packet.ReadBuffer = ReadBuffer;
-                    packet.Reader = reader;
-                    packet.MessageType = messageType;
-                    packet.ContinueWithPacket = true;
-
-                    NetMessageRecieved?.Invoke(this, packet);
-
-                    if (!packet.ContinueWithPacket)
-                    {
-                        return;
-                    }
+                    return;
                 }
-                switch (messageType)
+            }
+            switch (messageType)
+            {
+                case MessageID.PlayerInfo:
                 {
-                    case MessageID.PlayerInfo:
+                    int playerIndex = reader.ReadByte();
+                    bool ServerWantsToRunCheckBytesInClientLoopThread = reader.ReadBoolean();
+
+                    if (Settings.PrintAnyOutput && Settings.PrintPlayerId)
                     {
-                        int playerIndex = reader.ReadByte();
-                        bool ServerWantsToRunCheckBytesInClientLoopThread = reader.ReadBoolean();
+                        Console.WriteLine($"Player id of {playerIndex}");
+                    }
 
-                        if (Settings.PrintAnyOutput && Settings.PrintPlayerId)
+                    myPlayer = playerIndex;
+                    LocalPlayer.active = true;
+                    LocalPlayer.SyncDataWithTemp(PlayerFile);
+
+                    await SendDataAsync(MessageID.SyncPlayer, playerIndex);
+                    await SendDataAsync(MessageID.ClientUUID, playerIndex);
+                    await SendDataAsync(MessageID.PlayerLife, playerIndex);
+                    await SendDataAsync(MessageID.PlayerMana, playerIndex);
+                    await SendDataAsync(MessageID.SyncPlayerBuffs, playerIndex);
+
+                    for (int i = 0; i < 260; i++)
+                    {
+                        await SendDataAsync(MessageID.SyncEquipment, playerIndex, i);
+                    }
+
+                    if (Settings.PrintAnyOutput && Settings.PrintWorldJoinMessages)
+                    {
+                        Console.WriteLine("Requesting world data");
+                    }
+                    await SendDataAsync(MessageID.RequestWorldData);
+                    break;
+                }
+                case MessageID.NetModules:
+                {
+                    ushort netModule = reader.ReadUInt16();
+                    switch (netModule)
+                    {
+                        case NetModuleID.Liquid:
                         {
-                            Console.WriteLine($"Player id of {playerIndex}");
+                            int liquidUpdateCount = MessageReader.ReadUInt16();
+                            for (int i = 0; i < liquidUpdateCount; i++)
+                            {
+                                int num2 = MessageReader.ReadInt32();
+                                byte liquid = MessageReader.ReadByte();
+                                byte liquidType = MessageReader.ReadByte();
+                                //Tile tile = Main.tile[num3, num4];
+                                //if (tile != null)
+                                //{
+                                //    tile.liquid = liquid;
+                                //    tile.liquidType(liquidType);
+                                //}
+                            }
+                            break;
                         }
-
-                        myPlayer = playerIndex;
-                        LocalPlayer.active = true;
-                        LocalPlayer.SyncDataWithTemp(PlayerFile);
-
-                        SendData(MessageID.SyncPlayer, playerIndex);
-                        SendData(MessageID.ClientUUID, playerIndex);
-                        SendData(MessageID.PlayerLife, playerIndex);
-                        SendData(MessageID.PlayerMana, playerIndex);
-                        SendData(MessageID.SyncPlayerBuffs, playerIndex);
-
-                        for (int i = 0; i < 260; i++)
+                        case NetModuleID.Text:
                         {
-                            SendData(MessageID.SyncEquipment, playerIndex, i);
+                            int authorIndex = reader.ReadByte();
+                            NetworkText networkText = NetworkText.Deserialize(reader);
+                            ChatMessageRecieved?.Invoke(this, new ChatMessage(authorIndex, networkText.ToString()));
+                            break;
                         }
+                    }
+                    break;
+                }
+                case MessageID.WorldData:
+                {
+                    World.CurrentWorld.time = reader.ReadInt32();
+                    BitsByte bitsByte20 = reader.ReadByte();
+                    World.CurrentWorld.dayTime = bitsByte20[0];
+                    World.CurrentWorld.bloodMoon = bitsByte20[1];
+                    World.CurrentWorld.eclipse = bitsByte20[2];
+                    World.CurrentWorld.moonPhase = reader.ReadByte();
+                    World.CurrentWorld.maxTilesX = reader.ReadInt16();
+                    World.CurrentWorld.maxTilesY = reader.ReadInt16();
+                    World.CurrentWorld.spawnTileX = reader.ReadInt16();
+                    World.CurrentWorld.spawnTileY = reader.ReadInt16();
+                    World.CurrentWorld.worldSurface = reader.ReadInt16();
+                    World.CurrentWorld.rockLayer = reader.ReadInt16();
+                    World.CurrentWorld.worldID = reader.ReadInt32();
+                    World.CurrentWorld.worldName = reader.ReadString();
+                    World.CurrentWorld.GameMode = reader.ReadByte();
+                    World.CurrentWorld.worldUUID = new Guid(reader.ReadBytes(16));
+                    World.CurrentWorld.worldGenVer = reader.ReadUInt64();
+                    World.CurrentWorld.moonType = reader.ReadByte();
 
+                    /*WorldGen.setBG(0, */
+                    reader.ReadByte()/*)*/;
+                    /*WorldGen.setBG(10,*/
+                    reader.ReadByte()/*)*/;
+                    /*WorldGen.setBG(11,*/
+                    reader.ReadByte()/*)*/;
+                    /*WorldGen.setBG(12,*/
+                    reader.ReadByte()/*)*/;
+                    /*WorldGen.setBG(1, */
+                    reader.ReadByte()/*)*/;
+                    /*WorldGen.setBG(2, */
+                    reader.ReadByte()/*)*/;
+                    /*WorldGen.setBG(3, */
+                    reader.ReadByte()/*)*/;
+                    /*WorldGen.setBG(4, */
+                    reader.ReadByte()/*)*/;
+                    /*WorldGen.setBG(5, */
+                    reader.ReadByte()/*)*/;
+                    /*WorldGen.setBG(6, */
+                    reader.ReadByte()/*)*/;
+                    /*WorldGen.setBG(7, */
+                    reader.ReadByte()/*)*/;
+                    /*WorldGen.setBG(8, */
+                    reader.ReadByte()/*)*/;
+                    /*WorldGen.setBG(9, */
+                    reader.ReadByte()/*)*/;
+
+                    World.CurrentWorld.iceBackStyle = reader.ReadByte();
+                    World.CurrentWorld.jungleBackStyle = reader.ReadByte();
+                    World.CurrentWorld.hellBackStyle = reader.ReadByte();
+                    World.CurrentWorld.windSpeedTarget = reader.ReadSingle();
+                    World.CurrentWorld.numClouds = reader.ReadByte();
+
+                    for (int num261 = 0; num261 < 3; num261++)
+                    {
+                        /*Main.treeX[num261] = */
+                        reader.ReadInt32();
+                    }
+                    for (int num262 = 0; num262 < 4; num262++)
+                    {
+                        /*Main.treeStyle[num262] = */
+                        reader.ReadByte();
+                    }
+                    for (int num263 = 0; num263 < 3; num263++)
+                    {
+                        /*Main.caveBackX[num263] = */
+                        reader.ReadInt32();
+                    }
+                    for (int num264 = 0; num264 < 4; num264++)
+                    {
+                        /*Main.caveBackStyle[num264] = */
+                        reader.ReadByte();
+                    }
+
+                    for (int num696969 = 0; num696969 < 13; num696969++)
+                    {
+                        // some tree variation doodoo
+                        reader.ReadByte();
+                    }
+
+                    World.CurrentWorld.maxRaining = reader.ReadSingle();
+                    World.CurrentWorld.raining = World.CurrentWorld.maxRaining > 0f;
+
+                    BitsByte bitsByte21 = reader.ReadByte();
+                    World.CurrentWorld.shadowOrbSmashed = bitsByte21[0];
+                    World.CurrentWorld.downedBoss1 = bitsByte21[1];
+                    World.CurrentWorld.downedBoss2 = bitsByte21[2];
+                    World.CurrentWorld.downedBoss3 = bitsByte21[3];
+                    World.CurrentWorld.hardMode = bitsByte21[4];
+                    World.CurrentWorld.downedClown = bitsByte21[5];
+                    ServerSideCharacter = bitsByte21[6];
+                    World.CurrentWorld.downedPlantBoss = bitsByte21[7];
+                    //if (Main.ServerSideCharacter)
+                    //{
+                    //    Main.ActivePlayerFileData.MarkAsServerSide();
+                    //}
+                    BitsByte bitsByte22 = reader.ReadByte();
+                    World.CurrentWorld.downedMechBoss1 = bitsByte22[0];
+                    World.CurrentWorld.downedMechBoss2 = bitsByte22[1];
+                    World.CurrentWorld.downedMechBoss3 = bitsByte22[2];
+                    World.CurrentWorld.downedMechBossAny = bitsByte22[3];
+                    World.CurrentWorld.cloudBGActive = (bitsByte22[4] ? 1 : 0);
+                    World.CurrentWorld.crimson = bitsByte22[5];
+                    World.CurrentWorld.pumpkinMoon = bitsByte22[6];
+                    World.CurrentWorld.snowMoon = bitsByte22[7];
+                    BitsByte bitsByte23 = reader.ReadByte();
+                    World.CurrentWorld.fastForwardTime = bitsByte23[1];
+                    //UpdateTimeRate();
+                    bool num265 = bitsByte23[2];
+                    World.CurrentWorld.downedSlimeKing = bitsByte23[3];
+                    World.CurrentWorld.downedQueenBee = bitsByte23[4];
+                    World.CurrentWorld.downedFishron = bitsByte23[5];
+                    World.CurrentWorld.downedMartians = bitsByte23[6];
+                    World.CurrentWorld.downedAncientCultist = bitsByte23[7];
+                    BitsByte bitsByte24 = reader.ReadByte();
+                    World.CurrentWorld.downedMoonlord = bitsByte24[0];
+                    World.CurrentWorld.downedHalloweenKing = bitsByte24[1];
+                    World.CurrentWorld.downedHalloweenTree = bitsByte24[2];
+                    World.CurrentWorld.downedChristmasIceQueen = bitsByte24[3];
+                    World.CurrentWorld.downedChristmasSantank = bitsByte24[4];
+                    World.CurrentWorld.downedChristmasTree = bitsByte24[5];
+                    World.CurrentWorld.downedGolemBoss = bitsByte24[6];
+                    World.CurrentWorld.BirthdayPartyManualParty = bitsByte24[7];
+                    BitsByte bitsByte25 = reader.ReadByte();
+                    World.CurrentWorld.downedPirates = bitsByte25[0];
+                    World.CurrentWorld.downedFrost = bitsByte25[1];
+                    World.CurrentWorld.downedGoblins = bitsByte25[2];
+                    World.CurrentWorld.Sandstorm.Happening = bitsByte25[3];
+                    World.CurrentWorld.DD2.Ongoing = bitsByte25[4];
+                    World.CurrentWorld.DD2.DownedInvasionT1 = bitsByte25[5];
+                    World.CurrentWorld.DD2.DownedInvasionT2 = bitsByte25[6];
+                    World.CurrentWorld.DD2.DownedInvasionT3 = bitsByte25[7];
+                    BitsByte bitsByte26 = reader.ReadByte();
+                    World.CurrentWorld.combatBookWasUsed = bitsByte26[0];
+                    World.CurrentWorld.LanternNightManualLanterns = bitsByte26[1];
+                    World.CurrentWorld.downedTowerSolar = bitsByte26[2];
+                    World.CurrentWorld.downedTowerVortex = bitsByte26[3];
+                    World.CurrentWorld.downedTowerNebula = bitsByte26[4];
+                    World.CurrentWorld.downedTowerStardust = bitsByte26[5];
+                    World.CurrentWorld.forceHalloweenForToday = bitsByte26[6];
+                    World.CurrentWorld.forceXMasForToday = bitsByte26[7];
+                    BitsByte bitsByte27 = reader.ReadByte();
+                    World.CurrentWorld.boughtCat = bitsByte27[0];
+                    World.CurrentWorld.boughtDog = bitsByte27[1];
+                    World.CurrentWorld.boughtBunny = bitsByte27[2];
+                    World.CurrentWorld.freeCake = bitsByte27[3];
+                    World.CurrentWorld.drunkWorld = bitsByte27[4];
+                    World.CurrentWorld.downedEmpressOfLight = bitsByte27[5];
+                    World.CurrentWorld.downedQueenSlime = bitsByte27[6];
+                    World.CurrentWorld.getGoodWorld = bitsByte27[7];
+                    BitsByte bitsByte28 = reader.ReadByte();
+                    World.CurrentWorld.tenthAnniversaryWorld = bitsByte28[0];
+                    World.CurrentWorld.dontStarveWorld = bitsByte28[1];
+                    World.CurrentWorld.downedDeerclops = bitsByte28[2];
+                    World.CurrentWorld.notTheBeesWorld = bitsByte28[3];
+                    World.CurrentWorld.SavedOreTiers_Copper = reader.ReadInt16();
+                    World.CurrentWorld.SavedOreTiers_Iron = reader.ReadInt16();
+                    World.CurrentWorld.SavedOreTiers_Silver = reader.ReadInt16();
+                    World.CurrentWorld.SavedOreTiers_Gold = reader.ReadInt16();
+                    World.CurrentWorld.SavedOreTiers_Cobalt = reader.ReadInt16();
+                    World.CurrentWorld.SavedOreTiers_Mythril = reader.ReadInt16();
+                    World.CurrentWorld.SavedOreTiers_Adamantite = reader.ReadInt16();
+                    if (num265)
+                    {
+                        //Main.StartSlimeRain();
+                    }
+                    else
+                    {
+                        //Main.StopSlimeRain();
+                    }
+                    World.CurrentWorld.invasionType = reader.ReadSByte();
+                    LobbyId = reader.ReadUInt64();
+                    World.CurrentWorld.Sandstorm.IntendedSeverity = reader.ReadSingle();
+
+                    //CurrentWorld.tile = new Tile[CurrentWorld.maxTilesX,CurrentWorld.maxTilesY];
+
+
+                    if (!initalWorldData)
+                    {
+                        initalWorldData = true;
                         if (Settings.PrintAnyOutput && Settings.PrintWorldJoinMessages)
                         {
-                            Console.WriteLine("Requesting world data");
-                        }
-                        SendData(MessageID.RequestWorldData);
-                        break;
-                    }
-                    case MessageID.NetModules:
-                    {
-                        ushort netModule = reader.ReadUInt16();
-                        switch (netModule)
-                        {
-                            case NetModuleID.Liquid:
-                            {
-                                int liquidUpdateCount = MessageReader.ReadUInt16();
-                                for (int i = 0; i < liquidUpdateCount; i++)
-                                {
-                                    int num2 = MessageReader.ReadInt32();
-                                    byte liquid = MessageReader.ReadByte();
-                                    byte liquidType = MessageReader.ReadByte();
-                                    //Tile tile = Main.tile[num3, num4];
-                                    //if (tile != null)
-                                    //{
-                                    //    tile.liquid = liquid;
-                                    //    tile.liquidType(liquidType);
-                                    //}
-                                }
-                            break;
-                            }
-                            case NetModuleID.Text:
-                            {
-                                int authorIndex = reader.ReadByte();
-                                NetworkText networkText = NetworkText.Deserialize(reader);
-                                ChatMessageRecieved?.Invoke(this, new ChatMessage(authorIndex, networkText.ToString()));
-                                break;
-                            }
-                        }
-                        break;
-                    }
-                    case MessageID.WorldData:
-                    {
-                        World.CurrentWorld.time = reader.ReadInt32();
-                        BitsByte bitsByte20 = reader.ReadByte();
-                        World.CurrentWorld.dayTime = bitsByte20[0];
-                        World.CurrentWorld.bloodMoon = bitsByte20[1];
-                        World.CurrentWorld.eclipse = bitsByte20[2];
-                        World.CurrentWorld.moonPhase = reader.ReadByte();
-                        World.CurrentWorld.maxTilesX = reader.ReadInt16();
-                        World.CurrentWorld.maxTilesY = reader.ReadInt16();
-                        World.CurrentWorld.spawnTileX = reader.ReadInt16();
-                        World.CurrentWorld.spawnTileY = reader.ReadInt16();
-                        World.CurrentWorld.worldSurface = reader.ReadInt16();
-                        World.CurrentWorld.rockLayer = reader.ReadInt16();
-                        World.CurrentWorld.worldID = reader.ReadInt32();
-                        World.CurrentWorld.worldName = reader.ReadString();
-                        World.CurrentWorld.GameMode = reader.ReadByte();
-                        World.CurrentWorld.worldUUID = new Guid(reader.ReadBytes(16));
-                        World.CurrentWorld.worldGenVer = reader.ReadUInt64();
-                        World.CurrentWorld.moonType = reader.ReadByte();
-
-                        /*WorldGen.setBG(0, */
-                        reader.ReadByte()/*)*/;
-                        /*WorldGen.setBG(10,*/
-                        reader.ReadByte()/*)*/;
-                        /*WorldGen.setBG(11,*/
-                        reader.ReadByte()/*)*/;
-                        /*WorldGen.setBG(12,*/
-                        reader.ReadByte()/*)*/;
-                        /*WorldGen.setBG(1, */
-                        reader.ReadByte()/*)*/;
-                        /*WorldGen.setBG(2, */
-                        reader.ReadByte()/*)*/;
-                        /*WorldGen.setBG(3, */
-                        reader.ReadByte()/*)*/;
-                        /*WorldGen.setBG(4, */
-                        reader.ReadByte()/*)*/;
-                        /*WorldGen.setBG(5, */
-                        reader.ReadByte()/*)*/;
-                        /*WorldGen.setBG(6, */
-                        reader.ReadByte()/*)*/;
-                        /*WorldGen.setBG(7, */
-                        reader.ReadByte()/*)*/;
-                        /*WorldGen.setBG(8, */
-                        reader.ReadByte()/*)*/;
-                        /*WorldGen.setBG(9, */
-                        reader.ReadByte()/*)*/;
-
-                        World.CurrentWorld.iceBackStyle = reader.ReadByte();
-                        World.CurrentWorld.jungleBackStyle = reader.ReadByte();
-                        World.CurrentWorld.hellBackStyle = reader.ReadByte();
-                        World.CurrentWorld.windSpeedTarget = reader.ReadSingle();
-                        World.CurrentWorld.numClouds = reader.ReadByte();
-
-                        for (int num261 = 0; num261 < 3; num261++)
-                        {
-                            /*Main.treeX[num261] = */
-                            reader.ReadInt32();
-                        }
-                        for (int num262 = 0; num262 < 4; num262++)
-                        {
-                            /*Main.treeStyle[num262] = */
-                            reader.ReadByte();
-                        }
-                        for (int num263 = 0; num263 < 3; num263++)
-                        {
-                            /*Main.caveBackX[num263] = */
-                            reader.ReadInt32();
-                        }
-                        for (int num264 = 0; num264 < 4; num264++)
-                        {
-                            /*Main.caveBackStyle[num264] = */
-                            reader.ReadByte();
+                            Console.WriteLine($"Joining world \"{World.CurrentWorld.worldName}\"");
                         }
 
-                        for (int num696969 = 0; num696969 < 13; num696969++)
-                        {
-                            // some tree variation doodoo
-                            reader.ReadByte();
-                        }
-
-                        World.CurrentWorld.maxRaining = reader.ReadSingle();
-                        World.CurrentWorld.raining = World.CurrentWorld.maxRaining > 0f;
-
-                        BitsByte bitsByte21 = reader.ReadByte();
-                        World.CurrentWorld.shadowOrbSmashed = bitsByte21[0];
-                        World.CurrentWorld.downedBoss1 = bitsByte21[1];
-                        World.CurrentWorld.downedBoss2 = bitsByte21[2];
-                        World.CurrentWorld.downedBoss3 = bitsByte21[3];
-                        World.CurrentWorld.hardMode = bitsByte21[4];
-                        World.CurrentWorld.downedClown = bitsByte21[5];
-                        ServerSideCharacter = bitsByte21[6];
-                        World.CurrentWorld.downedPlantBoss = bitsByte21[7];
-                        //if (Main.ServerSideCharacter)
-                        //{
-                        //    Main.ActivePlayerFileData.MarkAsServerSide();
-                        //}
-                        BitsByte bitsByte22 = reader.ReadByte();
-                        World.CurrentWorld.downedMechBoss1 = bitsByte22[0];
-                        World.CurrentWorld.downedMechBoss2 = bitsByte22[1];
-                        World.CurrentWorld.downedMechBoss3 = bitsByte22[2];
-                        World.CurrentWorld.downedMechBossAny = bitsByte22[3];
-                        World.CurrentWorld.cloudBGActive = (bitsByte22[4] ? 1 : 0);
-                        World.CurrentWorld.crimson = bitsByte22[5];
-                        World.CurrentWorld.pumpkinMoon = bitsByte22[6];
-                        World.CurrentWorld.snowMoon = bitsByte22[7];
-                        BitsByte bitsByte23 = reader.ReadByte();
-                        World.CurrentWorld.fastForwardTime = bitsByte23[1];
-                        //UpdateTimeRate();
-                        bool num265 = bitsByte23[2];
-                        World.CurrentWorld.downedSlimeKing = bitsByte23[3];
-                        World.CurrentWorld.downedQueenBee = bitsByte23[4];
-                        World.CurrentWorld.downedFishron = bitsByte23[5];
-                        World.CurrentWorld.downedMartians = bitsByte23[6];
-                        World.CurrentWorld.downedAncientCultist = bitsByte23[7];
-                        BitsByte bitsByte24 = reader.ReadByte();
-                        World.CurrentWorld.downedMoonlord = bitsByte24[0];
-                        World.CurrentWorld.downedHalloweenKing = bitsByte24[1];
-                        World.CurrentWorld.downedHalloweenTree = bitsByte24[2];
-                        World.CurrentWorld.downedChristmasIceQueen = bitsByte24[3];
-                        World.CurrentWorld.downedChristmasSantank = bitsByte24[4];
-                        World.CurrentWorld.downedChristmasTree = bitsByte24[5];
-                        World.CurrentWorld.downedGolemBoss = bitsByte24[6];
-                        World.CurrentWorld.BirthdayPartyManualParty = bitsByte24[7];
-                        BitsByte bitsByte25 = reader.ReadByte();
-                        World.CurrentWorld.downedPirates = bitsByte25[0];
-                        World.CurrentWorld.downedFrost = bitsByte25[1];
-                        World.CurrentWorld.downedGoblins = bitsByte25[2];
-                        World.CurrentWorld.Sandstorm.Happening = bitsByte25[3];
-                        World.CurrentWorld.DD2.Ongoing = bitsByte25[4];
-                        World.CurrentWorld.DD2.DownedInvasionT1 = bitsByte25[5];
-                        World.CurrentWorld.DD2.DownedInvasionT2 = bitsByte25[6];
-                        World.CurrentWorld.DD2.DownedInvasionT3 = bitsByte25[7];
-                        BitsByte bitsByte26 = reader.ReadByte();
-                        World.CurrentWorld.combatBookWasUsed = bitsByte26[0];
-                        World.CurrentWorld.LanternNightManualLanterns = bitsByte26[1];
-                        World.CurrentWorld.downedTowerSolar = bitsByte26[2];
-                        World.CurrentWorld.downedTowerVortex = bitsByte26[3];
-                        World.CurrentWorld.downedTowerNebula = bitsByte26[4];
-                        World.CurrentWorld.downedTowerStardust = bitsByte26[5];
-                        World.CurrentWorld.forceHalloweenForToday = bitsByte26[6];
-                        World.CurrentWorld.forceXMasForToday = bitsByte26[7];
-                        BitsByte bitsByte27 = reader.ReadByte();
-                        World.CurrentWorld.boughtCat = bitsByte27[0];
-                        World.CurrentWorld.boughtDog = bitsByte27[1];
-                        World.CurrentWorld.boughtBunny = bitsByte27[2];
-                        World.CurrentWorld.freeCake = bitsByte27[3];
-                        World.CurrentWorld.drunkWorld = bitsByte27[4];
-                        World.CurrentWorld.downedEmpressOfLight = bitsByte27[5];
-                        World.CurrentWorld.downedQueenSlime = bitsByte27[6];
-                        World.CurrentWorld.getGoodWorld = bitsByte27[7];
-                        BitsByte bitsByte28 = reader.ReadByte();
-                        World.CurrentWorld.tenthAnniversaryWorld = bitsByte28[0];
-                        World.CurrentWorld.dontStarveWorld = bitsByte28[1];
-                        World.CurrentWorld.downedDeerclops = bitsByte28[2];
-                        World.CurrentWorld.notTheBeesWorld = bitsByte28[3];
-                        World.CurrentWorld.SavedOreTiers_Copper = reader.ReadInt16();
-                        World.CurrentWorld.SavedOreTiers_Iron = reader.ReadInt16();
-                        World.CurrentWorld.SavedOreTiers_Silver = reader.ReadInt16();
-                        World.CurrentWorld.SavedOreTiers_Gold = reader.ReadInt16();
-                        World.CurrentWorld.SavedOreTiers_Cobalt = reader.ReadInt16();
-                        World.CurrentWorld.SavedOreTiers_Mythril = reader.ReadInt16();
-                        World.CurrentWorld.SavedOreTiers_Adamantite = reader.ReadInt16();
-                        if (num265)
-                        {
-                            //Main.StartSlimeRain();
-                        }
-                        else
-                        {
-                            //Main.StopSlimeRain();
-                        }
-                        World.CurrentWorld.invasionType = reader.ReadSByte();
-                        LobbyId = reader.ReadUInt64();
-                        World.CurrentWorld.Sandstorm.IntendedSeverity = reader.ReadSingle();
-
-                        //CurrentWorld.tile = new Tile[CurrentWorld.maxTilesX,CurrentWorld.maxTilesY];
-
-
-                        if (!initalWorldData)
-                        {
-                            initalWorldData = true;
-                            if (Settings.PrintAnyOutput && Settings.PrintWorldJoinMessages)
-                            {
-                                Console.WriteLine($"Joining world \"{World.CurrentWorld.worldName}\"");
-                            }
-                            
-                            WorldDataRecieved?.Invoke(this);
-                            LocalPlayer.position = new Vector2(World.CurrentWorld.spawnTileX * 16f, World.CurrentWorld.spawnTileY * 16f);
-                            SendData(MessageID.SpawnTileData, World.CurrentWorld.spawnTileX, World.CurrentWorld.spawnTileY);
-                        }
-                        break;
+                        WorldDataRecieved?.Invoke(this);
+                        LocalPlayer.position = new Vector2(World.CurrentWorld.spawnTileX * 16f, World.CurrentWorld.spawnTileY * 16f);
+                        await SendDataAsync(MessageID.SpawnTileData, World.CurrentWorld.spawnTileX, World.CurrentWorld.spawnTileY);
                     }
-                    case MessageID.FinishedConnectingToServer:
-                    {
-                        FinishedConnectingToServer?.Invoke(this);
-                        break;
-                    }
-                    case MessageID.CompleteConnectionAndSpawn:
-                    {
-                        if (Settings.SpawnPlayer)
-                        {
-                            SendData(MessageID.PlayerSpawn, myPlayer, 1);
-
-                            for (int i = 0; i < 40; i++)
-                            {
-                                SendData(MessageID.SyncEquipment, myPlayer, i, 0, 0, 0);
-                            }
-                            SendData(MessageID.SyncPlayerZone, myPlayer);
-                            SendData(MessageID.PlayerControls, myPlayer);
-                            SendData(MessageID.ClientSyncedInventory, myPlayer);
-                        }
-                        IsInWorld = true;
-                        ClientConnectionCompleted?.Invoke(this);
-                        break;
-                    }
-                    case MessageID.Kick:
-                    {
-                        IsInWorld = false;
-                        if (Settings.PrintAnyOutput && Settings.PrintKickMessage)
-                        {
-                            Console.WriteLine($"Kicked from world {World.CurrentWorld?.worldName}");
-                        }
-                        break;
-                    }
-                    case MessageID.StatusText:
-                    {
-                        int statusMax = reader.ReadInt32();
-                        NetworkText statusText = NetworkText.Deserialize(reader);
-                        byte flags = reader.ReadByte();
-                        break;
-                    }
-                    case MessageID.NPCKillCountDeathTally:
-                    {
-                        short npcType = reader.ReadInt16();
-                        int npcKillCount = reader.ReadInt32();
-                        break;
-                    }
-                    case MessageID.TileSection:
-                    {
-                        // well documented code btw
-                        // 🤨 📸
-                        World.CurrentWorld.DecompressTileSection(ReadBuffer, start, length);
-                        break;
-                    }
-                    case MessageID.TileManipulation:
-                    {
-                        byte action = reader.ReadByte();
-                        int tileX = reader.ReadInt16();
-                        int tileY = reader.ReadInt16();
-                        int flags = reader.ReadInt16();
-                        int flags2 = reader.ReadByte();
-
-                        TileManipulationMessageRecieved?.Invoke(this, new TileManipulation(action, tileX, tileY, flags, flags2));
-                        break;
-                    }
-                    case MessageID.SyncPlayer:
-                    {
-                        byte whoAreThey = reader.ReadByte();
-
-
-                        // skin variant
-                        World.player[whoAreThey].skinVariant = reader.ReadByte();
-
-                        // hair
-                        reader.ReadByte();
-
-                        World.player[whoAreThey].name = reader.ReadString();
-
-                        // hair dye
-                        World.player[whoAreThey].hairDye = reader.ReadByte();
-
-                        // accessory/armor visibility 1
-                        BitsByte hideVisibleAccessory = reader.ReadByte();
-
-                        // accessory/armor visibility 2
-                        BitsByte hideVisibleAccessory2 = reader.ReadByte();
-
-                        // hide misc
-                        reader.ReadByte();
-
-                        // hairColor
-                        World.player[whoAreThey].hairColor = reader.ReadRGB();
-
-                        // skinColor
-                        World.player[whoAreThey].skinColor = reader.ReadRGB();
-
-                        // eyeColor
-                        World.player[whoAreThey].eyeColor = reader.ReadRGB();
-
-                        // shirtColor
-                        World.player[whoAreThey].shirtColor = reader.ReadRGB();
-
-                        // underShirtColor
-                        World.player[whoAreThey].underShirtColor = reader.ReadRGB();
-
-                        // pantsColor
-                        World.player[whoAreThey].pantsColor = reader.ReadRGB();
-
-                        // shoeColor
-                        World.player[whoAreThey].shoeColor = reader.ReadRGB();
-
-                        BitsByte bitsByte7 = reader.ReadByte();
-
-                        BitsByte bitsByte8 = reader.ReadByte();
-
-                        break;
-                    }
-                    case MessageID.PlayerActive:
-                    {
-                        byte whoAreThey = reader.ReadByte();
-                        bool active = reader.ReadByte() == 1;
-
-                        World.player[whoAreThey].active = active;
-                        break;
-                    }
-                    case MessageID.PlayerControls:
-                    {
-                        byte whoAreThey = reader.ReadByte();
-
-                        Player plr = World.player[whoAreThey];
-                        BitsByte control = reader.ReadByte();
-                        BitsByte pulley = reader.ReadByte();
-                        BitsByte misc = reader.ReadByte();
-                        byte sleeping = reader.ReadByte();
-                        byte selectedItem = reader.ReadByte();
-                        plr.position.X = reader.ReadSingle();
-                        plr.position.Y = reader.ReadSingle();
-                        //plr.velocity.X = reader.ReadSingle();
-                        //plr.velocity.Y = reader.ReadSingle();
-                        break;
-                    }
-                    case MessageID.PlayerLife:
-                    {
-                        byte whoAreThey = reader.ReadByte();
-                        Player plr = World.player[whoAreThey];
-
-                        plr.statLife = reader.ReadInt16();
-                        plr.statLifeMax = reader.ReadInt16();
-                        break;
-                    }
-                    case MessageID.PlayerMana:
-                    {
-                        byte whoAreThey = reader.ReadByte();
-                        Player plr = World.player[whoAreThey];
-
-                        plr.statMana = reader.ReadInt16();
-                        plr.statManaMax = reader.ReadInt16();
-                        break;
-                    }
-                    case MessageID.SyncNPC:
-                    {
-                        int npcIndex = reader.ReadInt16();
-                        break;
-                    }
-                    case MessageID.ReleaseItemOwnership:
-                    {
-                        int itemIndex = reader.ReadInt16();
-                        SendData(MessageID.ItemOwner, itemIndex);
-                        break;
-                    }
-                    case MessageID.SyncProjectile:
-                    {
-                        break;
-                    }
-                    case MessageID.KillProjectile:
-                    {
-                        break;
-                    }
-                    case MessageID.SyncEquipment:
-                    {
-                        byte whoAreThey = reader.ReadByte();
-                        Player plr = World.player[whoAreThey];
-                        short inventorySlot = reader.ReadInt16();
-                        Item item = plr.inventory[inventorySlot];
-
-                        short stack = reader.ReadInt16();
-                        byte prefix = reader.ReadByte();
-                        short type = reader.ReadInt16();
-
-                        if (item == null)
-                        {
-                            item = new Item(type, stack, prefix);
-                        }
-                        else
-                        {
-                            item.type = type;
-                            item.prefix = prefix;
-                            item.stack = stack;
-                        }
-                        break;
-                    }
-                    case MessageID.SyncItem:
-                    {
-                        break;
-                    }
-                    case MessageID.SyncPlayerItemRotation:
-                    {
-                        byte whoAreThey = reader.ReadByte();
-
-                        float rotation = reader.ReadSingle();
-                        short animation = reader.ReadInt16();
-                        break;
-                    }
-                    default:
-                        if (Settings.PrintAnyOutput && Settings.PrintUnknownPackets)
-                        {
-                            Console.WriteLine($"Recieved unknown message of type {MessageID.GetName(messageType)}");
-                        }
-                        break;
+                    break;
                 }
+                case MessageID.FinishedConnectingToServer:
+                {
+                    FinishedConnectingToServer?.Invoke(this);
+                    break;
+                }
+                case MessageID.CompleteConnectionAndSpawn:
+                {
+                    if (Settings.SpawnPlayer)
+                    {
+                        await SendDataAsync(MessageID.PlayerSpawn, myPlayer, 1);
+
+                        for (int i = 0; i < 40; i++)
+                        {
+                            await SendDataAsync(MessageID.SyncEquipment, myPlayer, i, 0, 0, 0);
+                        }
+                        await SendDataAsync(MessageID.SyncPlayerZone, myPlayer);
+                        await SendDataAsync(MessageID.PlayerControls, myPlayer);
+                        await SendDataAsync(MessageID.ClientSyncedInventory, myPlayer);
+                    }
+                    IsInWorld = true;
+                    ClientConnectionCompleted?.Invoke(this);
+                    break;
+                }
+                case MessageID.Kick:
+                {
+                    IsInWorld = false;
+                    if (Settings.PrintAnyOutput && Settings.PrintKickMessage)
+                    {
+                        Console.WriteLine($"Kicked from world {World.CurrentWorld?.worldName}");
+                    }
+                    break;
+                }
+                case MessageID.StatusText:
+                {
+                    int statusMax = reader.ReadInt32();
+                    NetworkText statusText = NetworkText.Deserialize(reader);
+                    byte flags = reader.ReadByte();
+                    break;
+                }
+                case MessageID.NPCKillCountDeathTally:
+                {
+                    short npcType = reader.ReadInt16();
+                    int npcKillCount = reader.ReadInt32();
+                    break;
+                }
+                case MessageID.TileSection:
+                {
+                    // well documented code btw
+                    // 🤨 📸
+                    World.CurrentWorld.DecompressTileSection(ReadBuffer, start, length);
+                    break;
+                }
+                case MessageID.TileManipulation:
+                {
+                    byte action = reader.ReadByte();
+                    int tileX = reader.ReadInt16();
+                    int tileY = reader.ReadInt16();
+                    int flags = reader.ReadInt16();
+                    int flags2 = reader.ReadByte();
+
+                    TileManipulationMessageRecieved?.Invoke(this, new TileManipulation(action, tileX, tileY, flags, flags2));
+                    break;
+                }
+                case MessageID.SyncPlayer:
+                {
+                    byte whoAreThey = reader.ReadByte();
+
+
+                    // skin variant
+                    World.player[whoAreThey].skinVariant = reader.ReadByte();
+
+                    // hair
+                    reader.ReadByte();
+
+                    World.player[whoAreThey].name = reader.ReadString();
+
+                    // hair dye
+                    World.player[whoAreThey].hairDye = reader.ReadByte();
+
+                    // accessory/armor visibility 1
+                    BitsByte hideVisibleAccessory = reader.ReadByte();
+
+                    // accessory/armor visibility 2
+                    BitsByte hideVisibleAccessory2 = reader.ReadByte();
+
+                    // hide misc
+                    reader.ReadByte();
+
+                    // hairColor
+                    World.player[whoAreThey].hairColor = reader.ReadRGB();
+
+                    // skinColor
+                    World.player[whoAreThey].skinColor = reader.ReadRGB();
+
+                    // eyeColor
+                    World.player[whoAreThey].eyeColor = reader.ReadRGB();
+
+                    // shirtColor
+                    World.player[whoAreThey].shirtColor = reader.ReadRGB();
+
+                    // underShirtColor
+                    World.player[whoAreThey].underShirtColor = reader.ReadRGB();
+
+                    // pantsColor
+                    World.player[whoAreThey].pantsColor = reader.ReadRGB();
+
+                    // shoeColor
+                    World.player[whoAreThey].shoeColor = reader.ReadRGB();
+
+                    BitsByte bitsByte7 = reader.ReadByte();
+
+                    BitsByte bitsByte8 = reader.ReadByte();
+
+                    break;
+                }
+                case MessageID.PlayerActive:
+                {
+                    byte whoAreThey = reader.ReadByte();
+                    bool active = reader.ReadByte() == 1;
+
+                    World.player[whoAreThey].active = active;
+                    break;
+                }
+                case MessageID.PlayerControls:
+                {
+                    byte whoAreThey = reader.ReadByte();
+
+                    Player plr = World.player[whoAreThey];
+                    BitsByte control = reader.ReadByte();
+                    BitsByte pulley = reader.ReadByte();
+                    BitsByte misc = reader.ReadByte();
+                    byte sleeping = reader.ReadByte();
+                    byte selectedItem = reader.ReadByte();
+                    plr.position.X = reader.ReadSingle();
+                    plr.position.Y = reader.ReadSingle();
+                    //plr.velocity.X = reader.ReadSingle();
+                    //plr.velocity.Y = reader.ReadSingle();
+                    break;
+                }
+                case MessageID.PlayerLife:
+                {
+                    byte whoAreThey = reader.ReadByte();
+                    Player plr = World.player[whoAreThey];
+
+                    plr.statLife = reader.ReadInt16();
+                    plr.statLifeMax = reader.ReadInt16();
+                    break;
+                }
+                case MessageID.PlayerMana:
+                {
+                    byte whoAreThey = reader.ReadByte();
+                    Player plr = World.player[whoAreThey];
+
+                    plr.statMana = reader.ReadInt16();
+                    plr.statManaMax = reader.ReadInt16();
+                    break;
+                }
+                case MessageID.SyncNPC:
+                {
+                    int npcIndex = reader.ReadInt16();
+                    break;
+                }
+                case MessageID.ReleaseItemOwnership:
+                {
+                    int itemIndex = reader.ReadInt16();
+                    await SendDataAsync(MessageID.ItemOwner, itemIndex);
+                    break;
+                }
+                case MessageID.SyncProjectile:
+                {
+                    break;
+                }
+                case MessageID.KillProjectile:
+                {
+                    break;
+                }
+                case MessageID.SyncEquipment:
+                {
+                    byte whoAreThey = reader.ReadByte();
+                    Player plr = World.player[whoAreThey];
+                    short inventorySlot = reader.ReadInt16();
+                    Item item = plr.inventory[inventorySlot];
+
+                    short stack = reader.ReadInt16();
+                    byte prefix = reader.ReadByte();
+                    short type = reader.ReadInt16();
+
+                    if (item == null)
+                    {
+                        item = new Item(type, stack, prefix);
+                    }
+                    else
+                    {
+                        item.type = type;
+                        item.prefix = prefix;
+                        item.stack = stack;
+                    }
+                    break;
+                }
+                case MessageID.SyncItem:
+                {
+                    break;
+                }
+                case MessageID.SyncPlayerItemRotation:
+                {
+                    byte whoAreThey = reader.ReadByte();
+
+                    float rotation = reader.ReadSingle();
+                    short animation = reader.ReadInt16();
+                    break;
+                }
+                default:
+                    if (Settings.PrintAnyOutput && Settings.PrintUnknownPackets)
+                    {
+                        Console.WriteLine($"Recieved unknown message of type {MessageID.GetName(messageType)}");
+                    }
+                    break;
             }
         }
 
-        public void SendData(int messageType, int number = 0, float number2 = 0, float number3 = 0, float number4 = 0, int number5 = 0)
+        public async Task SendDataAsync(int messageType, int number = 0, float number2 = 0, float number3 = 0, float number4 = 0, int number5 = 0)
         {
             if (TCPClient == null)
                 return;
@@ -989,8 +984,8 @@ namespace HeadlessTerrariaClient.Client
                         return;
                     }
                 }
-
-                TCPClient.Send(WriteBuffer, length);
+                // literally cringe lololol
+                TCPClient.SendAsync(WriteBuffer, length);
             }
         }
     }
