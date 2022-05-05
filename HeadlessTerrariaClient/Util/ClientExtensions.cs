@@ -52,6 +52,16 @@ namespace HeadlessTerrariaClient.Util
             return -1;
         }
 
+
+        public static async Task TeleportAsync(this HeadlessClient client, Vector2 positoin)
+        {
+            await client.CustomSendDataAsync(MessageID.PlayerControls, client.myPlayer, positoin.X, positoin.Y);
+        }
+        public static async Task TeleportAsync(this HeadlessClient client, int tileX, int tileY)
+        {
+            await client.TeleportAsync(new Vector2(tileX * 16, tileY * 16));
+        }
+
         public static async Task SendBreakTile(this HeadlessClient client, int tileX, int tileY)
         {
             await client.SendDataAsync(MessageID.TileManipulation, TileManipulationID.KillTileNoItem, tileX, tileY);
@@ -81,13 +91,23 @@ namespace HeadlessTerrariaClient.Util
         }
         public static async Task SendPlaceWall_TShockBypass(this HeadlessClient client, int tileX, int tileY, int type)
         {
-            await client.CustomSendDataAsync(MessageID.PlayerControls, client.myPlayer, tileX * 16f, tileY * 16f);
             await client.CustomSendDataAsync(MessageID.SyncEquipment, client.myPlayer, 0, 1, 0, BlockTypeItem.WallToItem[type]);
 
             await client.SendDataAsync(MessageID.TileManipulation, TileManipulationID.PlaceWall, tileX, tileY, type);
 
             await client.SendDataAsync(MessageID.PlayerControls, client.myPlayer);
             await client.SendDataAsync(MessageID.SyncEquipment, client.myPlayer, 0);
+        }
+
+
+        public static async Task TeleportThereAndBackAsync(this HeadlessClient client, Vector2 positoin)
+        {
+            await client.CustomSendDataAsync(MessageID.PlayerControls, client.myPlayer, positoin.X, positoin.Y);
+            await client.SendDataAsync(MessageID.PlayerControls, client.myPlayer);
+        }
+        public static async Task TeleportThereAndBackAsync(this HeadlessClient client, int tileX, int tileY)
+        {
+            await client.TeleportThereAndBackAsync(new Vector2(tileX * 16, tileY * 16));
         }
 
         public static async Task CustomSendDataAsync(this HeadlessClient client, int messageType, int number = 0, float number2 = 0, float number3 = 0, float number4 = 0, float number5 = 0, float number6 = 0, float number7 = 0, float number8 = 0)
