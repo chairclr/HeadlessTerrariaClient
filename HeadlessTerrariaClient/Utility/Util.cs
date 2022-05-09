@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Dynamic;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using System.Text;
 
@@ -147,6 +148,48 @@ namespace HeadlessTerrariaClient.Utility
 		{
 			return value1 + (value2 - value1) * amount;
 		}
+
+		private static readonly Dictionary<Color, ConsoleColor> _consoleColorMap = new Dictionary<Color, ConsoleColor>
+		{
+			{ Color.Red,                    ConsoleColor.Red },
+			{ Color.Green,                  ConsoleColor.Green },
+			{ Color.Blue,                   ConsoleColor.Cyan },
+			{ new Color(255, 250, 170),     ConsoleColor.Yellow },
+			{ new Color(170, 170, 255),     ConsoleColor.Cyan },
+			{ new Color(255, 170, 255),     ConsoleColor.Magenta },
+			{ new Color(170, 255, 170),     ConsoleColor.Green },
+			{ new Color(255, 170, 170),     ConsoleColor.Red },
+			{ new Color(139, 0, 0),         ConsoleColor.DarkRed }, // This is the console warning color
+			{ Color.PaleVioletRed,          ConsoleColor.Magenta }, // This is the command logging color
+			{ Color.White,                  ConsoleColor.White }
+		};
+
+		public static ConsoleColor PickNearbyConsoleColor(Color color)
+		{
+			//Grabs an integer difference between two colors in euclidean space
+			int ColorDiff(Color c1, Color c2)
+			{
+				return (int)Math.Sqrt((c1.R - c2.R) * (c1.R - c2.R)
+									   + (c1.G - c2.G) * (c1.G - c2.G)
+									   + (c1.B - c2.B) * (c1.B - c2.B));
+			}
+
+			var diffs = _consoleColorMap.Select(kvp => ColorDiff(kvp.Key, color));
+			int index = 0;
+			int min = int.MaxValue;
+
+			for (int i = 0; i < _consoleColorMap.Count; i++)
+			{
+				if (diffs.ElementAt(i) < min)
+				{
+					index = i;
+					min = diffs.ElementAt(i);
+				}
+			}
+
+			return _consoleColorMap.Values.ElementAt(index);
+		}
+
 
 		public static ThreadSafeRandom rand = new ThreadSafeRandom();
 	}

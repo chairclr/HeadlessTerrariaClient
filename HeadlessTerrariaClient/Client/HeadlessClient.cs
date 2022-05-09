@@ -16,6 +16,8 @@ namespace HeadlessTerrariaClient.Client
     public class HeadlessClient
     {
         public ArkTCPClient TCPClient;
+        public bool DisconnectFromServer = false;
+        public ConnectionState ConnectionState = ConnectionState.None;
         public byte[] WriteBuffer = new byte[131070];
         public byte[] ReadBuffer = new byte[131070];
         public MemoryStream MemoryStreamWrite;
@@ -51,9 +53,6 @@ namespace HeadlessTerrariaClient.Client
             // Automatically send the SpawnPlayer packet
             Settings.SpawnPlayer = true;
 
-            // Await the ConnectToServer function call
-            Settings.AwaitConnectToServerCall = true;
-
             // Run a seperate game loop
             Settings.RunGameLoop = true;
             Settings.UpdateTimeout = 200;
@@ -70,6 +69,7 @@ namespace HeadlessTerrariaClient.Client
 
             // Completely ignore all tile chunk packets
             Settings.IgnoreTileChunks = false;
+
         }
 
         public async Task Connect(string address, short port)
@@ -87,15 +87,9 @@ namespace HeadlessTerrariaClient.Client
                 Console.WriteLine($"Connecting to {address}:{port}");
             }
 
-            
-            if (Settings.AwaitConnectToServerCall)
-            {
-                await ConnectToServer();
-            }
-            else
-            {
-                ConnectToServer();
-            }
+
+            await ConnectToServer();
+            await JoinWorld();
 
             if (Settings.RunGameLoop)
             {
@@ -109,6 +103,7 @@ namespace HeadlessTerrariaClient.Client
                         }
                     });
             }
+
         }
         private async Task ConnectToServer()
         {
@@ -133,9 +128,15 @@ namespace HeadlessTerrariaClient.Client
 
             MemoryStreamRead = new MemoryStream(ReadBuffer);
             MessageReader = new BinaryReader(MemoryStreamRead);
-
-            await SendDataAsync(MessageID.Hello);
         }
+        private async Task JoinWorld()
+        {
+            await SendDataAsync(1);
+            ConnectionState = ConnectionState.SyncingPlayer;
+        }
+
+
+
         public bool SetIP(string remoteAddress, out IPAddress address)
         {
             if (IPAddress.TryParse(remoteAddress, out address))
@@ -249,7 +250,6 @@ namespace HeadlessTerrariaClient.Client
         public int VersionNumber = 248;
         public PlayerData PlayerFile = new PlayerData();
         public object UserData;
-        private bool initalWorldData = false;
         public bool IsInWorld
         {
             get;
@@ -294,6 +294,9 @@ namespace HeadlessTerrariaClient.Client
             {
                 case MessageID.PlayerInfo:
                 {
+
+
+
                     int playerIndex = reader.ReadByte();
                     bool ServerWantsToRunCheckBytesInClientLoopThread = reader.ReadBoolean();
 
@@ -317,10 +320,15 @@ namespace HeadlessTerrariaClient.Client
                         await SendDataAsync(MessageID.SyncEquipment, playerIndex, i);
                     }
 
+                    
+
+                    ConnectionState = ConnectionState.RequestingWorldData;
+
                     if (Settings.PrintAnyOutput && Settings.PrintWorldJoinMessages)
                     {
                         Console.WriteLine("Requesting world data");
                     }
+
                     await SendDataAsync(MessageID.RequestWorldData);
                     break;
                 }
@@ -533,24 +541,22 @@ namespace HeadlessTerrariaClient.Client
 
 
 
-                    if (!initalWorldData)
+                    if (ConnectionState == ConnectionState.RequestingWorldData)
                     {
-                        initalWorldData = true;
                         if (Settings.PrintAnyOutput && Settings.PrintWorldJoinMessages)
                         {
                             Console.WriteLine($"Joining world \"{World.CurrentWorld.worldName}\"");
                         }
 
+                        ConnectionState = ConnectionState.RequestingTileData;
+
                         World.CurrentWorld.SetupTiles(Settings.LoadTileSections);
                         WorldDataRecieved?.Invoke(this);
+
                         LocalPlayer.position = new Vector2(World.CurrentWorld.spawnTileX * 16f, World.CurrentWorld.spawnTileY * 16f);
+
                         await SendDataAsync(MessageID.SpawnTileData, World.CurrentWorld.spawnTileX, World.CurrentWorld.spawnTileY);
                     }
-                    break;
-                }
-                case MessageID.FinishedConnectingToServer:
-                {
-                    FinishedConnectingToServer?.Invoke(this);
                     break;
                 }
                 case MessageID.CompleteConnectionAndSpawn:
@@ -563,12 +569,20 @@ namespace HeadlessTerrariaClient.Client
                         {
                             await SendDataAsync(MessageID.SyncEquipment, myPlayer, i);
                         }
+
                         await SendDataAsync(MessageID.SyncPlayerZone, myPlayer);
                         await SendDataAsync(MessageID.PlayerControls, myPlayer);
                         await SendDataAsync(MessageID.ClientSyncedInventory, myPlayer);
                     }
                     IsInWorld = true;
                     ClientConnectionCompleted?.Invoke(this);
+
+                    ConnectionState = ConnectionState.Connected;
+                    break;
+                }
+                case MessageID.FinishedConnectingToServer:
+                {
+                    FinishedConnectingToServer?.Invoke(this);
                     break;
                 }
                 case MessageID.Kick:

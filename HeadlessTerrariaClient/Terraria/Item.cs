@@ -18,6 +18,12 @@ namespace HeadlessTerrariaClient.Terraria
         public int stack;
         public int prefix;
 
+        public Item()
+        {
+            type = 0;
+            stack = 0;
+            prefix = 0;
+        }
         public Item(int type, int stack = 1, int prefix = 0)
         {
             this.type = type;

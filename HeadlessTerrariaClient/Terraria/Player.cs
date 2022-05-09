@@ -39,6 +39,7 @@ namespace HeadlessTerrariaClient.Terraria
         public Vector2 position;
         public Vector2 velocity;
 
+
         public void SyncDataWithTemp(PlayerData data)
         {
             name = data.name;

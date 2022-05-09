@@ -49,14 +49,17 @@ namespace HeadlessTerrariaClient.Examples
             HeadlessClient.ChatMessageRecieved += (HeadlessClient client, ChatMessage message) =>
             {
                 // Messages of id 255 are not from another player
-                if (message.author != 255)
+                if (message.AuthorIndex != 255)
                 {
-                    Player sender = client.World.player[message.author];
-                    Console.WriteLine($"<{sender.name}> {message.message}");
+                    Player sender = client.World.player[message.AuthorIndex];
+                    Console.Write($"<{sender.name}>");
+                    message.WriteToConsole();
+                    Console.Write("\n");
                 }
                 else
                 {
-                    Console.WriteLine(message.message);
+                    message.WriteToConsole();
+                    Console.Write("\n");
                 }
             };
 
