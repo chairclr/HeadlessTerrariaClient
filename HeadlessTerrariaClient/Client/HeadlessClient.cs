@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using HeadlessTerrariaClient.Terraria;
 using HeadlessTerrariaClient.Terraria.ID;
 using HeadlessTerrariaClient.Terraria.Chat;
-using HeadlessTerrariaClient.Util;
+using HeadlessTerrariaClient.Utility;
 using System.Net.Sockets;
 using System.Numerics;
 
@@ -39,6 +39,7 @@ namespace HeadlessTerrariaClient.Client
 
         public HeadlessClient()
         {
+            // Printing out anything to Console.WriteLine
             Settings.PrintAnyOutput = true;
             Settings.PrintPlayerId = true;
             Settings.PrintWorldJoinMessages = true;
@@ -46,15 +47,29 @@ namespace HeadlessTerrariaClient.Client
             Settings.PrintUnknownPackets = false;
             Settings.PrintKickMessage = true;
             Settings.PrintDisconnectMessage = true;
+
+            // Automatically send the SpawnPlayer packet
             Settings.SpawnPlayer = true;
+
+            // Await the ConnectToServer function call
             Settings.AwaitConnectToServerCall = true;
+
+            // Run a seperate game loop
             Settings.RunGameLoop = true;
+            Settings.UpdateTimeout = 200;
+
+            // Automatically send some information to the server that vanilla clients usually send, this can prevent some detection by anti-cheats
             Settings.AutoSyncPlayerZone = true;
             Settings.AutoSyncPlayerControl = false;
             Settings.AutoSyncPlayerLife = true;
             Settings.AutoSyncPeriod = 2000;
             Settings.LastSyncPeriod = DateTime.Now;
-            Settings.UpdateTimeout = 200;
+
+            // Load the actual tiles of the world, if this is set to false it will still have to decompress the tile section and will still keep track of what tile sectiosn you have loaded, but won't fill any tiles
+            Settings.LoadTileSections = true;
+
+            // Completely ignore all tile chunk packets
+            Settings.IgnoreTileChunks = false;
         }
 
         public async Task Connect(string address, short port)
@@ -516,7 +531,6 @@ namespace HeadlessTerrariaClient.Client
                     LobbyId = reader.ReadUInt64();
                     World.CurrentWorld.Sandstorm.IntendedSeverity = reader.ReadSingle();
 
-                    //CurrentWorld.tile = new Tile[CurrentWorld.maxTilesX,CurrentWorld.maxTilesY];
 
 
                     if (!initalWorldData)
@@ -527,6 +541,7 @@ namespace HeadlessTerrariaClient.Client
                             Console.WriteLine($"Joining world \"{World.CurrentWorld.worldName}\"");
                         }
 
+                        World.CurrentWorld.SetupTiles(Settings.LoadTileSections);
                         WorldDataRecieved?.Invoke(this);
                         LocalPlayer.position = new Vector2(World.CurrentWorld.spawnTileX * 16f, World.CurrentWorld.spawnTileY * 16f);
                         await SendDataAsync(MessageID.SpawnTileData, World.CurrentWorld.spawnTileX, World.CurrentWorld.spawnTileY);
@@ -582,7 +597,12 @@ namespace HeadlessTerrariaClient.Client
                 {
                     // well documented code btw
                     // 🤨 📸
-                    World.CurrentWorld.DecompressTileSection(ReadBuffer, start, length);
+                    // 🤨 📸
+
+                    if (!Settings.IgnoreTileChunks)
+                    {
+                        World.CurrentWorld.DecompressTileSection(ReadBuffer, start + 1, length, Settings.LoadTileSections);
+                    }
                     break;
                 }
                 case MessageID.TileManipulation:

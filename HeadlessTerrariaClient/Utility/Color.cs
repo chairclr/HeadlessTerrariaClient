@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
 
-namespace HeadlessTerrariaClient.Util
+namespace HeadlessTerrariaClient.Utility
 {
 	/// <summary>
 	/// A color lmao
@@ -949,53 +949,53 @@ namespace HeadlessTerrariaClient.Util
 		{
 			packedValue = 0;
 
-			R = (byte)ClientUtil.Clamp(color.X * 255, Byte.MinValue, Byte.MaxValue);
-			G = (byte)ClientUtil.Clamp(color.Y * 255, Byte.MinValue, Byte.MaxValue);
-			B = (byte)ClientUtil.Clamp(color.Z * 255, Byte.MinValue, Byte.MaxValue);
-			A = (byte)ClientUtil.Clamp(color.W * 255, Byte.MinValue, Byte.MaxValue);
+			R = (byte)Util.Clamp(color.X * 255, Byte.MinValue, Byte.MaxValue);
+			G = (byte)Util.Clamp(color.Y * 255, Byte.MinValue, Byte.MaxValue);
+			B = (byte)Util.Clamp(color.Z * 255, Byte.MinValue, Byte.MaxValue);
+			A = (byte)Util.Clamp(color.W * 255, Byte.MinValue, Byte.MaxValue);
 		}
 		public Color(Vector3 color)
 		{
 			packedValue = 0;
 
-			R = (byte)ClientUtil.Clamp(color.X * 255, Byte.MinValue, Byte.MaxValue);
-			G = (byte)ClientUtil.Clamp(color.Y * 255, Byte.MinValue, Byte.MaxValue);
-			B = (byte)ClientUtil.Clamp(color.Z * 255, Byte.MinValue, Byte.MaxValue);
+			R = (byte)Util.Clamp(color.X * 255, Byte.MinValue, Byte.MaxValue);
+			G = (byte)Util.Clamp(color.Y * 255, Byte.MinValue, Byte.MaxValue);
+			B = (byte)Util.Clamp(color.Z * 255, Byte.MinValue, Byte.MaxValue);
 			A = 255;
 		}
 		public Color(float r, float g, float b)
 		{
 			packedValue = 0;
 
-			R = (byte)ClientUtil.Clamp(r * 255, Byte.MinValue, Byte.MaxValue);
-			G = (byte)ClientUtil.Clamp(g * 255, Byte.MinValue, Byte.MaxValue);
-			B = (byte)ClientUtil.Clamp(b * 255, Byte.MinValue, Byte.MaxValue);
+			R = (byte)Util.Clamp(r * 255, Byte.MinValue, Byte.MaxValue);
+			G = (byte)Util.Clamp(g * 255, Byte.MinValue, Byte.MaxValue);
+			B = (byte)Util.Clamp(b * 255, Byte.MinValue, Byte.MaxValue);
 			A = 255;
 		}
 		public Color(int r, int g, int b)
 		{
 			packedValue = 0;
-			R = (byte)ClientUtil.Clamp(r, Byte.MinValue, Byte.MaxValue);
-			G = (byte)ClientUtil.Clamp(g, Byte.MinValue, Byte.MaxValue);
-			B = (byte)ClientUtil.Clamp(b, Byte.MinValue, Byte.MaxValue);
+			R = (byte)Util.Clamp(r, Byte.MinValue, Byte.MaxValue);
+			G = (byte)Util.Clamp(g, Byte.MinValue, Byte.MaxValue);
+			B = (byte)Util.Clamp(b, Byte.MinValue, Byte.MaxValue);
 			A = (byte)255;
 		}
 		public Color(int r, int g, int b, int alpha)
 		{
 			packedValue = 0;
-			R = (byte)ClientUtil.Clamp(r, Byte.MinValue, Byte.MaxValue);
-			G = (byte)ClientUtil.Clamp(g, Byte.MinValue, Byte.MaxValue);
-			B = (byte)ClientUtil.Clamp(b, Byte.MinValue, Byte.MaxValue);
-			A = (byte)ClientUtil.Clamp(alpha, Byte.MinValue, Byte.MaxValue);
+			R = (byte)Util.Clamp(r, Byte.MinValue, Byte.MaxValue);
+			G = (byte)Util.Clamp(g, Byte.MinValue, Byte.MaxValue);
+			B = (byte)Util.Clamp(b, Byte.MinValue, Byte.MaxValue);
+			A = (byte)Util.Clamp(alpha, Byte.MinValue, Byte.MaxValue);
 		}
 		public Color(float r, float g, float b, float alpha)
 		{
 			packedValue = 0;
 
-			R = (byte)ClientUtil.Clamp(r * 255, Byte.MinValue, Byte.MaxValue);
-			G = (byte)ClientUtil.Clamp(g * 255, Byte.MinValue, Byte.MaxValue);
-			B = (byte)ClientUtil.Clamp(b * 255, Byte.MinValue, Byte.MaxValue);
-			A = (byte)ClientUtil.Clamp(alpha * 255, Byte.MinValue, Byte.MaxValue);
+			R = (byte)Util.Clamp(r * 255, Byte.MinValue, Byte.MaxValue);
+			G = (byte)Util.Clamp(g * 255, Byte.MinValue, Byte.MaxValue);
+			B = (byte)Util.Clamp(b * 255, Byte.MinValue, Byte.MaxValue);
+			A = (byte)Util.Clamp(alpha * 255, Byte.MinValue, Byte.MaxValue);
 		}
 		public Color(uint packedValue)
 		{
@@ -1019,12 +1019,12 @@ namespace HeadlessTerrariaClient.Util
 
 		public static Color Lerp(Color value1, Color value2, float amount)
 		{
-			amount = ClientUtil.Clamp(amount, 0.0f, 1.0f);
+			amount = Util.Clamp(amount, 0.0f, 1.0f);
 			return new Color(
-				(int)ClientUtil.Lerp(value1.R, value2.R, amount),
-				(int)ClientUtil.Lerp(value1.G, value2.G, amount),
-				(int)ClientUtil.Lerp(value1.B, value2.B, amount),
-				(int)ClientUtil.Lerp(value1.A, value2.A, amount)
+				(int)Util.Lerp(value1.R, value2.R, amount),
+				(int)Util.Lerp(value1.G, value2.G, amount),
+				(int)Util.Lerp(value1.B, value2.B, amount),
+				(int)Util.Lerp(value1.A, value2.A, amount)
 			);
 		}
 

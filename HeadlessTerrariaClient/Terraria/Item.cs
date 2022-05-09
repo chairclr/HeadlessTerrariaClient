@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using HeadlessTerrariaClient.Terraria;
 using HeadlessTerrariaClient.Terraria.ID;
 using HeadlessTerrariaClient.Terraria.Chat;
-using HeadlessTerrariaClient.Util;
+using HeadlessTerrariaClient.Utility;
 using System.Net.Sockets;
 using System.Numerics;
 

@@ -6,9 +6,9 @@ using System.IO;
 using System.Numerics;
 using System.Text;
 
-namespace HeadlessTerrariaClient.Util
+namespace HeadlessTerrariaClient.Utility
 {
-    public static class ClientUtil
+    public static class Util
     {
 		public static void WriteRGB(this BinaryWriter bb, Color c)
 		{
@@ -164,7 +164,7 @@ namespace HeadlessTerrariaClient.Util
 			}
 			else
             {
-				result = ClientUtil.GetDefault(binder.ReturnType);
+				result = Util.GetDefault(binder.ReturnType);
             }
 
 

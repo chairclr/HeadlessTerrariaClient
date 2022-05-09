@@ -6,12 +6,11 @@ using System.Threading.Tasks;
 using HeadlessTerrariaClient.Terraria;
 using HeadlessTerrariaClient.Terraria.ID;
 using HeadlessTerrariaClient.Terraria.Chat;
-using HeadlessTerrariaClient.Util;
 using System.Net.Sockets;
 using System.Numerics;
 using HeadlessTerrariaClient.Client;
 
-namespace HeadlessTerrariaClient.Util
+namespace HeadlessTerrariaClient.Utility
 {
     public static class ClientExtensions
     {

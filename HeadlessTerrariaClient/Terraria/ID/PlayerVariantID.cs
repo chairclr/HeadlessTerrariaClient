@@ -32,7 +32,7 @@ namespace HeadlessTerrariaClient.Terraria.ID
 
 		public static int GetRandomSkin()
 		{
-			return HeadlessTerrariaClient.Util.ClientUtil.rand.Next(Count);
+			return HeadlessTerrariaClient.Utility.Util.rand.Next(Count);
 		}
 	}
 	public static class HairStyles
@@ -101,7 +101,7 @@ namespace HeadlessTerrariaClient.Terraria.ID
 		}
 		public static int GetRandomHair()
         {
-			return AvailableHairstyles[HeadlessTerrariaClient.Util.ClientUtil.rand.Next(AvailableHairstyles.Count)];
+			return AvailableHairstyles[HeadlessTerrariaClient.Utility.Util.rand.Next(AvailableHairstyles.Count)];
         }
 	}
 }

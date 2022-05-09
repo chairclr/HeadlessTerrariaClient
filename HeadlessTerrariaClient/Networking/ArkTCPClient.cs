@@ -78,9 +78,10 @@ namespace ArkNetwork
 
                         while (bytesRead < len)
                         {
-                            int bytesReceived = NetworkStream.Read(ReadBuffer, 2, len - bytesRead);
+                            int bytesReceived = NetworkStream.Read(ReadBuffer, bytesRead, len - bytesRead);
                             bytesRead += bytesReceived;
                         }
+
                         this.OnRecieve(client, bytesRead);
 
 

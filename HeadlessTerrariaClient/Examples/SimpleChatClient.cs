@@ -3,7 +3,7 @@ using HeadlessTerrariaClient;
 using HeadlessTerrariaClient.Terraria;
 using HeadlessTerrariaClient.Terraria.Chat;
 using HeadlessTerrariaClient.Client;
-using HeadlessTerrariaClient.Util;
+using HeadlessTerrariaClient.Utility;
 using System.Threading;
 using System.Threading.Tasks;
 using HeadlessTerrariaClient.Terraria.ID;
@@ -37,7 +37,7 @@ namespace HeadlessTerrariaClient.Examples
             HeadlessClient.World = new ClientWorld();
 
             // Name the player
-            HeadlessClient.PlayerFile.name = $"ExampleChatClient";  
+            HeadlessClient.PlayerFile.name = $"ExampleChatClient";
 
             // Softcore player, Default appearence, and Default inventory
             HeadlessClient.PlayerFile.LoadDefaultPlayer();

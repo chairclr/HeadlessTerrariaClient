@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.IO.Compression;
 
 namespace HeadlessTerrariaClient.Terraria
 {
@@ -109,10 +110,73 @@ namespace HeadlessTerrariaClient.Terraria
         }
 
         public Tile[,] tile;
+        public bool[,] LoadedTileSections;
 
-        public void DecompressTileSection(byte[] buffer, int start, int length)
+        public void SetupTiles(bool loadTileSections)
         {
-            // implement later ok
+            if (loadTileSections)
+            {
+                tile = new Tile[maxTilesX, maxTilesY];
+            }
+
+            LoadedTileSections = new bool[maxTilesX / 200, maxTilesY / 150];
+        }
+
+        public bool IsTileSectionLoaded(int tileSectionX, int tileSectionY)
+        {
+            return LoadedTileSections[tileSectionX, tileSectionY];
+        }
+
+        public bool IsTileInLoadedSection(int tileX, int tileY)
+        {
+            return IsTileSectionLoaded(tileX / 200, tileY / 150);
+        }
+
+        public void DecompressTileSection(byte[] buffer, int bufferStart, int bufferLength, bool loadTileSections)
+        {
+            // implement now ok
+            using MemoryStream memoryStream = new MemoryStream();
+            memoryStream.Write(buffer, bufferStart, bufferLength);
+            memoryStream.Position = 0L;
+            MemoryStream memoryStream3;
+            if (memoryStream.ReadByte() != 0)
+            {
+                MemoryStream memoryStream2 = new MemoryStream();
+                using (DeflateStream deflateStream = new DeflateStream(memoryStream, CompressionMode.Decompress, leaveOpen: true))
+                {
+                    deflateStream.CopyTo(memoryStream2);
+                    deflateStream.Close();
+                }
+                memoryStream3 = memoryStream2;
+                memoryStream3.Position = 0L;
+            }
+            else
+            {
+                memoryStream3 = memoryStream;
+                memoryStream3.Position = 1L;
+            }
+            using BinaryReader binaryReader = new BinaryReader(memoryStream3);
+            int xStart = binaryReader.ReadInt32();
+            int yStart = binaryReader.ReadInt32();
+            short width = binaryReader.ReadInt16();
+            short height = binaryReader.ReadInt16();
+
+            if (xStart % 200 == 0 && yStart % 150 == 0 && width == 200 && height == 150)
+            {
+                if (!IsTileInLoadedSection(xStart, yStart))
+                {
+                    LoadedTileSections[xStart / 200, yStart / 150] = true;
+
+                    if (loadTileSections)
+                    {
+                        // implement actually loading tiles later on in the future ok
+                    }
+                }
+                else
+                {
+                    // Already loaded this tile section on another client or something
+                }
+            }
         }
     }
 }
