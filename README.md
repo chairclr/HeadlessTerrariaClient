@@ -26,7 +26,7 @@ Connecting to TShock and Vanilla servers programmatically
 [82] NetModules 
 
 ## Planned Features and Packets
-Chests, Signs, and Tile Entites \
+Chests, Signs, and Tile Entites 
 
 
 ###### Still no head :(
