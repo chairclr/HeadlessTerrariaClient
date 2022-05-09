@@ -19,13 +19,14 @@ Connecting to TShock and Vanilla servers programmatically
 
 ## Partially Supported Packets
 [7] WorldData \
+[10] TileSection \
 [13] PlayerControls \
 [17] TileManipulation \
 [39] ReleaseItemOwnership \
 [82] NetModules 
 
 ## Planned Features and Packets
-Worlds and tiles \
-Getting real
+Chests, Signs, and Tile Entites \
+
 
 ###### Still no head :(
