@@ -12,11 +12,6 @@ namespace ArkNetwork
 {
     public class ArkTCPClient
     {
-        public delegate void ConnectionAccepted(Socket handler);
-        public delegate void ConnectionClosed(Socket handler);
-        public delegate void OnRecieveBytes(Socket handler, int bytesRead);
-
-        /// <summary>
         /// Raw TCP socket
         /// </summary>
         public Socket client;
@@ -34,7 +29,7 @@ namespace ArkNetwork
         /// <summary>
         /// Callback for when bytes are received from the server
         /// </summary>
-        public OnRecieveBytes OnRecieve;
+        public Action<int> OnRecieve;
 
         /// <summary>
         /// Buffer to read data into
@@ -55,6 +50,8 @@ namespace ArkNetwork
         /// why
         /// </summary>
         public bool Exit = false;
+
+
         public bool IsReading = false;
         public bool IsWriting = false;
 
@@ -65,7 +62,7 @@ namespace ArkNetwork
         /// <param name="readBuffer">buffer to read data into</param>
         /// <param name="port">port to connect to</param>
         /// <param name="OnRecieve">callback for when bytes are received</param>
-        public ArkTCPClient(IPAddress ip, byte[] readBuffer, int port, OnRecieveBytes OnRecieve)
+        public ArkTCPClient(IPAddress ip, byte[] readBuffer, int port, Action<int> OnRecieve)
         {
             IPAddress = ip;
             this.port = port;
@@ -93,23 +90,17 @@ namespace ArkNetwork
             {
                 while (client.Connected)
                 {
-                    if (IsReading)
-                    {
-                        await Task.Delay(16);
-                        continue;
-                    }
+                    if (Exit)
+                        return;
+
+                    // Wait for any data to be available 
                     if (client.Available <= 2)
                     {
                         await Task.Delay(16);
                         continue;
                     }
-                    if (Exit)
-                        return;
                     try
                     {
-                        IsReading = true;
-
-
                         // read the length of the packet from the network into the first 2 bytes of the ReadBuffer
                         int bytesRead = NetworkStream.Read(ReadBuffer, 0, 2);
 
@@ -126,14 +117,7 @@ namespace ArkNetwork
                             bytesRead += bytesReceived;
                         }
 
-                        this.OnRecieve(client, bytesRead);
-
-
-                        IsReading = false;
-                    }
-                    catch (AggregateException ae)
-                    {
-                        Console.WriteLine(ae.ToString());
+                        this.OnRecieve(bytesRead);
                     }
                     catch (ObjectDisposedException ode)
                     {

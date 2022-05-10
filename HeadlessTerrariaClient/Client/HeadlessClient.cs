@@ -92,9 +92,8 @@ namespace HeadlessTerrariaClient.Client
         {
             // Printing out anything to Console.WriteLine
             Settings.PrintAnyOutput = true;
-            Settings.PrintPlayerId = true;
+            Settings.PrintPlayerId = false;
             Settings.PrintWorldJoinMessages = true;
-            Settings.PrintConnectionMessages = true;
             Settings.PrintUnknownPackets = false;
             Settings.PrintKickMessage = true;
             Settings.PrintDisconnectMessage = true;
@@ -133,17 +132,12 @@ namespace HeadlessTerrariaClient.Client
                 throw new ArgumentException($"Could not resolve ip {address}");
             }
 
-            TCPClient = new ArkTCPClient(ipAddress, ReadBuffer, port, (x, y) => { OnRecieve(y).Wait(); });
+            TCPClient = new ArkTCPClient(ipAddress, ReadBuffer, port, OnRecieve);
             MemoryStreamWrite = new MemoryStream(WriteBuffer);
             MessageWriter = new BinaryWriter(MemoryStreamWrite);
-            if (Settings.PrintAnyOutput && Settings.PrintConnectionMessages)
-            {
-                Console.WriteLine($"Connecting to {address}:{port}");
-            }
-
 
             await ConnectToServer();
-            await BeginJoiningWorld();
+            BeginJoiningWorld();
 
             if (Settings.RunGameLoop)
             {
@@ -191,9 +185,9 @@ namespace HeadlessTerrariaClient.Client
         /// <summary>
         /// Starts joining a world
         /// </summary>
-        private async Task BeginJoiningWorld()
+        private void BeginJoiningWorld()
         {
-            await SendDataAsync(1);
+            SendData(1);
             ConnectionState = ConnectionState.SyncingPlayer;
         }
 
@@ -227,7 +221,7 @@ namespace HeadlessTerrariaClient.Client
         /// Handler for receiving bytes from the server
         /// </summary>
         /// <param name="bytesRead">number of byets read</param>
-        public async Task OnRecieve(int bytesRead)
+        public void OnRecieve(int bytesRead)
         {
             if (MemoryStreamRead == null)
             {
@@ -245,7 +239,7 @@ namespace HeadlessTerrariaClient.Client
                 if (dataLeftToRecieve >= nextPacketLength)
                 {
                     long position = MemoryStreamRead.Position;
-                    await GetData(currentReadIndex + 2, nextPacketLength - 2);
+                    GetData(currentReadIndex + 2, nextPacketLength - 2);
                     MemoryStreamRead.Position = position + nextPacketLength;
                     dataLeftToRecieve -= nextPacketLength;
                     currentReadIndex += nextPacketLength;
@@ -267,15 +261,15 @@ namespace HeadlessTerrariaClient.Client
                 {
                     if (Settings.AutoSyncPlayerControl)
                     {
-                        await SendDataAsync(MessageID.PlayerControls, myPlayer);
+                        SendData(MessageID.PlayerControls, myPlayer);
                     }
                     if (Settings.AutoSyncPlayerZone)
                     {
-                        await SendDataAsync(MessageID.SyncPlayerZone, myPlayer);
+                        SendData(MessageID.SyncPlayerZone, myPlayer);
                     }
                     if (Settings.AutoSyncPlayerLife)
                     {
-                        await SendDataAsync(MessageID.PlayerLife, myPlayer);
+                        SendData(MessageID.PlayerLife, myPlayer);
                     }
                     Settings.LastSyncPeriod = DateTime.Now;
                 }
@@ -293,14 +287,13 @@ namespace HeadlessTerrariaClient.Client
                 Console.WriteLine($"Disconnected from world {World.CurrentWorld?.worldName}");
             }
 
-            try
-            {
-                TCPClient.client.Close();
-            } catch { }
             TCPClient.Exit = true;
             try
             {
-                UserData = null;
+                TCPClient.client.Shutdown(SocketShutdown.Both);
+            } catch { }
+            try
+            {
                 TCPClient = null;
                 Settings = null;
             } catch { }
@@ -361,21 +354,6 @@ namespace HeadlessTerrariaClient.Client
         public PlayerData PlayerFile = new PlayerData();
 
         /// <summary>
-        /// Arbitrary data stored by the user
-        /// </summary>
-        public object UserData;
-
-        /// <summary>
-        /// Easier way to get the data stored by the user
-        /// </summary>
-        /// <typeparam name="T">The type of the data</typeparam>
-        /// <returns>The data as T</returns>
-        public T GetUserData<T>()
-        {
-            return (T)UserData;
-        }
-
-        /// <summary>
         /// Returns whether or not the client is in a world
         /// </summary>
         public bool IsInWorld
@@ -390,7 +368,7 @@ namespace HeadlessTerrariaClient.Client
         /// </summary>
         /// <param name="start">position of the first byte of the packet in ReadBuffer</param>
         /// <param name="length">length of the packet</param>
-        public async Task GetData(int start, int length)
+        public void GetData(int start, int length)
         {
             if (TCPClient == null)
             {
@@ -438,15 +416,15 @@ namespace HeadlessTerrariaClient.Client
                     LocalPlayer.active = true;
                     LocalPlayer.SyncDataWithTemp(PlayerFile);
 
-                    await SendDataAsync(MessageID.SyncPlayer, playerIndex);
-                    await SendDataAsync(MessageID.ClientUUID, playerIndex);
-                    await SendDataAsync(MessageID.PlayerLife, playerIndex);
-                    await SendDataAsync(MessageID.PlayerMana, playerIndex);
-                    await SendDataAsync(MessageID.SyncPlayerBuffs, playerIndex);
+                    SendData(MessageID.SyncPlayer, playerIndex);
+                    SendData(MessageID.ClientUUID, playerIndex);
+                    SendData(MessageID.PlayerLife, playerIndex);
+                    SendData(MessageID.PlayerMana, playerIndex);
+                    SendData(MessageID.SyncPlayerBuffs, playerIndex);
 
                     for (int i = 0; i < 260; i++)
                     {
-                        await SendDataAsync(MessageID.SyncEquipment, playerIndex, i);
+                        SendData(MessageID.SyncEquipment, playerIndex, i);
                     }
 
                     
@@ -458,7 +436,7 @@ namespace HeadlessTerrariaClient.Client
                         Console.WriteLine("Requesting world data");
                     }
 
-                    await SendDataAsync(MessageID.RequestWorldData);
+                    SendData(MessageID.RequestWorldData);
                     break;
                 }
                 case MessageID.NetModules:
@@ -684,7 +662,7 @@ namespace HeadlessTerrariaClient.Client
 
                         LocalPlayer.position = new Vector2(World.CurrentWorld.spawnTileX * 16f, World.CurrentWorld.spawnTileY * 16f);
 
-                        await SendDataAsync(MessageID.SpawnTileData, World.CurrentWorld.spawnTileX, World.CurrentWorld.spawnTileY);
+                        SendData(MessageID.SpawnTileData, World.CurrentWorld.spawnTileX, World.CurrentWorld.spawnTileY);
                     }
                     break;
                 }
@@ -692,16 +670,16 @@ namespace HeadlessTerrariaClient.Client
                 {
                     if (Settings.SpawnPlayer)
                     {
-                        await SendDataAsync(MessageID.PlayerSpawn, myPlayer, 1);
+                        SendData(MessageID.PlayerSpawn, myPlayer, 1);
 
                         for (int i = 0; i < 40; i++)
                         {
-                            await SendDataAsync(MessageID.SyncEquipment, myPlayer, i);
+                            SendData(MessageID.SyncEquipment, myPlayer, i);
                         }
 
-                        await SendDataAsync(MessageID.SyncPlayerZone, myPlayer);
-                        await SendDataAsync(MessageID.PlayerControls, myPlayer);
-                        await SendDataAsync(MessageID.ClientSyncedInventory, myPlayer);
+                        SendData(MessageID.SyncPlayerZone, myPlayer);
+                        SendData(MessageID.PlayerControls, myPlayer);
+                        SendData(MessageID.ClientSyncedInventory, myPlayer);
                     }
                     IsInWorld = true;
                     ClientConnectionCompleted?.Invoke(this);
@@ -861,7 +839,7 @@ namespace HeadlessTerrariaClient.Client
                 case MessageID.ReleaseItemOwnership:
                 {
                     int itemIndex = reader.ReadInt16();
-                    await SendDataAsync(MessageID.ItemOwner, itemIndex);
+                    SendData(MessageID.ItemOwner, itemIndex);
                     break;
                 }
                 case MessageID.SyncProjectile:
@@ -920,7 +898,7 @@ namespace HeadlessTerrariaClient.Client
         /// Sends data to the server
         /// </summary>
         /// <param name="messageType">type of message to be sent</param>
-        public async Task SendDataAsync(int messageType, int number = 0, float number2 = 0, float number3 = 0, float number4 = 0, int number5 = 0)
+        public void SendData(int messageType, int number = 0, float number2 = 0, float number3 = 0, float number4 = 0, int number5 = 0)
         {
             if (TCPClient == null)
                 return;
@@ -1155,8 +1133,7 @@ namespace HeadlessTerrariaClient.Client
                         return;
                     }
                 }
-                // literally cringe lololol
-                TCPClient.SendAsync(WriteBuffer, length);
+                TCPClient.Send(WriteBuffer, length);
             }
         }
     }
