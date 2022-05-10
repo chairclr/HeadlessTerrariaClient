@@ -8,10 +8,32 @@ using HeadlessTerrariaClient.Utility;
 
 namespace HeadlessTerrariaClient.Terraria.Chat
 {
+	/// <summary>
+	/// A message received or sent in the games chat
+	/// </summary>
 	public class ChatMessage
 	{
+		/// <summary>
+		/// Index of the sender of the message
+		/// If it's 255, the author was the server
+		/// </summary>
 		public int AuthorIndex;
+
+		/// <summary>
+		/// Raw text of the message
+		/// </summary>
 		public string RawMessage;
+
+		/// <summary>
+		/// Text of the message without any tags
+		/// </summary>
+		public string Text
+        {
+			get
+            {
+				return GetParsedText();
+            }
+        }
 
         public ChatMessage(int a, string m)
         {
@@ -19,6 +41,9 @@ namespace HeadlessTerrariaClient.Terraria.Chat
             RawMessage = m;
         }
 
+		/// <summary>
+		/// Writes the message to the console with coloring
+		/// </summary>
 		public void WriteToConsole()
         {
 			List<TextSnippet> list = ChatParser.ParseMessage(RawMessage, Color.White);
@@ -35,6 +60,11 @@ namespace HeadlessTerrariaClient.Terraria.Chat
 				Console.ResetColor();
             }
 		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <returns>Text of the message without and tags</returns>
 		public string GetParsedText()
         {
 			return ChatParser.ParseOutTags(RawMessage);
@@ -76,6 +106,12 @@ namespace HeadlessTerrariaClient.Terraria.Chat
 			return null;
 		}
 
+		/// <summary>
+		/// Parse a message into a List of TextSnippits
+		/// </summary>
+		/// <param name="text">text to be parsed</param>
+		/// <param name="baseColor"></param>
+		/// <returns></returns>
 		public static List<TextSnippet> ParseMessage(string text, Color baseColor)
 		{
 			text = text.Replace("\r", "");
@@ -110,6 +146,11 @@ namespace HeadlessTerrariaClient.Terraria.Chat
 			return snippets;
 		}
 
+		/// <summary>
+		/// Removes tags from a string
+		/// </summary>
+		/// <param name="text">text to remove tags from</param>
+		/// <returns></returns>
 		public static string ParseOutTags(string text)
         {
 			List<TextSnippet> list = ParseMessage(text, Color.White);

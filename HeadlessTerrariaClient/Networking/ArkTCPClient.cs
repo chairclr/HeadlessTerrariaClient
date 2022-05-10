@@ -16,17 +16,55 @@ namespace ArkNetwork
         public delegate void ConnectionClosed(Socket handler);
         public delegate void OnRecieveBytes(Socket handler, int bytesRead);
 
+        /// <summary>
+        /// Raw TCP socket
+        /// </summary>
         public Socket client;
+
+        /// <summary>
+        /// IP address that is real
+        /// </summary>
         public IPAddress IPAddress;
+
+        /// <summary>
+        /// Port that the TCP socket is connected on
+        /// </summary>
         public int port;
+
+        /// <summary>
+        /// Callback for when bytes are received from the server
+        /// </summary>
         public OnRecieveBytes OnRecieve;
+
+        /// <summary>
+        /// Buffer to read data into
+        /// </summary>
         public byte[] ReadBuffer;
+
+        /// <summary>
+        /// Networkstream wrapping the TCP socket
+        /// </summary>
         public NetworkStream NetworkStream;
+
+        /// <summary>
+        /// Task for the client loop
+        /// </summary>
         public Task ClientLoop;
+
+        /// <summary>
+        /// why
+        /// </summary>
         public bool Exit = false;
         public bool IsReading = false;
         public bool IsWriting = false;
 
+        /// <summary>
+        /// Constructs the TCP client
+        /// </summary>
+        /// <param name="ip">IP address to connect to</param>
+        /// <param name="readBuffer">buffer to read data into</param>
+        /// <param name="port">port to connect to</param>
+        /// <param name="OnRecieve">callback for when bytes are received</param>
         public ArkTCPClient(IPAddress ip, byte[] readBuffer, int port, OnRecieveBytes OnRecieve)
         {
             IPAddress = ip;
@@ -36,6 +74,9 @@ namespace ArkNetwork
             client = new Socket(IPAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         }
 
+        /// <summary>
+        /// Connects to the server and starts the client loop
+        /// </summary>
         public async Task Connect()
         {
             client.Connect(IPAddress, port);
@@ -43,6 +84,9 @@ namespace ArkNetwork
             return;
         }
 
+        /// <summary>
+        /// Starts receiving data from the server
+        /// </summary>
         private async Task RunClientLoop()
         {
             using (NetworkStream = new NetworkStream(client))
@@ -104,6 +148,11 @@ namespace ArkNetwork
             }
         }
 
+        /// <summary>
+        /// Sends data to the server
+        /// </summary>
+        /// <param name="data">byte array to send</param>
+        /// <param name="length">length of data to send, if length is -1, send the entire buffer</param>
         public void Send(byte[] data, int length = -1)
         {
             while (IsWriting)
@@ -115,6 +164,12 @@ namespace ArkNetwork
             IsWriting = false;
         }
 
+
+        /// <summary>
+        /// Sends data to the server but it has the async keyword
+        /// </summary>
+        /// <param name="data">byte array to send</param>
+        /// <param name="length">length of data to send, if length is -1, send the entire buffer</param>
         public async Task SendAsync(byte[] data, int length = -1)
         {
             while (IsWriting)

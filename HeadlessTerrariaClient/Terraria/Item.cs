@@ -31,6 +31,10 @@ namespace HeadlessTerrariaClient.Terraria
             this.prefix = prefix;
         }
 
+        /// <summary>
+        /// Creates a copy of an item
+        /// </summary>
+        /// <returns>Copy of the item</returns>
         public Item Clone()
         {
             return new Item(type, stack, prefix);

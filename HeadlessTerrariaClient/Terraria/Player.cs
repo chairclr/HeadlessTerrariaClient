@@ -8,12 +8,29 @@ using HeadlessTerrariaClient.Utility;
 
 namespace HeadlessTerrariaClient.Terraria
 {
+    /// <summary>
+    /// A player in the world
+    /// </summary>
     public class Player
     {
+        /// <summary>
+        /// Index in World.player
+        /// </summary>
         public int whoAmI;
+
+        /// <summary>
+        /// Whether or not a player is active
+        /// </summary>
         public bool active = false;
+
+        /// <summary>
+        /// Name of the player
+        /// </summary>
         public string name = "";
 
+        /// <summary>
+        /// ayo is this client racist?
+        /// </summary>
         public int skinVariant;
         public int hairType;
         public int hairDye;
@@ -34,12 +51,26 @@ namespace HeadlessTerrariaClient.Terraria
         public int statMana;
         public int statManaMax;
 
+        /// <summary>
+        /// The inventory of the player
+        /// </summary>
         public Item[] inventory = new Item[260];
 
+
+        /// <summary>
+        /// Position of the player
+        /// </summary>
         public Vector2 position;
+
+        /// <summary>
+        /// Velocity of the player
+        /// </summary>
         public Vector2 velocity;
 
-
+        /// <summary>
+        /// Loads data from the player file
+        /// </summary>
+        /// <param name="data">player file to be loaded</param>
         public void SyncDataWithTemp(PlayerData data)
         {
             name = data.name;
@@ -73,6 +104,9 @@ namespace HeadlessTerrariaClient.Terraria
             }
         }
 
+        /// <summary>
+        /// Loads the default appearnce of the player
+        /// </summary>
         public void LoadDefaultAppearence()
         {
             skinVariant = 0;
@@ -86,6 +120,10 @@ namespace HeadlessTerrariaClient.Terraria
             pantsColor = new Color(255, 230, 175, 255);
             shoeColor = new Color(160, 105, 60, 255);
         }
+
+        /// <summary>
+        /// Randomizes the appearence of the player
+        /// </summary>
         public void RandomizeAppearence()
         {
             HairStyles.Rebuild();
@@ -139,6 +177,9 @@ namespace HeadlessTerrariaClient.Terraria
 
         public Item[] inventory = new Item[260];
 
+        /// <summary>
+        /// Loads the default appearnce of the player
+        /// </summary>
         public void LoadDefaultAppearence()
         {
             skinVariant = 0;
@@ -152,6 +193,10 @@ namespace HeadlessTerrariaClient.Terraria
             pantsColor = new Color(255 ,230 ,175, 255);
             shoeColor = new Color(160, 105, 60, 255);
         }
+
+        /// <summary>
+        /// Randomizes the appearence of the player
+        /// </summary>
         public void RandomizeAppearence()
         {
             // implemented cringeface 🤨 📸
@@ -178,12 +223,20 @@ namespace HeadlessTerrariaClient.Terraria
             pantsColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
             shoeColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
         }
+        
+        /// <summary>
+        /// Loads the default inventory of the player
+        /// </summary>
         public void LoadDefaultInventory()
         {
             inventory[0] = new Item(ItemID.CopperShortsword);
             inventory[1] = new Item(ItemID.CopperPickaxe);
             inventory[2] = new Item(ItemID.CopperAxe);
         }
+
+        /// <summary>
+        /// Loads both the default inventory and appearnce of the player
+        /// </summary>
         public void LoadDefaultPlayer()
         {
             difficulty = PlayerDifficultyID.SoftCore;
