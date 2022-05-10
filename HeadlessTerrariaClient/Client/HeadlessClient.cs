@@ -13,30 +13,79 @@ using System.Numerics;
 // Much of packet documentation is from Terraria's NetMessage.cs and from https://tshock.readme.io/docs/multiplayer-packet-structure
 namespace HeadlessTerrariaClient.Client
 {
+    /// <summary>
+    /// A Terraria client without any overhead
+    /// </summary>
     public class HeadlessClient
     {
+        /// <summary>
+        /// The TCP client to connect to the server with
+        /// </summary>
         public ArkTCPClient TCPClient;
+
         public bool DisconnectFromServer = false;
+
+        /// <summary>
+        /// Current state in the connection protocol
+        /// </summary>
         public ConnectionState ConnectionState = ConnectionState.None;
+
+        /// <summary>
+        /// Buffer used for writing to the NetworkStream
+        /// </summary>
         public byte[] WriteBuffer = new byte[131070];
+        /// <summary>
+        /// Buffer used for reading from the NetworkStream
+        /// </summary>
         public byte[] ReadBuffer = new byte[131070];
         public MemoryStream MemoryStreamWrite;
         public BinaryWriter MessageWriter;
         public MemoryStream MemoryStreamRead;
         public BinaryReader MessageReader;
-        public delegate void OnSomethingHappened(HeadlessClient hc);
-        public delegate void OnSomethingHappened<T>(HeadlessClient hc, T e);
-        public delegate void OnSomethingHappened<T1, T2>(HeadlessClient hc, T1 e, T2 e2);
-        public delegate void OnSomethingHappened<T1, T2, T3>(HeadlessClient hc, T1 e, T2 e2, T3 e3);
-        public OnSomethingHappened WorldDataRecieved = null;
-        public OnSomethingHappened FinishedConnectingToServer = null;
-        public OnSomethingHappened ClientConnectionCompleted = null;
-        public OnSomethingHappened OnUpdate = null;
-        public OnSomethingHappened<ChatMessage> ChatMessageRecieved = null;
-        public OnSomethingHappened<TileManipulation> TileManipulationMessageRecieved = null;
-        public OnSomethingHappened<RawIncomingPacket> NetMessageRecieved = null;
-        public OnSomethingHappened<RawOutgoingPacket> NetMessageSent = null;
 
+        /// <summary>
+        /// Event called after the WorldData packet is received
+        /// </summary>
+        public Action<HeadlessClient> WorldDataRecieved = null;
+
+        /// <summary>
+        /// Event called after the FinishedConnectingToServer packet is received
+        /// </summary>
+        public Action<HeadlessClient> FinishedConnectingToServer = null;
+
+        /// <summary>
+        /// Event called after the CompleteConnectionAndSpawn packet is received
+        /// </summary>
+        public Action<HeadlessClient> ClientConnectionCompleted = null;
+
+        /// <summary>
+        /// Event called every time the game loop runs
+        /// </summary>
+        public Action<HeadlessClient> OnUpdate = null;
+
+        /// <summary>
+        /// Event called when a chat message is received
+        /// </summary>
+        public Action<HeadlessClient, ChatMessage> ChatMessageRecieved = null;
+
+        /// <summary>
+        /// Event called when another player manipulates a tile
+        /// </summary>
+        public Action<HeadlessClient, TileManipulation> TileManipulationMessageRecieved = null;
+
+        /// <summary>
+        /// Event called when any packet is received
+        /// </summary>
+        public Action<HeadlessClient, RawIncomingPacket> NetMessageReceived = null;
+
+        /// <summary>
+        /// Event called when any packet is sent
+        /// </summary>
+        public Action<HeadlessClient, RawOutgoingPacket> NetMessageSent = null;
+
+        /// <summary>
+        /// Dynamic settings object
+        /// </summary>
         public dynamic Settings = new Settings();
 
         public HeadlessClient()
@@ -72,9 +121,14 @@ namespace HeadlessTerrariaClient.Client
 
         }
 
+        /// <summary>
+        /// Connects to a terraria server
+        /// <param name="address">the address to connect to, both IP and domain names are supported</param>
+        /// <param name="port">the port to connect on</param>
+        /// </summary>
         public async Task Connect(string address, short port)
         {
-            if (!SetIP(address, out IPAddress ipAddress))
+            if (!ResolveIP(address, out IPAddress ipAddress))
             {
                 throw new ArgumentException($"Could not resolve ip {address}");
             }
@@ -89,7 +143,7 @@ namespace HeadlessTerrariaClient.Client
 
 
             await ConnectToServer();
-            await JoinWorld();
+            await BeginJoiningWorld();
 
             if (Settings.RunGameLoop)
             {
@@ -105,6 +159,10 @@ namespace HeadlessTerrariaClient.Client
             }
 
         }
+
+        /// <summary>
+        /// Connects the TCP client
+        /// </summary>
         private async Task ConnectToServer()
         {
             await TCPClient.Connect();
@@ -129,15 +187,24 @@ namespace HeadlessTerrariaClient.Client
             MemoryStreamRead = new MemoryStream(ReadBuffer);
             MessageReader = new BinaryReader(MemoryStreamRead);
         }
-        private async Task JoinWorld()
+
+        /// <summary>
+        /// Starts joining a world
+        /// </summary>
+        private async Task BeginJoiningWorld()
         {
             await SendDataAsync(1);
             ConnectionState = ConnectionState.SyncingPlayer;
         }
 
 
-
-        public bool SetIP(string remoteAddress, out IPAddress address)
+        /// <summary>
+        /// Parses a string for the ip
+        /// </summary>
+        /// <param name="remoteAddress">IP address or domain name as a string</param>
+        /// <param name="address">the IPAddress object resolved</param>
+        /// <returns>whether the IP or domain name was valid</returns>
+        public bool ResolveIP(string remoteAddress, out IPAddress address)
         {
             if (IPAddress.TryParse(remoteAddress, out address))
             {
@@ -155,6 +222,11 @@ namespace HeadlessTerrariaClient.Client
 
             return false;
         }
+
+        /// <summary>
+        /// Handler for receiving bytes from the server
+        /// </summary>
+        /// <param name="bytesRead">number of byets read</param>
         public async Task OnRecieve(int bytesRead)
         {
             if (MemoryStreamRead == null)
@@ -183,6 +255,9 @@ namespace HeadlessTerrariaClient.Client
             }
         }
 
+        /// <summary>
+        /// Simple update loop
+        /// </summary>
         public async Task Update()
         {
             if (IsInWorld)
@@ -207,6 +282,10 @@ namespace HeadlessTerrariaClient.Client
             }
             OnUpdate?.Invoke(this);
         }
+
+        /// <summary>
+        /// Disconnects the client from the server
+        /// </summary>
         public void Disconnect()
         {
             if (Settings.PrintAnyOutput && Settings.PrintDisconnectMessage)
@@ -235,8 +314,19 @@ namespace HeadlessTerrariaClient.Client
             } catch { }
         }
 
+        /// <summary>
+        /// A reference to a ClientWorld
+        /// </summary>
         public ClientWorld World;
+
+        /// <summary>
+        /// The current index of this client's player
+        /// </summary>
         public int myPlayer;
+
+        /// <summary>
+        /// The current Player object for this client
+        /// </summary>
         public Player LocalPlayer
         {
             get
@@ -244,23 +334,62 @@ namespace HeadlessTerrariaClient.Client
                 return World.player[myPlayer];
             }
         }
+
+        /// <summary>
+        /// The GUID for this client
+        /// </summary>
         public string clientUUID;
+
+        /// <summary>
+        /// this game doodoo
+        /// </summary>
         public bool ServerSideCharacter;
+
+        /// <summary>
+        /// why is this here
+        /// </summary>
         public ulong LobbyId;
+
+        /// <summary>
+        /// The version of the game to use
+        /// </summary>
         public int VersionNumber = 248;
+
+        /// <summary>
+        /// A player file, not sure why I did things like this
+        /// </summary>
         public PlayerData PlayerFile = new PlayerData();
+
+        /// <summary>
+        /// Arbitrary data stored by the user
+        /// </summary>
         public object UserData;
+
+        /// <summary>
+        /// Easier way to get the data stored by the user
+        /// </summary>
+        /// <typeparam name="T">The type of the data</typeparam>
+        /// <returns>The data as T</returns>
+        public T GetUserData<T>()
+        {
+            return (T)UserData;
+        }
+
+        /// <summary>
+        /// Returns whether or not the client is in a world
+        /// </summary>
         public bool IsInWorld
         {
             get;
             private set;
         }
 
-        public T GetUserData<T>()
-        {
-            return (T)UserData;
-        }
-
+        
+        /// <summary>
+        /// Handler for a packet being received
+        /// </summary>
+        /// <param name="start">position of the first byte of the packet in ReadBuffer</param>
+        /// <param name="length">length of the packet</param>
         public async Task GetData(int start, int length)
         {
             if (TCPClient == null)
@@ -273,7 +402,7 @@ namespace HeadlessTerrariaClient.Client
 
             byte messageType = reader.ReadByte();
 
-            if (NetMessageRecieved != null)
+            if (NetMessageReceived != null)
             {
                 RawIncomingPacket packet = new RawIncomingPacket
                 {
@@ -283,7 +412,7 @@ namespace HeadlessTerrariaClient.Client
                     ContinueWithPacket = true
                 };
 
-                NetMessageRecieved?.Invoke(this, packet);
+                NetMessageReceived?.Invoke(this, packet);
 
                 if (!packet.ContinueWithPacket)
                 {
@@ -787,6 +916,10 @@ namespace HeadlessTerrariaClient.Client
             }
         }
 
+        /// <summary>
+        /// Sends data to the server
+        /// </summary>
+        /// <param name="messageType">type of message to be sent</param>
         public async Task SendDataAsync(int messageType, int number = 0, float number2 = 0, float number3 = 0, float number4 = 0, int number5 = 0)
         {
             if (TCPClient == null)

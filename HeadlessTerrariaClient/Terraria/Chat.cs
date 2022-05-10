@@ -80,34 +80,34 @@ namespace HeadlessTerrariaClient.Terraria.Chat
 		{
 			text = text.Replace("\r", "");
 			MatchCollection matchCollection = ChatFormat.Matches(text);
-			List<TextSnippet> list = new List<TextSnippet>();
+			List<TextSnippet> snippets = new List<TextSnippet>();
 			int num = 0;
 			foreach (Match item in matchCollection)
 			{
 				if (item.Index > num)
 				{
-					list.Add(new TextSnippet(text.Substring(num, item.Index - num), baseColor));
+					snippets.Add(new TextSnippet(text.Substring(num, item.Index - num), baseColor));
 				}
 				num = item.Index + item.Length;
-				string value = item.Groups["tag"].Value;
-				string value2 = item.Groups["text"].Value;
-				string value3 = item.Groups["options"].Value;
-				ITagHandler handler = GetHandler(value);
-				if (handler != null)
+				string tagValue = item.Groups["tag"].Value;
+				string textValue = item.Groups["text"].Value;
+				string optValue = item.Groups["options"].Value;
+				ITagHandler tagHandler = GetHandler(tagValue);
+				if (tagHandler != null)
 				{
-					list.Add(handler.Parse(value2, baseColor, value3));
-					list[list.Count - 1].TextOriginal = item.ToString();
+					snippets.Add(tagHandler.Parse(textValue, baseColor, optValue));
+					snippets[snippets.Count - 1].TextOriginal = item.ToString();
 				}
 				else
 				{
-					list.Add(new TextSnippet(value2, baseColor));
+					snippets.Add(new TextSnippet(textValue, baseColor));
 				}
 			}
 			if (text.Length > num)
 			{
-				list.Add(new TextSnippet(text.Substring(num, text.Length - num), baseColor));
+				snippets.Add(new TextSnippet(text.Substring(num, text.Length - num), baseColor));
 			}
-			return list;
+			return snippets;
 		}
 
 		public static string ParseOutTags(string text)
