@@ -4,16 +4,33 @@ using System.Numerics;
 using System.Text;
 using HeadlessTerrariaClient;
 using HeadlessTerrariaClient.Terraria.ID;
-using HeadlessTerrariaClient.Util;
+using HeadlessTerrariaClient.Utility;
 
 namespace HeadlessTerrariaClient.Terraria
 {
+    /// <summary>
+    /// A player in the world
+    /// </summary>
     public class Player
     {
+        /// <summary>
+        /// Index in World.player
+        /// </summary>
         public int whoAmI;
+
+        /// <summary>
+        /// Whether or not a player is active
+        /// </summary>
         public bool active = false;
+
+        /// <summary>
+        /// Name of the player
+        /// </summary>
         public string name = "";
 
+        /// <summary>
+        /// ayo is this client racist?
+        /// </summary>
         public int skinVariant;
         public int hairType;
         public int hairDye;
@@ -34,11 +51,26 @@ namespace HeadlessTerrariaClient.Terraria
         public int statMana;
         public int statManaMax;
 
+        /// <summary>
+        /// The inventory of the player
+        /// </summary>
         public Item[] inventory = new Item[260];
 
+
+        /// <summary>
+        /// Position of the player
+        /// </summary>
         public Vector2 position;
+
+        /// <summary>
+        /// Velocity of the player
+        /// </summary>
         public Vector2 velocity;
 
+        /// <summary>
+        /// Loads data from the player file
+        /// </summary>
+        /// <param name="data">player file to be loaded</param>
         public void SyncDataWithTemp(PlayerData data)
         {
             name = data.name;
@@ -72,6 +104,9 @@ namespace HeadlessTerrariaClient.Terraria
             }
         }
 
+        /// <summary>
+        /// Loads the default appearnce of the player
+        /// </summary>
         public void LoadDefaultAppearence()
         {
             skinVariant = 0;
@@ -85,30 +120,34 @@ namespace HeadlessTerrariaClient.Terraria
             pantsColor = new Color(255, 230, 175, 255);
             shoeColor = new Color(160, 105, 60, 255);
         }
+
+        /// <summary>
+        /// Randomizes the appearence of the player
+        /// </summary>
         public void RandomizeAppearence()
         {
             HairStyles.Rebuild();
             hairType = HairStyles.GetRandomHair();
             skinVariant = PlayerVariantID.GetRandomSkin();
 
-            eyeColor = ClientUtil.ScaledHslToRgb(ClientUtil.GetRandomColorVector());
+            eyeColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
             while (eyeColor.R + eyeColor.G + eyeColor.B > 300)
             {
-                eyeColor = ClientUtil.ScaledHslToRgb(ClientUtil.GetRandomColorVector());
+                eyeColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
             }
-            float num = (float)ClientUtil.rand.Next(60, 120) * 0.01f;
+            float num = (float)Util.rand.Next(60, 120) * 0.01f;
             if (num > 1f)
             {
                 num = 1f;
             }
-            skinColor.R = (byte)((float)ClientUtil.rand.Next(240, 255) * num);
-            skinColor.G = (byte)((float)ClientUtil.rand.Next(110, 140) * num);
-            skinColor.B = (byte)((float)ClientUtil.rand.Next(75, 110) * num);
-            hairColor = ClientUtil.ScaledHslToRgb(ClientUtil.GetRandomColorVector());
-            shirtColor = ClientUtil.ScaledHslToRgb(ClientUtil.GetRandomColorVector());
-            underShirtColor = ClientUtil.ScaledHslToRgb(ClientUtil.GetRandomColorVector());
-            pantsColor = ClientUtil.ScaledHslToRgb(ClientUtil.GetRandomColorVector());
-            shoeColor = ClientUtil.ScaledHslToRgb(ClientUtil.GetRandomColorVector());
+            skinColor.R = (byte)((float)Util.rand.Next(240, 255) * num);
+            skinColor.G = (byte)((float)Util.rand.Next(110, 140) * num);
+            skinColor.B = (byte)((float)Util.rand.Next(75, 110) * num);
+            hairColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
+            shirtColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
+            underShirtColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
+            pantsColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
+            shoeColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
         }
     }
 
@@ -138,6 +177,9 @@ namespace HeadlessTerrariaClient.Terraria
 
         public Item[] inventory = new Item[260];
 
+        /// <summary>
+        /// Loads the default appearnce of the player
+        /// </summary>
         public void LoadDefaultAppearence()
         {
             skinVariant = 0;
@@ -151,6 +193,10 @@ namespace HeadlessTerrariaClient.Terraria
             pantsColor = new Color(255 ,230 ,175, 255);
             shoeColor = new Color(160, 105, 60, 255);
         }
+
+        /// <summary>
+        /// Randomizes the appearence of the player
+        /// </summary>
         public void RandomizeAppearence()
         {
             // implemented cringeface 🤨 📸
@@ -158,30 +204,44 @@ namespace HeadlessTerrariaClient.Terraria
             hairType = HairStyles.GetRandomHair();
             skinVariant = PlayerVariantID.GetRandomSkin();
 
-            eyeColor = Util.ClientUtil.ScaledHslToRgb(Util.ClientUtil.GetRandomColorVector());
+            eyeColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
             while (eyeColor.R + eyeColor.G + eyeColor.B > 300)
             {
-                eyeColor = Util.ClientUtil.ScaledHslToRgb(ClientUtil.GetRandomColorVector());
+                eyeColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
             }
-            float num = (float)Util.ClientUtil.rand.Next(60, 120) * 0.01f;
+            float num = (float)Util.rand.Next(60, 120) * 0.01f;
             if (num > 1f)
             {
                 num = 1f;
             }
-            skinColor.R = (byte)((float)ClientUtil.rand.Next(240, 255) * num);
-            skinColor.G = (byte)((float)ClientUtil.rand.Next(110, 140) * num);
-            skinColor.B = (byte)((float)ClientUtil.rand.Next(75, 110) * num);
-            hairColor = ClientUtil.ScaledHslToRgb(ClientUtil.GetRandomColorVector());
-            shirtColor = ClientUtil.ScaledHslToRgb(ClientUtil.GetRandomColorVector());
-            underShirtColor = ClientUtil.ScaledHslToRgb(ClientUtil.GetRandomColorVector());
-            pantsColor = ClientUtil.ScaledHslToRgb(ClientUtil.GetRandomColorVector());
-            shoeColor = ClientUtil.ScaledHslToRgb(ClientUtil.GetRandomColorVector());
+            skinColor.R = (byte)((float)Util.rand.Next(240, 255) * num);
+            skinColor.G = (byte)((float)Util.rand.Next(110, 140) * num);
+            skinColor.B = (byte)((float)Util.rand.Next(75, 110) * num);
+            hairColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
+            shirtColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
+            underShirtColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
+            pantsColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
+            shoeColor = Util.ScaledHslToRgb(Util.GetRandomColorVector());
         }
+        
+        /// <summary>
+        /// Loads the default inventory of the player
+        /// </summary>
         public void LoadDefaultInventory()
         {
             inventory[0] = new Item(ItemID.CopperShortsword);
             inventory[1] = new Item(ItemID.CopperPickaxe);
             inventory[2] = new Item(ItemID.CopperAxe);
+        }
+
+        /// <summary>
+        /// Loads both the default inventory and appearnce of the player
+        /// </summary>
+        public void LoadDefaultPlayer()
+        {
+            difficulty = PlayerDifficultyID.SoftCore;
+            LoadDefaultAppearence();
+            LoadDefaultInventory();
         }
     }
 }

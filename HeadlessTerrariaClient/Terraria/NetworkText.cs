@@ -4,6 +4,9 @@ using System.Text;
 
 namespace HeadlessTerrariaClient.Terraria
 {
+	/// <summary>
+	/// text that goes over the network
+	/// </summary>
 	public class NetworkText
 	{
 		private enum Mode : byte

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using HeadlessTerrariaClient.Terraria;
 using HeadlessTerrariaClient.Terraria.ID;
 using HeadlessTerrariaClient.Terraria.Chat;
-using HeadlessTerrariaClient.Util;
+using HeadlessTerrariaClient.Utility;
 using System.Net.Sockets;
 using System.Numerics;
 
@@ -18,6 +18,12 @@ namespace HeadlessTerrariaClient.Terraria
         public int stack;
         public int prefix;
 
+        public Item()
+        {
+            type = 0;
+            stack = 0;
+            prefix = 0;
+        }
         public Item(int type, int stack = 1, int prefix = 0)
         {
             this.type = type;
@@ -25,6 +31,10 @@ namespace HeadlessTerrariaClient.Terraria
             this.prefix = prefix;
         }
 
+        /// <summary>
+        /// Creates a copy of an item
+        /// </summary>
+        /// <returns>Copy of the item</returns>
         public Item Clone()
         {
             return new Item(type, stack, prefix);

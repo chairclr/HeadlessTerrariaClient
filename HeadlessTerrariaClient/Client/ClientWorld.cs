@@ -10,9 +10,19 @@ using System.Numerics;
 
 namespace HeadlessTerrariaClient.Client
 {
+    /// <summary>
+    /// A world 
+    /// </summary>
     public class ClientWorld
     {
+        /// <summary>
+        /// Players in the world
+        /// </summary>
         public Player[] player;
+
+        /// <summary>
+        /// World object containing information about the world
+        /// </summary>
         public World CurrentWorld;
 
         public ClientWorld()
