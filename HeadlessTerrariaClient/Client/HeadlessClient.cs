@@ -433,8 +433,6 @@ namespace HeadlessTerrariaClient.Client
                         SendData(MessageID.SyncEquipment, playerIndex, i);
                     }
 
-                    
-
                     ConnectionState = ConnectionState.RequestingWorldData;
 
                     if (Settings.PrintAnyOutput && Settings.PrintWorldJoinMessages)
@@ -498,32 +496,32 @@ namespace HeadlessTerrariaClient.Client
                     World.CurrentWorld.worldGenVer = reader.ReadUInt64();
                     World.CurrentWorld.moonType = reader.ReadByte();
 
-                    /*WorldGen.setBG(0, */
-                    reader.ReadByte()/*)*/;
-                    /*WorldGen.setBG(10,*/
-                    reader.ReadByte()/*)*/;
-                    /*WorldGen.setBG(11,*/
-                    reader.ReadByte()/*)*/;
-                    /*WorldGen.setBG(12,*/
-                    reader.ReadByte()/*)*/;
-                    /*WorldGen.setBG(1, */
-                    reader.ReadByte()/*)*/;
-                    /*WorldGen.setBG(2, */
-                    reader.ReadByte()/*)*/;
-                    /*WorldGen.setBG(3, */
-                    reader.ReadByte()/*)*/;
-                    /*WorldGen.setBG(4, */
-                    reader.ReadByte()/*)*/;
-                    /*WorldGen.setBG(5, */
-                    reader.ReadByte()/*)*/;
-                    /*WorldGen.setBG(6, */
-                    reader.ReadByte()/*)*/;
-                    /*WorldGen.setBG(7, */
-                    reader.ReadByte()/*)*/;
-                    /*WorldGen.setBG(8, */
-                    reader.ReadByte()/*)*/;
-                    /*WorldGen.setBG(9, */
-                    reader.ReadByte()/*)*/;
+                    // World Background 0
+                    reader.ReadByte();
+                    // World Background 1
+                    reader.ReadByte();
+                    // World Background 1
+                    reader.ReadByte();
+                    // World Background 1
+                    reader.ReadByte();
+                    // World Background 1
+                    reader.ReadByte();
+                    // World Background 2
+                    reader.ReadByte();
+                    // World Background 3
+                    reader.ReadByte();
+                    // World Background 4
+                    reader.ReadByte();
+                    // World Background 5
+                    reader.ReadByte();
+                    // World Background 6
+                    reader.ReadByte();
+                    // World Background 7
+                    reader.ReadByte();
+                    // World Background 8
+                    reader.ReadByte();
+                    // World Background 9
+                    reader.ReadByte();
 
                     World.CurrentWorld.iceBackStyle = reader.ReadByte();
                     World.CurrentWorld.jungleBackStyle = reader.ReadByte();
@@ -531,28 +529,28 @@ namespace HeadlessTerrariaClient.Client
                     World.CurrentWorld.windSpeedTarget = reader.ReadSingle();
                     World.CurrentWorld.numClouds = reader.ReadByte();
 
-                    for (int num261 = 0; num261 < 3; num261++)
+                    for (int i = 0; i < 3; i++)
                     {
-                        /*Main.treeX[num261] = */
+                        // treeX[i]
                         reader.ReadInt32();
                     }
-                    for (int num262 = 0; num262 < 4; num262++)
+                    for (int i = 0; i < 4; i++)
                     {
-                        /*Main.treeStyle[num262] = */
+                        // treeStyle[i]
                         reader.ReadByte();
                     }
-                    for (int num263 = 0; num263 < 3; num263++)
+                    for (int i = 0; i < 3; i++)
                     {
-                        /*Main.caveBackX[num263] = */
+                        // caveBackX[i]
                         reader.ReadInt32();
                     }
-                    for (int num264 = 0; num264 < 4; num264++)
+                    for (int i = 0; i < 4; i++)
                     {
-                        /*Main.caveBackStyle[num264] = */
+                        // caveBackStyle[i]
                         reader.ReadByte();
                     }
 
-                    for (int num696969 = 0; num696969 < 13; num696969++)
+                    for (int i = 0; i < 13; i++)
                     {
                         // some tree variation doodoo
                         reader.ReadByte();
@@ -810,16 +808,63 @@ namespace HeadlessTerrariaClient.Client
                 {
                     byte whoAreThey = reader.ReadByte();
 
-                    Player plr = World.player[whoAreThey];
-                    BitsByte control = reader.ReadByte();
-                    BitsByte pulley = reader.ReadByte();
-                    BitsByte misc = reader.ReadByte();
-                    byte sleeping = reader.ReadByte();
-                    byte selectedItem = reader.ReadByte();
-                    plr.position.X = reader.ReadSingle();
-                    plr.position.Y = reader.ReadSingle();
-                    //plr.velocity.X = reader.ReadSingle();
-                    //plr.velocity.Y = reader.ReadSingle();
+                    if (whoAreThey != myPlayer || ServerSideCharacter)
+                    {
+
+                        Player plr = World.player[whoAreThey];
+
+                        BitsByte control = reader.ReadByte();
+                        BitsByte pulley = reader.ReadByte();
+                        BitsByte sitting = reader.ReadByte();
+                        BitsByte what = reader.ReadByte();
+                        plr.controlUp = control[0];
+                        plr.controlDown = control[1];
+                        plr.controlLeft = control[2];
+                        plr.controlRight = control[3];
+                        plr.controlJump = control[4];
+                        plr.controlUseItem = control[5];
+                        plr.direction = (control[6] ? 1 : (-1));
+                        if (pulley[0])
+                        {
+                            plr.pulley = true;
+                            plr.pulleyDir = (byte)((!pulley[1]) ? 1u : 2u);
+                        }
+                        else
+                        {
+                            plr.pulley = false;
+                        }
+                        plr.vortexStealthActive = pulley[3];
+                        plr.gravDir = (pulley[4] ? 1 : (-1));
+                        //plr.TryTogglingShield(bitsByte15[5]);
+                        plr.ghost = pulley[6];
+                        plr.selectedItem = reader.ReadByte();
+                        plr.position = reader.ReadVector2();
+                        if (pulley[2])
+                        {
+                            plr.velocity = reader.ReadVector2();
+                        }
+                        else
+                        {
+                            plr.velocity = Vector2.Zero;
+                        }
+                        if (sitting[6])
+                        {
+                            plr.PotionOfReturnOriginalUsePosition = reader.ReadVector2();
+                            plr.PotionOfReturnHomePosition = reader.ReadVector2();
+                        }
+                        else
+                        {
+                            plr.PotionOfReturnOriginalUsePosition = null;
+                            plr.PotionOfReturnHomePosition = null;
+                        }
+                        plr.tryKeepingHoveringUp = sitting[0];
+                        plr.IsVoidVaultEnabled = sitting[1];
+                        plr.isSitting = sitting[2];
+                        plr.downedDD2EventAnyDifficulty = sitting[3];
+                        plr.isPettingAnimal = sitting[4];
+                        plr.isTheAnimalBeingPetSmall = sitting[5];
+                        plr.tryKeepingHoveringDown = sitting[7];
+                    }
                     break;
                 }
                 case MessageID.PlayerLife:
@@ -880,6 +925,7 @@ namespace HeadlessTerrariaClient.Client
                         item.prefix = prefix;
                         item.stack = stack;
                     }
+                    plr.inventory[inventorySlot] = item;
                     break;
                 }
                 case MessageID.SyncItem:
@@ -1070,8 +1116,8 @@ namespace HeadlessTerrariaClient.Client
                     {
                         Player plr = World.player[number];
                         writer.Write((byte)number);
-                        // Control
-                        writer.Write((byte)0);
+                        // Control, b3 must be true to send velocity
+                        writer.Write(new BitsByte(b3: true));
                         // Pulley
                         writer.Write((byte)0);
                         // Misc
@@ -1081,11 +1127,9 @@ namespace HeadlessTerrariaClient.Client
                         // Selected Item
                         writer.Write((byte)0);
 
-                        writer.Write(plr.position.X);
-                        writer.Write(plr.position.Y);
+                        writer.Write(plr.position);
 
-                        writer.Write(plr.velocity.X);
-                        writer.Write(plr.velocity.Y);
+                        writer.Write(plr.velocity);
 
                         break;
                     }

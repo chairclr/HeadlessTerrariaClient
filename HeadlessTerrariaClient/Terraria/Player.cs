@@ -51,6 +51,27 @@ namespace HeadlessTerrariaClient.Terraria
         public int statMana;
         public int statManaMax;
 
+        public bool controlUp;
+        public bool controlDown;
+        public bool controlLeft;
+        public bool controlRight;
+        public bool controlJump;
+        public bool tryKeepingHoveringDown;
+        public bool tryKeepingHoveringUp;
+
+        public bool controlUseItem;
+
+        public bool pulley;
+        public bool vortexStealthActive;
+        public bool ghost;
+
+        public byte pulleyDir;
+
+        public int direction;
+        public int gravDir;
+
+        public int selectedItem;
+
         /// <summary>
         /// The inventory of the player
         /// </summary>
@@ -66,6 +87,16 @@ namespace HeadlessTerrariaClient.Terraria
         /// Velocity of the player
         /// </summary>
         public Vector2 velocity;
+
+        public Vector2? PotionOfReturnOriginalUsePosition;
+        public Vector2? PotionOfReturnHomePosition;
+
+        public bool IsVoidVaultEnabled;
+        public bool downedDD2EventAnyDifficulty;
+        public bool isPettingAnimal;
+        public bool isTheAnimalBeingPetSmall;
+        
+        public bool isSitting;
 
         /// <summary>
         /// Loads the default appearnce of the player

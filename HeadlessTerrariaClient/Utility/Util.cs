@@ -11,18 +11,25 @@ namespace HeadlessTerrariaClient.Utility
 {
     public static class Util
     {
-		public static void WriteRGB(this BinaryWriter bb, Color c)
+		public static void WriteRGB(this BinaryWriter writer, Color c)
 		{
-			bb.Write(c.R);
-			bb.Write(c.G);
-			bb.Write(c.B);
+			writer.Write(c.R);
+			writer.Write(c.G);
+			writer.Write(c.B);
 		}
-
-		public static Color ReadRGB(this BinaryReader bb)
+		public static Color ReadRGB(this BinaryReader reader)
 		{
-			return new Color(bb.ReadByte(), bb.ReadByte(), bb.ReadByte());
+			return new Color(reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
 		}
-
+		public static void Write(this BinaryWriter writer, Vector2 vec)
+		{
+			writer.Write(vec.X);
+			writer.Write(vec.Y);
+		}
+		public static Vector2 ReadVector2(this BinaryReader reader)
+        {
+			return new Vector2(reader.ReadSingle(), reader.ReadSingle());
+        }
 
 		public static uint ComputeByteHash(byte[] s, int len)
 		{
