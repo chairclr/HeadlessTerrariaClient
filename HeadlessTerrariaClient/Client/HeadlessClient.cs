@@ -90,6 +90,14 @@ namespace HeadlessTerrariaClient.Client
 
         public HeadlessClient()
         {
+            SetDefaultSettings();
+        }
+
+        /// <summary>
+        /// Sets the default settings
+        /// </summary>
+        public void SetDefaultSettings()
+        {
             // Printing out anything to Console.WriteLine
             Settings.PrintAnyOutput = true;
             Settings.PrintPlayerId = false;
@@ -117,7 +125,6 @@ namespace HeadlessTerrariaClient.Client
 
             // Completely ignore all tile chunk packets
             Settings.IgnoreTileChunks = false;
-
         }
 
         /// <summary>
@@ -315,7 +322,7 @@ namespace HeadlessTerrariaClient.Client
         /// <summary>
         /// The current index of this client's player
         /// </summary>
-        public int myPlayer;
+        public int myPlayer = 0;
 
         /// <summary>
         /// The current Player object for this client
@@ -347,11 +354,6 @@ namespace HeadlessTerrariaClient.Client
         /// The version of the game to use
         /// </summary>
         public int VersionNumber = 248;
-
-        /// <summary>
-        /// A player file, not sure why I did things like this
-        /// </summary>
-        public PlayerData PlayerFile = new PlayerData();
 
         /// <summary>
         /// Returns whether or not the client is in a world
@@ -397,13 +399,11 @@ namespace HeadlessTerrariaClient.Client
                     return;
                 }
             }
+
             switch (messageType)
             {
                 case MessageID.PlayerInfo:
                 {
-
-
-
                     int playerIndex = reader.ReadByte();
                     bool ServerWantsToRunCheckBytesInClientLoopThread = reader.ReadBoolean();
 
@@ -412,9 +412,15 @@ namespace HeadlessTerrariaClient.Client
                         Console.WriteLine($"Player id of {playerIndex}");
                     }
 
-                    myPlayer = playerIndex;
+                    if (myPlayer != playerIndex)
+                    {
+                        // Swap players
+                        World.player[playerIndex] = World.player[myPlayer];
+                        World.player[myPlayer].Reset();
+                        myPlayer = playerIndex;
+                    }
+
                     LocalPlayer.active = true;
-                    LocalPlayer.SyncDataWithTemp(PlayerFile);
 
                     SendData(MessageID.SyncPlayer, playerIndex);
                     SendData(MessageID.ClientUUID, playerIndex);

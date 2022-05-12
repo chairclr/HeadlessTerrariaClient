@@ -37,10 +37,10 @@ namespace HeadlessTerrariaClient.Examples
             HeadlessClient.World = new ClientWorld();
 
             // Name the player
-            HeadlessClient.PlayerFile.name = $"ExampleChatClient";
+            HeadlessClient.LocalPlayer.name = "ExampleChatClient";
 
             // Softcore player, Default appearence, and Default inventory
-            HeadlessClient.PlayerFile.LoadDefaultPlayer();
+            HeadlessClient.LocalPlayer.LoadDefaultPlayer();
 
             // This can bypass some anti-cheats that attempt to block headless clients
             HeadlessClient.Settings.AutoSyncPlayerZone = true;

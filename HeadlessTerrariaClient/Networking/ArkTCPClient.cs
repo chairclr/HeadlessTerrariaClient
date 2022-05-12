@@ -52,7 +52,7 @@ namespace ArkNetwork
         public bool Exit = false;
 
 
-        public bool IsReading = false;
+
         public bool IsWriting = false;
 
         /// <summary>
@@ -91,7 +91,7 @@ namespace ArkNetwork
                 while (client.Connected)
                 {
                     if (Exit)
-                        return;
+                        break;
 
                     // Wait for any data to be available 
                     if (client.Available <= 2)
@@ -99,6 +99,8 @@ namespace ArkNetwork
                         await Task.Delay(16);
                         continue;
                     }
+
+
                     try
                     {
                         // read the length of the packet from the network into the first 2 bytes of the ReadBuffer
@@ -119,10 +121,6 @@ namespace ArkNetwork
 
                         this.OnRecieve(bytesRead);
                     }
-                    catch (ObjectDisposedException ode)
-                    {
-                        break;
-                    }
                     catch (Exception e)
                     {
                         Console.WriteLine(e.ToString());
@@ -137,15 +135,9 @@ namespace ArkNetwork
         /// </summary>
         /// <param name="data">byte array to send</param>
         /// <param name="length">length of data to send, if length is -1, send the entire buffer</param>
-        public void Send(byte[] data, int length = -1)
+        public void Send(byte[] data, int length)
         {
-            while (IsWriting)
-                Thread.Sleep(16);
-            IsWriting = true;
-            if (length == -1)
-                length = data.Length;
             NetworkStream.Write(data, 0, length);
-            IsWriting = false;
         }
 
 
@@ -154,15 +146,9 @@ namespace ArkNetwork
         /// </summary>
         /// <param name="data">byte array to send</param>
         /// <param name="length">length of data to send, if length is -1, send the entire buffer</param>
-        public async Task SendAsync(byte[] data, int length = -1)
+        public async Task SendAsync(byte[] data, int length)
         {
-            while (IsWriting)
-                Thread.Sleep(16);
-            IsWriting = true;
-            if (length == -1)
-                length = data.Length;
             await NetworkStream.WriteAsync(data, 0, length);
-            IsWriting = false;
         }
     }
 }

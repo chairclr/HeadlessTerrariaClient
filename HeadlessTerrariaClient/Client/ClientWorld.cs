@@ -27,17 +27,23 @@ namespace HeadlessTerrariaClient.Client
 
         public ClientWorld()
         {
-            player = new Player[256];
-            CurrentWorld = new World();
+            InitializePlayers();
+            InitializeWorld();
+        }
 
+        private void InitializePlayers()
+        {
+            player = new Player[256];
             for (int i = 0; i < 255; i++)
             {
                 player[i] = new Player();
+                player[i].Reset();
                 player[i].whoAmI = i;
-                player[i].active = false;
-                player[i].name = "";
             }
         }
-
+        private void InitializeWorld()
+        {
+            CurrentWorld = new World();
+        }
     }
 }
