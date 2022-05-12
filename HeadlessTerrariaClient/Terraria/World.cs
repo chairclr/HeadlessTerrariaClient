@@ -112,7 +112,67 @@ namespace HeadlessTerrariaClient.Terraria
         public Tile[,] tile;
         public bool[,] LoadedTileSections;
 
-        public void SetupTiles(bool loadTileSections)
+
+
+
+
+
+
+		public bool CanPoundTile(int x, int y)
+		{
+			if (tile[x, y] == null)
+			{
+				tile[x, y] = new Tile();
+			}
+			if (tile[x, y - 1] == null)
+			{
+				tile[x, y - 1] = new Tile();
+			}
+			if (tile[x, y + 1] == null)
+			{
+				tile[x, y + 1] = new Tile();
+			}
+			switch (tile[x, y].tileType)
+			{
+				case 10:
+				case 48:
+				case 137:
+				case 138:
+				case 232:
+				case 380:
+				case 387:
+				case 388:
+				case 476:
+				case 484:
+					return false;
+				default:
+					if (tile[x, y - 1].GetTileActive())
+					{
+						switch (tile[x, y - 1].tileType)
+						{
+							case 21:
+							case 26:
+							case 77:
+							case 88:
+							case 235:
+							case 237:
+							case 441:
+							case 467:
+							case 468:
+							case 470:
+							case 475:
+							case 488:
+							case 597:
+								return false;
+						}
+					}
+					return true;
+			}
+		}
+
+
+
+		public void SetupTiles(bool loadTileSections)
         {
             if (loadTileSections)
             {

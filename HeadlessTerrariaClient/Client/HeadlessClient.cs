@@ -719,6 +719,7 @@ namespace HeadlessTerrariaClient.Client
                     // well documented code btw
                     // 🤨 📸
                     // 🤨 📸
+                    // 🤨 📸
 
                     if (!Settings.IgnoreTileChunks)
                     {
@@ -735,6 +736,8 @@ namespace HeadlessTerrariaClient.Client
                     int flags2 = reader.ReadByte();
 
                     TileManipulationMessageRecieved?.Invoke(this, new TileManipulation(action, tileX, tileY, flags, flags2));
+
+                    TileManipulationHandler.Handle(this, action, tileX, tileY, flags, flags2);
                     break;
                 }
                 case MessageID.SyncPlayer:
