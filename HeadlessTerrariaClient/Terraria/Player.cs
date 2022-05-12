@@ -180,5 +180,10 @@ namespace HeadlessTerrariaClient.Terraria
             LoadDefaultAppearence();
             LoadDefaultInventory();
         }
+
+        public Player Clone()
+        {
+            return (Player)MemberwiseClone();
+        }
     }
 }

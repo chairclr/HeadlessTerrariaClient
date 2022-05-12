@@ -71,7 +71,7 @@ namespace HeadlessTerrariaClient.Client
         /// <summary>
         /// Event called when another player manipulates a tile
         /// </summary>
-        public Action<HeadlessClient, TileManipulation> TileManipulationMessageRecieved = null;
+        public Func<HeadlessClient, TileManipulation, bool> TileManipulationMessageRecieved = null;
 
         /// <summary>
         /// Event called when any packet is received
@@ -415,7 +415,7 @@ namespace HeadlessTerrariaClient.Client
                     if (myPlayer != playerIndex)
                     {
                         // Swap players
-                        World.player[playerIndex] = World.player[myPlayer];
+                        World.player[playerIndex] = World.player[myPlayer].Clone();
                         World.player[myPlayer].Reset();
                         myPlayer = playerIndex;
                     }
@@ -739,9 +739,10 @@ namespace HeadlessTerrariaClient.Client
                     int flags = reader.ReadInt16();
                     int flags2 = reader.ReadByte();
 
-                    TileManipulationMessageRecieved?.Invoke(this, new TileManipulation(action, tileX, tileY, flags, flags2));
-
-                    TileManipulationHandler.Handle(this, action, tileX, tileY, flags, flags2);
+                    if ((bool)(TileManipulationMessageRecieved?.Invoke(this, new TileManipulation(action, tileX, tileY, flags, flags2))))
+                    {
+                        TileManipulationHandler.Handle(this, action, tileX, tileY, flags, flags2);
+                    }
                     break;
                 }
                 case MessageID.SyncPlayer:
