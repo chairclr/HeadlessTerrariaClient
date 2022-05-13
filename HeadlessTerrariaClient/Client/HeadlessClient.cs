@@ -243,6 +243,8 @@ namespace HeadlessTerrariaClient.Client
             while (dataLeftToRecieve >= 2)
             {
                 int nextPacketLength = BitConverter.ToUInt16(ReadBuffer, currentReadIndex);
+                if (nextPacketLength == 0)
+                    break;
                 if (dataLeftToRecieve >= nextPacketLength)
                 {
                     long position = MemoryStreamRead.Position;
@@ -1118,7 +1120,7 @@ namespace HeadlessTerrariaClient.Client
                         Player plr = World.player[number];
                         writer.Write((byte)number);
                         // Control, b3 must be true to send velocity
-                        writer.Write(new BitsByte(b3: true));
+                        writer.Write(new BitsByte(b2: true));
                         // Pulley
                         writer.Write((byte)0);
                         // Misc
@@ -1162,7 +1164,15 @@ namespace HeadlessTerrariaClient.Client
                         // flags 2
                         writer.Write((byte)number5);
                         break;
-                    }    
+                    }
+                    case MessageID.PaintTile:
+                    case MessageID.PaintWall:
+                    {
+                        writer.Write((short)number);
+                        writer.Write((short)number2);
+                        writer.Write((byte)number3);
+                        break;
+                    };
                 }
 
                 int length = (int)MemoryStreamWrite.Position;

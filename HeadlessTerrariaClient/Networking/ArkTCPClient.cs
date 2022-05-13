@@ -94,29 +94,32 @@ namespace ArkNetwork
                         break;
 
                     // Wait for any data to be available 
-                    if (client.Available <= 2)
+                    if (!NetworkStream.CanRead)
                     {
-                        await Task.Delay(16);
+                        Task.Delay(16).Wait();
                         continue;
                     }
 
 
                     try
                     {
-                        // read the length of the packet from the network into the first 2 bytes of the ReadBuffer
                         int bytesRead = NetworkStream.Read(ReadBuffer, 0, 2);
 
+                        // sanity check
                         if (bytesRead < 2)
                         {
                             break;
                         }
 
-                        int len = BitConverter.ToInt16(ReadBuffer);
+                        int len = BitConverter.ToUInt16(ReadBuffer);
 
-                        while (bytesRead < len)
+                        while (len > bytesRead)
                         {
-                            int bytesReceived = NetworkStream.Read(ReadBuffer, bytesRead, len - bytesRead);
-                            bytesRead += bytesReceived;
+                            bytesRead += NetworkStream.Read(ReadBuffer, bytesRead, len - bytesRead);
+
+                            // sleep here to wait for more data to come
+                            if (len > bytesRead)
+                                Thread.Sleep(1);
                         }
 
                         this.OnRecieve(bytesRead);

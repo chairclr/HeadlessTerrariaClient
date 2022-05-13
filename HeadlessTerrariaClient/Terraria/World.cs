@@ -223,7 +223,7 @@ namespace HeadlessTerrariaClient.Terraria
             if (xStart % 200 == 0 && yStart % 150 == 0 && width == 200 && height == 150)
             {
                 if (!IsTileInLoadedSection(xStart, yStart))
-                {
+				{
                     LoadedTileSections[xStart / 200, yStart / 150] = true;
 
                     if (loadTileSections)
