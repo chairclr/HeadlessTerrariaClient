@@ -69,7 +69,8 @@ namespace HeadlessTerrariaClient.Client
         public Action<HeadlessClient, ChatMessage> ChatMessageRecieved = null;
 
         /// <summary>
-        /// Event called when another player manipulates a tile
+        /// Event called when another player manipulates a tile.
+        /// Returns a boolean of whether or not to process this tile event normally
         /// </summary>
         public Func<HeadlessClient, TileManipulation, bool> TileManipulationMessageRecieved = null;
 
@@ -741,7 +742,8 @@ namespace HeadlessTerrariaClient.Client
                     int flags = reader.ReadInt16();
                     int flags2 = reader.ReadByte();
 
-                    if ((bool)(TileManipulationMessageRecieved?.Invoke(this, new TileManipulation(action, tileX, tileY, flags, flags2))))
+                    bool? handleManpipulation = TileManipulationMessageRecieved?.Invoke(this, new TileManipulation(action, tileX, tileY, flags, flags2));
+                    if (!handleManpipulation.HasValue || handleManpipulation.Value)
                     {
                         TileManipulationHandler.Handle(this, action, tileX, tileY, flags, flags2);
                     }
