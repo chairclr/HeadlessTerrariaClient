@@ -1,32 +1,76 @@
-# Headless Terraria Client
 
-Is a 3rd party Terraria client meant to be used programmatically, similar to a discord bot.
+<h1 align="center">
+Headless Client
+</h1>
+<p align="center">
+Headless Client is a 3rd party client for Terraria, meant to be similar to a Discord bot.
+</p>
+<br>
 
-## Main Features
-Connecting to TShock and Vanilla servers programmatically
+<h2>
+Examples
+</h2>
 
-## Fully Supported Packets
-[3] PlayerInfo \
-[4] SyncPlayer \
-[5] SyncEquipment \
-[9] StatusText \
-[14] PlayerActive \
-[16] PlayerLife \
-[42] PlayerMana \
-[49] CompleteConnectionAndSpawn \
-[68] ClientUUID \
-[129] FinishedConnectingToServer 
+---
 
-## Partially Supported Packets
-[7] WorldData \
-[10] TileSection \
-[13] PlayerControls \
-[17] TileManipulation \
-[39] ReleaseItemOwnership \
-[82] NetModules 
 
-## Planned Features and Packets
-Chests, Signs, and Tile Entites 
+```cs
+HeadlessClient HeadlessClient = new HeadlessClient();
+
+// Random client UUID
+HeadlessClient.clientUUID = Guid.NewGuid().ToString();
+
+// World
+HeadlessClient.World = new ClientWorld();
+
+// Player name
+HeadlessClient.LocalPlayer.name = "Example Client";
+
+// Softcore player, Default appearence, and Default inventory
+HeadlessClient.LocalPlayer.LoadDefaultPlayer();
+
+// Connect to the server
+await HeadlessClient.Connect();
+```
+
+<h2>
+Main features
+</h2>
+
+---
+
+- Connecting to TShock and Vanilla Terraria servers
+- Sending and receiving chat messages
+- Sending and receiving tile manipulation, such as placing and breaking blocks
+- Events
+  - World Data Recieved
+  - Finished Connecting to Server
+  - Client Connection Completed
+  - Chat Message Recieved
+  - Tile Manipulation Message Recieved
+  - Net Message Received
+  - Net Message Sent
+
+<h2>
+Planned features
+</h2>
+
+---
+
+- NPC data
+- Projectile data
+- Writing to signs
+- Using chests
+- Mass wiring operations
+- Improving async/await experience
+
+<h2>
+Contributing
+</h2>
+
+---
+
+To contribute, open a pull request and I will review it and accept the PR if it suitable.
 
 
 ###### Still no head :(
