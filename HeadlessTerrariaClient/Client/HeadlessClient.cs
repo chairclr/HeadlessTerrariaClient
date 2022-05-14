@@ -85,6 +85,56 @@ namespace HeadlessTerrariaClient.Client
         public Action<HeadlessClient, RawOutgoingPacket> NetMessageSent = null;
 
         /// <summary>
+        /// A reference to a ClientWorld
+        /// </summary>
+        public ClientWorld World;
+
+        /// <summary>
+        /// The current index of this client's player
+        /// </summary>
+        public int myPlayer = 0;
+
+        /// <summary>
+        /// The current Player object for this client
+        /// </summary>
+        public Player LocalPlayer
+        {
+            get
+            {
+                return World.player[myPlayer];
+            }
+        }
+
+        /// <summary>
+        /// The GUID for this client
+        /// </summary>
+        public string clientUUID;
+
+        /// <summary>
+        /// this game doodoo
+        /// </summary>
+        public bool ServerSideCharacter;
+
+        /// <summary>
+        /// why is this here
+        /// </summary>
+        public ulong LobbyId;
+
+        /// <summary>
+        /// The version of the game to use
+        /// </summary>
+        public int VersionNumber = 248;
+
+        /// <summary>
+        /// Returns whether or not the client is in a world
+        /// </summary>
+        public bool IsInWorld
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
         /// Dynamic settings object
         /// </summary>
         public dynamic Settings = new Settings();
@@ -317,55 +367,7 @@ namespace HeadlessTerrariaClient.Client
             } catch { }
         }
 
-        /// <summary>
-        /// A reference to a ClientWorld
-        /// </summary>
-        public ClientWorld World;
-
-        /// <summary>
-        /// The current index of this client's player
-        /// </summary>
-        public int myPlayer = 0;
-
-        /// <summary>
-        /// The current Player object for this client
-        /// </summary>
-        public Player LocalPlayer
-        {
-            get
-            {
-                return World.player[myPlayer];
-            }
-        }
-
-        /// <summary>
-        /// The GUID for this client
-        /// </summary>
-        public string clientUUID;
-
-        /// <summary>
-        /// this game doodoo
-        /// </summary>
-        public bool ServerSideCharacter;
-
-        /// <summary>
-        /// why is this here
-        /// </summary>
-        public ulong LobbyId;
-
-        /// <summary>
-        /// The version of the game to use
-        /// </summary>
-        public int VersionNumber = 248;
-
-        /// <summary>
-        /// Returns whether or not the client is in a world
-        /// </summary>
-        public bool IsInWorld
-        {
-            get;
-            private set;
-        }
+        
 
         
         /// <summary>

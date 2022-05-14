@@ -127,6 +127,50 @@ namespace HeadlessTerrariaClient.Utility
              client.TeleportThereAndBack(new Vector2(tileX * 16, tileY * 16));
         }
 
+        public static Task LoadEntireWorld(this HeadlessClient client, int timeout = 25)
+        {
+            return Task.Run(async () =>
+            {
+                bool entireWorldLoaded = false;
+                while (!entireWorldLoaded)
+                {
+                    bool hasGoneToNewChunk = false;
+                    for (int x = 0; x < client.World.CurrentWorld.LoadedTileSections.GetLength(0); x++)
+                    {
+                        for (int y = 0; y < client.World.CurrentWorld.LoadedTileSections.GetLength(1); y++)
+                        {
+                            if (!client.World.CurrentWorld.LoadedTileSections[x, y])
+                            {
+                                if (!hasGoneToNewChunk)
+                                {
+                                    client.Teleport(x * 200 + 100, y * 150 + 75);
+                                    hasGoneToNewChunk = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (hasGoneToNewChunk)
+                            break;
+                    }
+
+                    if (!hasGoneToNewChunk)
+                        break;
+                    await Task.Delay(timeout);
+                }
+            });
+        }
+
+        public static Task WaitForClientToFinishConnecting(this HeadlessClient client)
+        {
+            return Task.Run(async () =>
+            {
+                while (!client.IsInWorld)
+                {
+                    await Task.Delay(32);
+                }
+            });
+        }
+
         public static void CustomSendData(this HeadlessClient client, int messageType, int number = 0, float number2 = 0, float number3 = 0, float number4 = 0, float number5 = 0, float number6 = 0, float number7 = 0, float number8 = 0)
         {
             if (client.TCPClient == null)
