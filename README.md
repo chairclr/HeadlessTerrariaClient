@@ -30,7 +30,7 @@ HeadlessClient.LocalPlayer.name = "Example Client";
 HeadlessClient.LocalPlayer.LoadDefaultPlayer();
 
 // Connect to the server
-await HeadlessClient.Connect();
+await HeadlessClient.Connect("127.0.0.1", 7777);
 ```
 
 <h2>
