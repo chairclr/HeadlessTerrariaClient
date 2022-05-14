@@ -42,9 +42,6 @@ namespace HeadlessTerrariaClient.Examples
             // Softcore player, Default appearence, and Default inventory
             HeadlessClient.LocalPlayer.LoadDefaultPlayer();
 
-            // This can bypass some anti-cheats that attempt to block headless clients
-            HeadlessClient.Settings.AutoSyncPlayerZone = true;
-
             // Run code when a chat message is recived
             HeadlessClient.ChatMessageRecieved += (HeadlessClient client, ChatMessage message) =>
             {

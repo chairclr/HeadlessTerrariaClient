@@ -21,78 +21,81 @@ namespace HeadlessTerrariaClient.Client
         /// <summary>
         /// The TCP client to connect to the server with
         /// </summary>
-        public ArkTCPClient TCPClient;
+        public ArkTCPClient TCPClient { get; private set; }
 
-        public bool DisconnectFromServer = false;
+        private bool DisconnectFromServer { get; set; }
 
         /// <summary>
         /// Current state in the connection protocol
         /// </summary>
-        public ConnectionState ConnectionState = ConnectionState.None;
+        public ConnectionState ConnectionState { get; private set; }
 
         /// <summary>
         /// Buffer used for writing to the NetworkStream
         /// </summary>
         public byte[] WriteBuffer = new byte[131070];
+
         /// <summary>
         /// Buffer used for reading from the NetworkStream
         /// </summary>
         public byte[] ReadBuffer = new byte[131070];
-        public MemoryStream MemoryStreamWrite;
-        public BinaryWriter MessageWriter;
-        public MemoryStream MemoryStreamRead;
-        public BinaryReader MessageReader;
+
+        public MemoryStream MemoryStreamWrite { get; private set; }
+        public BinaryWriter MessageWriter { get; private set; }
+
+        public MemoryStream MemoryStreamRead { get; private set; }
+        public BinaryReader MessageReader {get; private set; }
 
         /// <summary>
         /// Event called after the WorldData packet is received
         /// </summary>
-        public Action<HeadlessClient> WorldDataRecieved = null;
+        public Action<HeadlessClient> WorldDataRecieved { get; set; }
 
         /// <summary>
         /// Event called after the FinishedConnectingToServer packet is received
         /// </summary>
-        public Action<HeadlessClient> FinishedConnectingToServer = null;
+        public Action<HeadlessClient> FinishedConnectingToServer { get; set; }
 
         /// <summary>
         /// Event called after the CompleteConnectionAndSpawn packet is received
         /// </summary>
-        public Action<HeadlessClient> ClientConnectionCompleted = null;
+        public Action<HeadlessClient> ClientConnectionCompleted { get; set; }
 
         /// <summary>
         /// Event called every time the game loop runs
         /// </summary>
-        public Action<HeadlessClient> OnUpdate = null;
+        public Action<HeadlessClient> OnUpdate { get; set; }
 
         /// <summary>
         /// Event called when a chat message is received
         /// </summary>
-        public Action<HeadlessClient, ChatMessage> ChatMessageRecieved = null;
+        public Action<HeadlessClient, ChatMessage> ChatMessageRecieved { get; set; }
 
         /// <summary>
         /// Event called when another player manipulates a tile.
         /// Returns a boolean of whether or not to process this tile event normally
         /// </summary>
-        public Func<HeadlessClient, TileManipulation, bool> TileManipulationMessageRecieved = null;
+        public Func<HeadlessClient, TileManipulation, bool> TileManipulationMessageRecieved { get; set; }
 
         /// <summary>
         /// Event called when any packet is received
         /// </summary>
-        public Action<HeadlessClient, RawIncomingPacket> NetMessageReceived = null;
+        public Action<HeadlessClient, RawIncomingPacket> NetMessageReceived { get; set; }
 
         /// <summary>
         /// Event called when any packet is sent
         /// </summary>
-        public Action<HeadlessClient, RawOutgoingPacket> NetMessageSent = null;
+        public Action<HeadlessClient, RawOutgoingPacket> NetMessageSent { get; set; }
 
         /// <summary>
         /// A reference to a ClientWorld
         /// </summary>
-        public ClientWorld World;
+        public ClientWorld World { get; set; }
 
         /// <summary>
         /// The current index of this client's player
         /// </summary>
-        public int myPlayer = 0;
+        private int myPlayer = 0;
 
         /// <summary>
         /// The current Player object for this client
@@ -108,39 +111,43 @@ namespace HeadlessTerrariaClient.Client
         /// <summary>
         /// The GUID for this client
         /// </summary>
-        public string clientUUID;
+        public string clientUUID { get; set; }
 
         /// <summary>
         /// this game doodoo
         /// </summary>
-        public bool ServerSideCharacter;
+        public bool ServerSideCharacter { get; private set; }
 
         /// <summary>
         /// why is this here
         /// </summary>
-        public ulong LobbyId;
+        public ulong LobbyId { get; private set; }
 
         /// <summary>
         /// The version of the game to use
         /// </summary>
-        public int VersionNumber = 248;
+        public int VersionNumber
+        {
+            get
+            {
+                return 248;
+            }
+        }
 
         /// <summary>
         /// Returns whether or not the client is in a world
         /// </summary>
-        public bool IsInWorld
-        {
-            get;
-            private set;
-        }
+        public bool IsInWorld { get; private set; }
 
         /// <summary>
         /// Dynamic settings object
         /// </summary>
-        public dynamic Settings = new Settings();
+        public dynamic Settings { get; private set; }
 
         public HeadlessClient()
         {
+            ConnectionState = ConnectionState.None;
+            Settings = new Settings();
             SetDefaultSettings();
         }
 
@@ -340,7 +347,7 @@ namespace HeadlessTerrariaClient.Client
         /// <summary>
         /// Disconnects the client from the server
         /// </summary>
-        public void Disconnect()
+        public async void Disconnect()
         {
             if (Settings.PrintAnyOutput && Settings.PrintDisconnectMessage)
             {
@@ -348,12 +355,16 @@ namespace HeadlessTerrariaClient.Client
             }
 
             TCPClient.Exit = true;
+
+            await TCPClient.ClientLoop;
+
             try
             {
                 TCPClient.client.Shutdown(SocketShutdown.Both);
             } catch { }
             try
             {
+                TCPClient.client.Close();
                 TCPClient = null;
                 Settings = null;
             } catch { }

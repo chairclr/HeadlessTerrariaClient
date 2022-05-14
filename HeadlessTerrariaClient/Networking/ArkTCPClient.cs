@@ -117,7 +117,7 @@ namespace ArkNetwork
                         {
                             bytesRead += NetworkStream.Read(ReadBuffer, bytesRead, len - bytesRead);
 
-                            // sleep here to wait for more data to come
+                            // Sleep here for the rest of the data to come
                             if (len > bytesRead)
                                 Thread.Sleep(1);
                         }

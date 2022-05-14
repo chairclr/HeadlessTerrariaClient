@@ -54,7 +54,7 @@ namespace HeadlessTerrariaClient.Utility
 
         public static void Teleport(this HeadlessClient client, Vector2 positoin)
         {
-             client.CustomSendData(MessageID.PlayerControls, client.myPlayer, positoin.X, positoin.Y);
+             client.CustomSendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI, positoin.X, positoin.Y);
         }
         public static void Teleport(this HeadlessClient client, int tileX, int tileY)
         {
@@ -71,8 +71,8 @@ namespace HeadlessTerrariaClient.Utility
         }
         public static void SendPlaceTile_TShockBypass(this HeadlessClient client, int tileX, int tileY, int type)
         {
-             client.CustomSendData(MessageID.PlayerControls, client.myPlayer, tileX * 16f, tileY * 16f);
-             client.CustomSendData(MessageID.SyncEquipment, client.myPlayer, 0, 1, 0, BlockTypeItem.TileToItem[type]);
+             client.CustomSendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI, tileX * 16f, tileY * 16f);
+             client.CustomSendData(MessageID.SyncEquipment, client.LocalPlayer.whoAmI, 0, 1, 0, BlockTypeItem.TileToItem[type]);
 
             client.SendData(MessageID.TileManipulation, TileManipulationID.PlaceTile, tileX, tileY, type);
 
@@ -88,9 +88,9 @@ namespace HeadlessTerrariaClient.Utility
         }
         public static void SendPlaceWall_TShockBypass(this HeadlessClient client, int tileX, int tileY, int type)
         {
-            client.CustomSendData(MessageID.SyncEquipment, client.myPlayer, 0, 1, 0, BlockTypeItem.WallToItem[type]);
+            client.CustomSendData(MessageID.SyncEquipment, client.LocalPlayer.whoAmI, 0, 1, 0, BlockTypeItem.WallToItem[type]);
 
-            client.CustomSendData(MessageID.PlayerControls, client.myPlayer, tileX * 16f, tileY * 16f);
+            client.CustomSendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI, tileX * 16f, tileY * 16f);
             client.SendData(MessageID.TileManipulation, TileManipulationID.PlaceWall, tileX, tileY, type);
         }
 
@@ -100,8 +100,8 @@ namespace HeadlessTerrariaClient.Utility
         }
         public static void SendPaintTile_TShockBypass(this HeadlessClient client, int tileX, int tileY, int paintType)
         {
-            client.CustomSendData(MessageID.SyncEquipment, client.myPlayer, 0, 1, 0, ItemID.Paintbrush);
-            client.CustomSendData(MessageID.PlayerControls, client.myPlayer, tileX * 16f, tileY * 16f);
+            client.CustomSendData(MessageID.SyncEquipment, client.LocalPlayer.whoAmI, 0, 1, 0, ItemID.Paintbrush);
+            client.CustomSendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI, tileX * 16f, tileY * 16f);
             client.SendData(MessageID.PaintTile, tileX, tileY, paintType);
         }
 
@@ -111,16 +111,16 @@ namespace HeadlessTerrariaClient.Utility
         }
         public static void SendPaintWall_TShockBypass(this HeadlessClient client, int tileX, int tileY, int paintType)
         {
-            client.CustomSendData(MessageID.PlayerControls, client.myPlayer, tileX * 16f, tileY * 16f);
-            client.CustomSendData(MessageID.SyncEquipment, client.myPlayer, 0, 1, 0, ItemID.PaintRoller);
+            client.CustomSendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI, tileX * 16f, tileY * 16f);
+            client.CustomSendData(MessageID.SyncEquipment, client.LocalPlayer.whoAmI, 0, 1, 0, ItemID.PaintRoller);
             client.SendData(MessageID.PaintWall, tileX, tileY, paintType);
         }
 
 
         public static void TeleportThereAndBack(this HeadlessClient client, Vector2 positoin)
         {
-            client.CustomSendData(MessageID.PlayerControls, client.myPlayer, positoin.X, positoin.Y);
-            client.SendData(MessageID.PlayerControls, client.myPlayer);
+            client.CustomSendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI, positoin.X, positoin.Y);
+            client.SendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI);
         }
         public static void TeleportThereAndBack(this HeadlessClient client, int tileX, int tileY)
         {
