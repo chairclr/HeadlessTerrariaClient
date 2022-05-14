@@ -18,12 +18,14 @@ namespace HeadlessTerrariaClient.Client
         /// <summary>
         /// Players in the world
         /// </summary>
-        public Player[] player;
+        public Player[] Players { get; set; }
 
         /// <summary>
         /// World object containing information about the world
         /// </summary>
         public World CurrentWorld;
+
+        public Item[] Items { get; set; }
 
         public ClientWorld()
         {
@@ -33,12 +35,18 @@ namespace HeadlessTerrariaClient.Client
 
         private void InitializePlayers()
         {
-            player = new Player[256];
+            Players = new Player[256];
             for (int i = 0; i < 255; i++)
             {
-                player[i] = new Player();
-                player[i].Reset();
-                player[i].whoAmI = i;
+                Players[i] = new Player();
+                Players[i].Reset();
+                Players[i].whoAmI = i;
+            }
+
+            Items = new Item[401];
+            for (int i = 0; i < Items.Length; i++)
+            {
+                Items[i] = new Item();
             }
         }
         private void InitializeWorld()

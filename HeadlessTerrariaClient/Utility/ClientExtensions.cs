@@ -43,7 +43,7 @@ namespace HeadlessTerrariaClient.Utility
         {
             for (int i = 0; i < 255; i++)
             {
-                if (client.World.player[i].active && client.World.player[i].name == name)
+                if (client.World.Players[i].active && client.World.Players[i].name == name)
                 {
                     return i;
                 }
@@ -61,62 +61,6 @@ namespace HeadlessTerrariaClient.Utility
              client.Teleport(new Vector2(tileX * 16, tileY * 16));
         }
 
-        public static void SendBreakTile(this HeadlessClient client, int tileX, int tileY)
-        {
-            client.SendData(MessageID.TileManipulation, TileManipulationID.KillTileNoItem, tileX, tileY);
-        }
-        public static void SendPlaceTile(this HeadlessClient client, int tileX, int tileY, int type)
-        {
-            client.SendData(MessageID.TileManipulation, TileManipulationID.PlaceTile, tileX, tileY, type);
-        }
-        public static void SendPlaceTile_TShockBypass(this HeadlessClient client, int tileX, int tileY, int type)
-        {
-             client.CustomSendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI, tileX * 16f, tileY * 16f);
-             client.CustomSendData(MessageID.SyncEquipment, client.LocalPlayer.whoAmI, 0, 1, 0, BlockTypeItem.TileToItem[type]);
-
-            client.SendData(MessageID.TileManipulation, TileManipulationID.PlaceTile, tileX, tileY, type);
-
-        }
-
-        public static void SendBreakWall(this HeadlessClient client, int tileX, int tileY)
-        {
-            client.SendData(MessageID.TileManipulation, TileManipulationID.KillWall, tileX, tileY);
-        }
-        public static void SendPlaceWall(this HeadlessClient client, int tileX, int tileY, int type)
-        {
-            client.SendData(MessageID.TileManipulation, TileManipulationID.PlaceWall, tileX, tileY, type);
-        }
-        public static void SendPlaceWall_TShockBypass(this HeadlessClient client, int tileX, int tileY, int type)
-        {
-            client.CustomSendData(MessageID.SyncEquipment, client.LocalPlayer.whoAmI, 0, 1, 0, BlockTypeItem.WallToItem[type]);
-
-            client.CustomSendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI, tileX * 16f, tileY * 16f);
-            client.SendData(MessageID.TileManipulation, TileManipulationID.PlaceWall, tileX, tileY, type);
-        }
-
-        public static void SendPaintTile(this HeadlessClient client, int tileX, int tileY, int paintType)
-        {
-            client.SendData(MessageID.PaintTile, tileX, tileY, paintType);
-        }
-        public static void SendPaintTile_TShockBypass(this HeadlessClient client, int tileX, int tileY, int paintType)
-        {
-            client.CustomSendData(MessageID.SyncEquipment, client.LocalPlayer.whoAmI, 0, 1, 0, ItemID.Paintbrush);
-            client.CustomSendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI, tileX * 16f, tileY * 16f);
-            client.SendData(MessageID.PaintTile, tileX, tileY, paintType);
-        }
-
-        public static void SendPaintWall(this HeadlessClient client, int tileX, int tileY, int paintType)
-        {
-            client.SendData(MessageID.PaintWall, tileX, tileY, paintType);
-        }
-        public static void SendPaintWall_TShockBypass(this HeadlessClient client, int tileX, int tileY, int paintType)
-        {
-            client.CustomSendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI, tileX * 16f, tileY * 16f);
-            client.CustomSendData(MessageID.SyncEquipment, client.LocalPlayer.whoAmI, 0, 1, 0, ItemID.PaintRoller);
-            client.SendData(MessageID.PaintWall, tileX, tileY, paintType);
-        }
-
-
         public static void TeleportThereAndBack(this HeadlessClient client, Vector2 positoin)
         {
             client.CustomSendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI, positoin.X, positoin.Y);
@@ -124,8 +68,104 @@ namespace HeadlessTerrariaClient.Utility
         }
         public static void TeleportThereAndBack(this HeadlessClient client, int tileX, int tileY)
         {
-             client.TeleportThereAndBack(new Vector2(tileX * 16, tileY * 16));
+            client.TeleportThereAndBack(new Vector2(tileX * 16, tileY * 16));
         }
+
+        public static void SendBreakTile(this HeadlessClient client, int tileX, int tileY)
+        {
+            client.SendData(MessageID.TileManipulation, TileManipulationID.KillTileNoItem, tileX, tileY);
+        }
+        public static void SendPlaceTile(this HeadlessClient client, int tileX, int tileY, int type, bool bypassTShock = true)
+        {
+            if (bypassTShock)
+            {
+                client.CustomSendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI, tileX * 16f, tileY * 16f);
+                client.CustomSendData(MessageID.SyncEquipment, client.LocalPlayer.whoAmI, 0, 1, 0, BlockTypeItem.TileToItem[type]);
+
+                client.SendData(MessageID.TileManipulation, TileManipulationID.PlaceTile, tileX, tileY, type);
+            }
+            else
+                client.SendData(MessageID.TileManipulation, TileManipulationID.PlaceTile, tileX, tileY, type);
+        }
+
+        public static void SendBreakWall(this HeadlessClient client, int tileX, int tileY)
+        {
+            client.SendData(MessageID.TileManipulation, TileManipulationID.KillWall, tileX, tileY);
+        }
+        public static void SendPlaceWall(this HeadlessClient client, int tileX, int tileY, int type, bool bypassTShock = true)
+        {
+            if (bypassTShock)
+            {
+                client.CustomSendData(MessageID.SyncEquipment, client.LocalPlayer.whoAmI, 0, 1, 0, BlockTypeItem.WallToItem[type]);
+
+                client.CustomSendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI, tileX * 16f, tileY * 16f);
+                client.SendData(MessageID.TileManipulation, TileManipulationID.PlaceWall, tileX, tileY, type);
+            }
+            else
+                client.SendData(MessageID.TileManipulation, TileManipulationID.PlaceWall, tileX, tileY, type);
+        }
+
+        public static void SendPaintTile(this HeadlessClient client, int tileX, int tileY, int paintType, bool bypassTShock = true)
+        {
+            if (bypassTShock)
+            {
+                client.CustomSendData(MessageID.SyncEquipment, client.LocalPlayer.whoAmI, 0, 1, 0, ItemID.Paintbrush);
+                client.CustomSendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI, tileX * 16f, tileY * 16f);
+                client.SendData(MessageID.PaintTile, tileX, tileY, paintType);
+            }
+            else
+                client.SendData(MessageID.PaintTile, tileX, tileY, paintType);
+        }
+        public static void SendPaintWall(this HeadlessClient client, int tileX, int tileY, int paintType, bool bypassTShock = true)
+        {
+            if (bypassTShock)
+            {
+                client.CustomSendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI, tileX * 16f, tileY * 16f);
+                client.CustomSendData(MessageID.SyncEquipment, client.LocalPlayer.whoAmI, 0, 1, 0, ItemID.PaintRoller);
+                client.SendData(MessageID.PaintWall, tileX, tileY, paintType);
+            }
+            else
+                client.SendData(MessageID.PaintWall, tileX, tileY, paintType);
+        }
+
+        public static void RemoveItem(this HeadlessClient client, int i, bool bypassTShock = true)
+        {
+            if (bypassTShock)
+                client.Teleport(client.World.Items[i].position);
+            client.World.Items[i].active = false;
+            client.World.Items[i].stack = 0;
+            client.World.Items[i].type = 0;
+            client.World.Items[i].prefix = 0;
+            client.SendData(MessageID.SyncItem, i);
+        }
+        public static void SpawnItem(this HeadlessClient client, int type, int stack, Vector2 positoin, Vector2 velocity, bool bypassTShock = true)
+        {
+            if (bypassTShock)
+                client.Teleport(positoin);
+
+            int nextItemIndex = 400;
+
+            int num = 0;
+            int num2 = 400;
+            int num3 = 1;
+            for (int i = num; i != num2; i += num3)
+            {
+                if (!client.World.Items[i].active)
+                {
+                    nextItemIndex = i;
+                    break;
+                }
+            }
+
+            client.World.Items[nextItemIndex] = new Item(type, stack, 0, true);
+            client.World.Items[nextItemIndex].velocity = velocity;
+            client.World.Items[nextItemIndex].position = positoin;
+
+            client.SendData(MessageID.SyncItem, nextItemIndex);
+        }
+
+
+        
 
         public static Task LoadEntireWorld(this HeadlessClient client, int timeout = 25)
         {

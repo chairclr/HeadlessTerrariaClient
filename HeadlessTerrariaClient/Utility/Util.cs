@@ -156,7 +156,8 @@ namespace HeadlessTerrariaClient.Utility
 			return value1 + (value2 - value1) * amount;
 		}
 
-		private static readonly Dictionary<Color, ConsoleColor> _consoleColorMap = new Dictionary<Color, ConsoleColor>
+		// borrowed from TShock btw
+		private static readonly Dictionary<Color, ConsoleColor> consoleColorLookup = new Dictionary<Color, ConsoleColor>
 		{
 			{ Color.Red,                    ConsoleColor.Red },
 			{ Color.Green,                  ConsoleColor.Green },
@@ -166,26 +167,24 @@ namespace HeadlessTerrariaClient.Utility
 			{ new Color(255, 170, 255),     ConsoleColor.Magenta },
 			{ new Color(170, 255, 170),     ConsoleColor.Green },
 			{ new Color(255, 170, 170),     ConsoleColor.Red },
-			{ new Color(139, 0, 0),         ConsoleColor.DarkRed }, // This is the console warning color
-			{ Color.PaleVioletRed,          ConsoleColor.Magenta }, // This is the command logging color
+			{ new Color(139, 0, 0),         ConsoleColor.DarkRed },
+			{ Color.PaleVioletRed,          ConsoleColor.Magenta },
 			{ Color.White,                  ConsoleColor.White }
 		};
 
+		// borrowed from TShock btw
 		public static ConsoleColor PickNearbyConsoleColor(Color color)
 		{
-			//Grabs an integer difference between two colors in euclidean space
 			int ColorDiff(Color c1, Color c2)
 			{
-				return (int)Math.Sqrt((c1.R - c2.R) * (c1.R - c2.R)
-									   + (c1.G - c2.G) * (c1.G - c2.G)
-									   + (c1.B - c2.B) * (c1.B - c2.B));
+				return (int)((c1.R - c2.R) * (c1.R - c2.R) + (c1.G - c2.G) * (c1.G - c2.G) + (c1.B - c2.B) * (c1.B - c2.B));
 			}
 
-			var diffs = _consoleColorMap.Select(kvp => ColorDiff(kvp.Key, color));
+			var diffs = consoleColorLookup.Select(kvp => ColorDiff(kvp.Key, color));
 			int index = 0;
 			int min = int.MaxValue;
 
-			for (int i = 0; i < _consoleColorMap.Count; i++)
+			for (int i = 0; i < consoleColorLookup.Count; i++)
 			{
 				if (diffs.ElementAt(i) < min)
 				{
@@ -194,7 +193,7 @@ namespace HeadlessTerrariaClient.Utility
 				}
 			}
 
-			return _consoleColorMap.Values.ElementAt(index);
+			return consoleColorLookup.Values.ElementAt(index);
 		}
 
 

@@ -48,7 +48,7 @@ namespace HeadlessTerrariaClient.Examples
                 // Messages of id 255 are not from another player
                 if (message.AuthorIndex != 255)
                 {
-                    Player sender = client.World.player[message.AuthorIndex];
+                    Player sender = client.World.Players[message.AuthorIndex];
                     Console.Write($"<{sender.name}>");
                     message.WriteToConsole();
                     Console.Write("\n");

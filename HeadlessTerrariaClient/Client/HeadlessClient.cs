@@ -104,7 +104,7 @@ namespace HeadlessTerrariaClient.Client
         {
             get
             {
-                return World.player[myPlayer];
+                return World.Players[myPlayer];
             }
         }
 
@@ -431,8 +431,8 @@ namespace HeadlessTerrariaClient.Client
                     if (myPlayer != playerIndex)
                     {
                         // Swap players
-                        World.player[playerIndex] = World.player[myPlayer].Clone();
-                        World.player[myPlayer].Reset();
+                        World.Players[playerIndex] = World.Players[myPlayer].Clone();
+                        World.Players[myPlayer].Reset();
                         myPlayer = playerIndex;
                     }
 
@@ -768,15 +768,15 @@ namespace HeadlessTerrariaClient.Client
 
 
                     // skin variant
-                    World.player[whoAreThey].skinVariant = reader.ReadByte();
+                    World.Players[whoAreThey].skinVariant = reader.ReadByte();
 
                     // hair
                     reader.ReadByte();
 
-                    World.player[whoAreThey].name = reader.ReadString();
+                    World.Players[whoAreThey].name = reader.ReadString();
 
                     // hair dye
-                    World.player[whoAreThey].hairDye = reader.ReadByte();
+                    World.Players[whoAreThey].hairDye = reader.ReadByte();
 
                     // accessory/armor visibility 1
                     BitsByte hideVisibleAccessory = reader.ReadByte();
@@ -788,25 +788,25 @@ namespace HeadlessTerrariaClient.Client
                     reader.ReadByte();
 
                     // hairColor
-                    World.player[whoAreThey].hairColor = reader.ReadRGB();
+                    World.Players[whoAreThey].hairColor = reader.ReadRGB();
 
                     // skinColor
-                    World.player[whoAreThey].skinColor = reader.ReadRGB();
+                    World.Players[whoAreThey].skinColor = reader.ReadRGB();
 
                     // eyeColor
-                    World.player[whoAreThey].eyeColor = reader.ReadRGB();
+                    World.Players[whoAreThey].eyeColor = reader.ReadRGB();
 
                     // shirtColor
-                    World.player[whoAreThey].shirtColor = reader.ReadRGB();
+                    World.Players[whoAreThey].shirtColor = reader.ReadRGB();
 
                     // underShirtColor
-                    World.player[whoAreThey].underShirtColor = reader.ReadRGB();
+                    World.Players[whoAreThey].underShirtColor = reader.ReadRGB();
 
                     // pantsColor
-                    World.player[whoAreThey].pantsColor = reader.ReadRGB();
+                    World.Players[whoAreThey].pantsColor = reader.ReadRGB();
 
                     // shoeColor
-                    World.player[whoAreThey].shoeColor = reader.ReadRGB();
+                    World.Players[whoAreThey].shoeColor = reader.ReadRGB();
 
                     BitsByte bitsByte7 = reader.ReadByte();
 
@@ -819,7 +819,7 @@ namespace HeadlessTerrariaClient.Client
                     byte whoAreThey = reader.ReadByte();
                     bool active = reader.ReadByte() == 1;
 
-                    World.player[whoAreThey].active = active;
+                    World.Players[whoAreThey].active = active;
                     break;
                 }
                 case MessageID.PlayerControls:
@@ -829,7 +829,7 @@ namespace HeadlessTerrariaClient.Client
                     if (whoAreThey != myPlayer || ServerSideCharacter)
                     {
 
-                        Player plr = World.player[whoAreThey];
+                        Player plr = World.Players[whoAreThey];
 
                         BitsByte control = reader.ReadByte();
                         BitsByte pulley = reader.ReadByte();
@@ -888,7 +888,7 @@ namespace HeadlessTerrariaClient.Client
                 case MessageID.PlayerLife:
                 {
                     byte whoAreThey = reader.ReadByte();
-                    Player plr = World.player[whoAreThey];
+                    Player plr = World.Players[whoAreThey];
 
                     plr.statLife = reader.ReadInt16();
                     plr.statLifeMax = reader.ReadInt16();
@@ -897,7 +897,7 @@ namespace HeadlessTerrariaClient.Client
                 case MessageID.PlayerMana:
                 {
                     byte whoAreThey = reader.ReadByte();
-                    Player plr = World.player[whoAreThey];
+                    Player plr = World.Players[whoAreThey];
 
                     plr.statMana = reader.ReadInt16();
                     plr.statManaMax = reader.ReadInt16();
@@ -925,7 +925,7 @@ namespace HeadlessTerrariaClient.Client
                 case MessageID.SyncEquipment:
                 {
                     byte whoAreThey = reader.ReadByte();
-                    Player plr = World.player[whoAreThey];
+                    Player plr = World.Players[whoAreThey];
                     short inventorySlot = reader.ReadInt16();
                     Item item = plr.inventory[inventorySlot];
 
@@ -946,8 +946,41 @@ namespace HeadlessTerrariaClient.Client
                     plr.inventory[inventorySlot] = item;
                     break;
                 }
+                case MessageID.InstancedItem:
                 case MessageID.SyncItem:
                 {
+                    int itemId = reader.ReadInt16();
+                    Vector2 itemPosition = reader.ReadVector2();
+                    Vector2 itemVelocity = reader.ReadVector2();
+                    int itemStack = reader.ReadInt16();
+                    int itemPrefix = reader.ReadByte();
+                    int noDelay = reader.ReadByte();
+                    int netID = reader.ReadInt16();
+
+                    if (netID == 0)
+                    {
+                        World.Items[itemId].active = false;
+                        break;
+                    }
+
+                    Item item2 = World.Items[itemId];
+                    item2.SetTypeFromNetID(netID);
+                    item2.prefix = itemPrefix;
+                    item2.stack = itemStack;
+                    item2.position = itemPosition;
+                    item2.velocity = itemVelocity;
+                    item2.active = true;
+                    if (messageType == 90)
+                    {
+
+                        // the item is only on our client, which is cringe as fuck
+                        item2.instanced = true;
+                        item2.whoIsThisInstancedItemFor = myPlayer;
+
+                        // what do i even do for this
+                        // stays around for 10 seconds? this is cringe.
+                        // item2.keepTime = 600;
+                    }
                     break;
                 }
                 case MessageID.SyncPlayerItemRotation:
@@ -989,7 +1022,7 @@ namespace HeadlessTerrariaClient.Client
                         break;
                     case MessageID.SyncPlayer:
                     {
-                        Player plr = World.player[number];
+                        Player plr = World.Players[number];
                         writer.Write((byte)number);
 
                         // skin variant
@@ -1069,7 +1102,7 @@ namespace HeadlessTerrariaClient.Client
                         break;
                     case MessageID.PlayerLife:
                     {
-                        Player plr = World.player[number];
+                        Player plr = World.Players[number];
                         writer.Write((byte)number);
                         //statLife
                         writer.Write((short)plr.statLife);
@@ -1079,7 +1112,7 @@ namespace HeadlessTerrariaClient.Client
                     }
                     case MessageID.PlayerMana:
                     {
-                        Player plr = World.player[number];
+                        Player plr = World.Players[number];
                         writer.Write((byte)number);
                         //statMana
                         writer.Write((short)plr.statMana);
@@ -1101,7 +1134,7 @@ namespace HeadlessTerrariaClient.Client
                         break;
                     case MessageID.SyncEquipment:
                     {
-                        Player plr = World.player[number];
+                        Player plr = World.Players[number];
                         Item item = plr.inventory[(int)number2];
                         // player index
                         writer.Write((byte)number);
@@ -1132,7 +1165,7 @@ namespace HeadlessTerrariaClient.Client
                     }
                     case MessageID.PlayerControls:
                     {
-                        Player plr = World.player[number];
+                        Player plr = World.Players[number];
                         writer.Write((byte)number);
                         // Control, b3 must be true to send velocity
                         writer.Write(new BitsByte(b2: true));
@@ -1188,6 +1221,23 @@ namespace HeadlessTerrariaClient.Client
                         writer.Write((byte)number3);
                         break;
                     };
+                    case MessageID.SyncItem:
+                    {
+                        Item item7 = World.Items[number];
+                        writer.Write((short)number);
+                        writer.Write(item7.position);
+                        writer.Write(item7.velocity);
+                        writer.Write((short)item7.stack);
+                        writer.Write(item7.prefix);
+                        writer.Write((byte)number2);
+                        short value5 = 0;
+                        if (item7.active && item7.stack > 0)
+                        {
+                            value5 = (short)item7.GetNetID();
+                        }
+                        writer.Write(value5);
+                        break;
+                    }
                 }
 
                 int length = (int)MemoryStreamWrite.Position;
