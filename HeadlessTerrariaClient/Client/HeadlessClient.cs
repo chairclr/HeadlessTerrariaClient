@@ -1013,6 +1013,70 @@ namespace HeadlessTerrariaClient.Client
                     }
                     break;
                 }
+                case MessageID.ChestName:
+                {
+                    int chestId = reader.ReadInt16();
+                    int chestX = reader.ReadInt16();
+                    int chestY = reader.ReadInt16();
+                    if (chestId >= 0 && chestId < 8000)
+                    {
+                        Chest chest3 = World.CurrentWorld.Chests[chestId];
+                        if (chest3 == null)
+                        {
+                            chest3 = new Chest();
+                            chest3.x = chestX;
+                            chest3.y = chestY;
+                            World.CurrentWorld.Chests[chestId] = chest3;
+                        }
+                        else if (chest3.x != chestX || chest3.y != chestY)
+                        {
+                            break;
+                        }
+                        chest3.Name = reader.ReadString();
+                    }
+                    break;
+                }
+                case MessageID.PlaceChest:
+                {
+                    int action = reader.ReadByte();
+                    int chestX = reader.ReadInt16();
+                    int chestY = reader.ReadInt16();
+                    int style = reader.ReadInt16();
+                    int chestId = reader.ReadInt16();
+
+                    switch (action)
+                    {
+                        case 0:
+                            if (chestId == -1)
+                            {
+                                World.CurrentWorld.KillTile(chestX, chestY);
+                                break;
+                            }
+                            World.CurrentWorld.PlaceChestDirect(chestX, chestY, 21, style, chestId);
+                            break;
+                        case 2:
+                            if (chestId == -1)
+                            {
+                                World.CurrentWorld.KillTile(chestX, chestY);
+                                break;
+                            }
+                            World.CurrentWorld.PlaceDresserDirect(chestX, chestY, 88, style, chestId);
+                            break;
+                        case 4:
+                            if (chestId == -1)
+                            {
+                                World.CurrentWorld.KillTile(chestX, chestY);
+                                break;
+                            }
+                            World.CurrentWorld.PlaceChestDirect(chestX, chestY, 467, style, chestId);
+                            break;
+                        default:
+                            World.CurrentWorld.KillChestDirect(chestX, chestY, chestId);
+                            World.CurrentWorld.KillTile(chestX, chestY);
+                            break;
+                    }
+                    break;
+                }
                 default:
                     if (Settings.PrintAnyOutput && Settings.PrintUnknownPackets)
                     {

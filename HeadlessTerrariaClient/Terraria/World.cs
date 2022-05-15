@@ -3,11 +3,20 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.IO.Compression;
+using HeadlessTerrariaClient.Terraria.ID;
+using HeadlessTerrariaClient.Client;
 
 namespace HeadlessTerrariaClient.Terraria
 {
 	public class World
-	{
+    {
+
+		/// <summary>
+		/// A reference back to the owner ClientWorld, for access to things like Players[]
+		/// </summary>
+		public ClientWorld ClientWorld;
+
+		#region World data
 		public int time;
 		public bool dayTime;
 		public bool bloodMoon;
@@ -109,74 +118,22 @@ namespace HeadlessTerrariaClient.Terraria
 			public bool DownedInvasionT3;
 		}
 
-		public Tile[,] tile;
+		public Tile[,] Tiles;
 		public bool[,] LoadedTileSections;
 
+		public Chest[] Chests = new Chest[8000];
+
 		public Sign[] Signs = new Sign[1000];
+		#endregion
 
-
-
-
-
-		public bool CanPoundTile(int x, int y)
-		{
-			if (tile[x, y] == null)
-			{
-				tile[x, y] = new Tile();
-			}
-			if (tile[x, y - 1] == null)
-			{
-				tile[x, y - 1] = new Tile();
-			}
-			if (tile[x, y + 1] == null)
-			{
-				tile[x, y + 1] = new Tile();
-			}
-			switch (tile[x, y].tileType)
-			{
-				case 10:
-				case 48:
-				case 137:
-				case 138:
-				case 232:
-				case 380:
-				case 387:
-				case 388:
-				case 476:
-				case 484:
-					return false;
-				default:
-					if (tile[x, y - 1].GetTileActive())
-					{
-						switch (tile[x, y - 1].tileType)
-						{
-							case 21:
-							case 26:
-							case 77:
-							case 88:
-							case 235:
-							case 237:
-							case 441:
-							case 467:
-							case 468:
-							case 470:
-							case 475:
-							case 488:
-							case 597:
-								return false;
-						}
-					}
-					return true;
-			}
-		}
-
+		public int UnderworldLayer => maxTilesY - 200;
 
 
 		public void SetupTiles(bool loadTileSections)
 		{
 			if (loadTileSections)
 			{
-				tile = new Tile[maxTilesX, maxTilesY];
+				Tiles = new Tile[maxTilesX, maxTilesY];
 			}
 
 			LoadedTileSections = new bool[maxTilesX / 200, maxTilesY / 150];
@@ -191,7 +148,8 @@ namespace HeadlessTerrariaClient.Terraria
 			return IsTileSectionLoaded(tileX / 200, tileY / 150);
 		}
 
-		public void DecompressTileSection(byte[] buffer, int bufferStart, int bufferLength, bool loadTileSections)
+        #region Decoding Tile Section
+        public void DecompressTileSection(byte[] buffer, int bufferStart, int bufferLength, bool loadTileSections)
 		{
 			// implement now ok
 			using MemoryStream rawSectionStream = new MemoryStream();
@@ -257,23 +215,23 @@ namespace HeadlessTerrariaClient.Terraria
 					if (num != 0)
 					{
 						num--;
-						if (tile[j, i] == null)
+						if (Tiles[j, i] == null)
 						{
-							tile[j, i] = new Tile(tileCache);
+							Tiles[j, i] = new Tile(tileCache);
 						}
 						else
 						{
-							tile[j, i].CopyFrom(tileCache);
+							Tiles[j, i].CopyFrom(tileCache);
 						}
 						continue;
 					}
 					byte b;
 					byte b2 = (b = 0);
-					tileCache = tile[j, i];
+					tileCache = Tiles[j, i];
 					if (tileCache == null)
 					{
 						tileCache = new Tile();
-						tile[j, i] = tileCache;
+						Tiles[j, i] = tileCache;
 					}
 					else
 					{
@@ -407,14 +365,14 @@ namespace HeadlessTerrariaClient.Terraria
 				string name = reader.ReadString();
 				if (chestId >= 0 && chestId < 8000)
 				{
-					// add chests later
-					//if (Main.chest[num4] == null)
-					//{
-					//	Main.chest[num4] = new Chest();
-					//}
-					//Main.chest[num4].name = name;
-					//Main.chest[num4].x = x;
-					//Main.chest[num4].y = y;
+					// add chests now
+					if (Chests[chestId] == null)
+					{
+						Chests[chestId] = new Chest();
+					}
+					Chests[chestId].Name = name;
+					Chests[chestId].x = x;
+					Chests[chestId].y = y;
 				}
 			}
 		}
@@ -451,5 +409,287 @@ namespace HeadlessTerrariaClient.Terraria
 				//TileEntity.ByPosition[tileEntity.Position] = tileEntity;
 			}
 		}
+        #endregion
+
+        #region Bad Terraria code
+        public bool CanPoundTile(int x, int y)
+		{
+			if (Tiles[x, y] == null)
+			{
+				Tiles[x, y] = new Tile();
+			}
+			if (Tiles[x, y - 1] == null)
+			{
+				Tiles[x, y - 1] = new Tile();
+			}
+			if (Tiles[x, y + 1] == null)
+			{
+				Tiles[x, y + 1] = new Tile();
+			}
+			switch (Tiles[x, y].tileType)
+			{
+				case 10:
+				case 48:
+				case 137:
+				case 138:
+				case 232:
+				case 380:
+				case 387:
+				case 388:
+				case 476:
+				case 484:
+					return false;
+				default:
+					if (Tiles[x, y - 1].GetTileActive())
+					{
+						switch (Tiles[x, y - 1].tileType)
+						{
+							case 21:
+							case 26:
+							case 77:
+							case 88:
+							case 235:
+							case 237:
+							case 441:
+							case 467:
+							case 468:
+							case 470:
+							case 475:
+							case 488:
+							case 597:
+								return false;
+						}
+					}
+					return true;
+			}
+		}
+		public int CheckTileBreakability(int x, int y)
+		{
+			Tile tile = Tiles[x, y];
+			if (y >= 1 && y <= maxTilesY - 1)
+			{
+				Tile tile2 = Tiles[x, y - 1];
+				Tile tile3 = Tiles[x, y + 1];
+				if (tile3 != null && tile3.GetTileActive())
+				{
+					return 2;
+				}
+				if (!TileID.IsTileSolid[tile.tileType] && !TileID.IsTileSolidTop[tile.tileType])
+				{
+					return 0;
+				}
+				if (tile2.GetTileActive())
+				{
+					if ((tile.tileType != tile2.tileType) | (tile2.tileType == 77 && tile.tileType != 77))
+					{
+						if (TileID.IsATreeTrunk[tile2.tileType])
+						{
+							return 2;
+						}
+						if (tile2.tileType == 323)
+						{
+							return 0;
+						}
+						return 2;
+					}
+					if (tile2.tileType == 80 && tile2.tileType != tile.tileType)
+					{
+						return 2;
+					}
+					if (tile.tileType == 10)
+					{
+						return 1;
+					}
+					if (tile.tileType == 138 || tile.tileType == 484)
+					{
+						return 0;
+					}
+				}
+			}
+			return 0;
+		}
+		public void KillTile(int i, int j, bool fail = false, bool noItem = true)
+		{
+			if (i < 0 || j < 0 || i >= maxTilesX || j >= maxTilesY)
+			{
+				return;
+			}
+			Tile tile = Tiles[i, j];
+			if (tile == null)
+			{
+				tile = new Tile();
+				Tiles[i, j] = tile;
+			}
+			if (!tile.GetTileActive())
+			{
+				return;
+			}
+			if (j >= 1 && Tiles[i, j - 1] == null)
+			{
+				Tiles[i, j - 1] = new Tile();
+			}
+			int num = CheckTileBreakability(i, j);
+			if (num == 1)
+			{
+				fail = true;
+			}
+			if (num == 2)
+			{
+				return;
+			}
+			if (fail)
+			{
+				if (tile.tileType == 2 || tile.tileType == 23 || tile.tileType == 109 || tile.tileType == 199 || tile.tileType == 477 || tile.tileType == 492)
+				{
+					tile.tileType = 0;
+				}
+				if (tile.tileType == 60 || tile.tileType == 70)
+				{
+					tile.tileType = 59;
+				}
+				if (TileID.tileMoss[tile.tileType])
+				{
+					tile.tileType = 1;
+				}
+				if (TileID.tileMossBrick[tile.tileType])
+				{
+					tile.tileType = 38;
+				}
+				return;
+			}
+			
+			if (tile.tileType == 51 && tile.wallType == 62 && Utility.Util.rand.Next(4) != 0)
+			{
+				noItem = true;
+			}
+			tile.SetTileActive(active: false);
+			tile.SetHalfBrick(halfBrick: false);
+			tile.SetTilePaint(0);
+			if (tile.tileType == 58 && j > UnderworldLayer)
+			{
+				tile.SetIsLava(lava: true);
+				tile.liquidCount = 128;
+			}
+			tile.tileType = 0;
+			tile.SetInactive(inActive: false);
+		}
+
+		public void PlaceChestDirect(int x, int y, ushort type, int style, int id)
+		{
+			CreateChest(x, y - 1, id);
+			for (int i = 0; i <= 1; i++)
+			{
+				for (int j = -1; j <= 0; j++)
+				{
+					if (Tiles[x + i, y + j] == null)
+					{	
+						Tiles[x + i, y + j] = new Tile();
+					}
+				}
+			}
+			Tiles[x, y - 1].SetTileActive(active: true);
+			Tiles[x, y - 1].tileType = type;
+			Tiles[x, y - 1].SetHalfBrick(halfBrick: false);
+			Tiles[x + 1, y - 1].SetTileActive(active: true);
+			Tiles[x + 1, y - 1].tileType = type;
+			Tiles[x + 1, y - 1].SetHalfBrick(halfBrick: false);
+			Tiles[x, y].SetTileActive(active: true);
+			Tiles[x, y].tileType = type;
+			Tiles[x, y].SetHalfBrick(halfBrick: false);
+			Tiles[x + 1, y].SetTileActive(active: true);
+			Tiles[x + 1, y].tileType = type;
+			Tiles[x + 1, y].SetHalfBrick(halfBrick: false);
+		}
+
+		public void PlaceDresserDirect(int x, int y, ushort type, int style, int id)
+		{
+			CreateChest(x - 1, y - 1, id);
+			for (int i = -1; i <= 1; i++)
+			{
+				for (int j = -1; j <= 0; j++)
+				{
+					if (Tiles[x + i, y + j] == null)
+					{
+						Tiles[x + i, y + j] = new Tile();
+					}
+				}
+			}
+			short num = (short)(style * 54);
+			Tiles[x - 1, y - 1].SetTileActive(active: true);
+			Tiles[x - 1, y - 1].tileType = type;
+			Tiles[x, y - 1].SetTileActive(active: true);
+			Tiles[x, y - 1].tileType = type;
+			Tiles[x + 1, y - 1].SetTileActive(active: true);
+			Tiles[x + 1, y - 1].tileType = type;
+			Tiles[x - 1, y].SetTileActive(active: true);
+			Tiles[x - 1, y].tileType = type;
+			Tiles[x, y].SetTileActive(active: true);
+			Tiles[x, y].tileType = type;
+			Tiles[x + 1, y].SetTileActive(active: true);
+			Tiles[x + 1, y].tileType = type;
+		}
+
+		public int FindEmptyChest(int x, int y, int type = 21, int style = 0, int direction = 1, int alternate = 0)
+		{
+			int num = -1;
+			for (int i = 0; i < 8000; i++)
+			{
+				Chest chest = Chests[i];
+				if (chest != null)
+				{
+					if (chest.x == x && chest.y == y)
+					{
+						return -1;
+					}
+				}
+				else if (num == -1)
+				{
+					num = i;
+				}
+			}
+			return num;
+		}
+
+		public int CreateChest(int x, int y, int id = -1)
+        {
+			int num = id;
+			if (num == -1)
+			{
+				num = FindEmptyChest(x, y);
+				if (num == -1)
+				{
+					return -1;
+				}
+				return num;
+			}
+			Chests[num] = new Chest();
+			Chests[num].x = x;
+			Chests[num].y = y;
+			for (int i = 0; i < 40; i++)
+			{
+				Chests[num].Items[i] = new Item();
+			}
+			return num;
+		}
+
+		public void KillChestDirect(int x, int y, int id)
+        {
+			if (id < 0 || id >= Chests.Length)
+			{
+				return;
+			}
+			try
+			{
+				Chest chest = Chests[id];
+				if (chest != null && chest.x == x && chest.y == y)
+				{
+					Chests[id] = null;
+				}
+			}
+			catch
+			{
+			}
+		}
+		#endregion
 	}
 }

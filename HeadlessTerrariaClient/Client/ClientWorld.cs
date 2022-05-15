@@ -52,6 +52,7 @@ namespace HeadlessTerrariaClient.Client
         private void InitializeWorld()
         {
             CurrentWorld = new World();
+            CurrentWorld.ClientWorld = this;
         }
     }
 }

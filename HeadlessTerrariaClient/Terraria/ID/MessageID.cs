@@ -83,7 +83,7 @@ namespace HeadlessTerrariaClient.Terraria.ID
 
 		public const byte SyncPlayerChest = 33;
 
-		public const byte ChestUpdates = 34;
+		public const byte PlaceChest = 34;
 
 		public const byte PlayerHeal = 35;
 

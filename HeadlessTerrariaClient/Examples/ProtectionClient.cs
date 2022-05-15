@@ -69,9 +69,9 @@ namespace HeadlessTerrariaClient.Examples
                     placeRateLimit = 0;
                 }
 
-                client.SendPlaceTile(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.tile[manipulation.tileX, manipulation.tileY].tileType);
+                client.SendPlaceTile(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY].tileType);
                 // Make sure to paint it again
-                client.SendPaintTile(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.tile[manipulation.tileX, manipulation.tileY].GetTilePaint());
+                client.SendPaintTile(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY].GetTilePaint());
 
 
                 placeRateLimit++;
@@ -90,9 +90,9 @@ namespace HeadlessTerrariaClient.Examples
                     placeRateLimit = 0;
                 }
 
-                client.SendPlaceWall(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.tile[manipulation.tileX, manipulation.tileY].wallType);
+                client.SendPlaceWall(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY].wallType);
                 // Make sure to paint it again
-                client.SendPaintWall(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.tile[manipulation.tileX, manipulation.tileY].GetWallPaint());
+                client.SendPaintWall(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY].GetWallPaint());
 
 
                 placeRateLimit++;
@@ -111,11 +111,11 @@ namespace HeadlessTerrariaClient.Examples
                     placeRateLimit = 0;
                 }
 
-                if (client.World.CurrentWorld.tile[manipulation.tileX, manipulation.tileY].GetTileActive())
+                if (client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY].GetTileActive())
                 {
-                    client.SendPlaceTile(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.tile[manipulation.tileX, manipulation.tileY].tileType);
+                    client.SendPlaceTile(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY].tileType);
                     // Make sure to paint it again
-                    client.SendPaintTile(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.tile[manipulation.tileX, manipulation.tileY].GetTilePaint());
+                    client.SendPaintTile(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY].GetTilePaint());
                 }
                 else
                 {
@@ -158,9 +158,9 @@ namespace HeadlessTerrariaClient.Examples
 
                 client.SendBreakWall(manipulation.tileX, manipulation.tileY);
 
-                client.SendPlaceWall(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.tile[manipulation.tileX, manipulation.tileY].wallType);
+                client.SendPlaceWall(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY].wallType);
                 // Make sure to paint it again
-                client.SendPaintWall(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.tile[manipulation.tileX, manipulation.tileY].GetWallPaint());
+                client.SendPaintWall(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY].GetWallPaint());
 
                 placeRateLimit++;
 

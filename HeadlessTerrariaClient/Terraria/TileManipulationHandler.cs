@@ -20,12 +20,12 @@ namespace HeadlessTerrariaClient.Terraria
             if (!client.IsInWorld || client.Settings.IgnoreTileChunks || !client.Settings.LoadTileSections)
                 return;
 
-            if (client.World.CurrentWorld.tile[x, y] == null)
+            if (client.World.CurrentWorld.Tiles[x, y] == null)
             {
-                client.World.CurrentWorld.tile[x, y] = new Tile();
+                client.World.CurrentWorld.Tiles[x, y] = new Tile();
             }
 
-            Tile tile = client.World.CurrentWorld.tile[x, y];
+            Tile tile = client.World.CurrentWorld.Tiles[x, y];
 
             bool fail = flags1 == 1;
 
