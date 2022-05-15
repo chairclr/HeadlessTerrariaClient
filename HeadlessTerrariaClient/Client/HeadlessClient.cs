@@ -992,6 +992,27 @@ namespace HeadlessTerrariaClient.Client
                     short animation = reader.ReadInt16();
                     break;
                 }
+                case MessageID.UpdateSign:
+                {
+                    int signId = reader.ReadInt16();
+                    int x = reader.ReadInt16();
+                    int y = reader.ReadInt16();
+                    string text = reader.ReadString();
+                    byte whoDidThis = reader.ReadByte();
+                    byte signFlags = reader.ReadByte();
+
+                    if (signId >= 0 && signId < 1000)
+                    {
+                        if (World.CurrentWorld.Signs[signId] == null)
+                        {
+                            World.CurrentWorld.Signs[signId] = new Sign();
+                        }
+                        World.CurrentWorld.Signs[signId].text = text;
+                        World.CurrentWorld.Signs[signId].x = x;
+                        World.CurrentWorld.Signs[signId].y = y;
+                    }
+                    break;
+                }
                 default:
                     if (Settings.PrintAnyOutput && Settings.PrintUnknownPackets)
                     {

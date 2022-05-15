@@ -109,7 +109,7 @@ namespace HeadlessTerrariaClient.Terraria.ID
 
 		public const byte Unknown46 = 46;
 
-		public const byte Unknown47 = 47;
+		public const byte UpdateSign = 47;
 
 		public const byte LiquidUpdate = 48;
 
