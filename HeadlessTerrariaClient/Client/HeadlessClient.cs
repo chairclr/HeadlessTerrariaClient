@@ -767,12 +767,16 @@ namespace HeadlessTerrariaClient.Client
                 {
                     byte whoAreThey = reader.ReadByte();
 
+                    if (whoAreThey == myPlayer && !ServerSideCharacter)
+                    {
+                        break;
+                    }
 
                     // skin variant
                     World.Players[whoAreThey].skinVariant = reader.ReadByte();
 
                     // hair
-                    reader.ReadByte();
+                    World.Players[whoAreThey].hairType = reader.ReadByte();
 
                     World.Players[whoAreThey].name = reader.ReadString();
 
@@ -829,7 +833,6 @@ namespace HeadlessTerrariaClient.Client
 
                     if (whoAreThey != myPlayer || ServerSideCharacter)
                     {
-
                         Player plr = World.Players[whoAreThey];
 
                         BitsByte control = reader.ReadByte();
@@ -889,17 +892,28 @@ namespace HeadlessTerrariaClient.Client
                 case MessageID.PlayerLife:
                 {
                     byte whoAreThey = reader.ReadByte();
-                    Player plr = World.Players[whoAreThey];
 
-                    plr.statLife = reader.ReadInt16();
-                    plr.statLifeMax = reader.ReadInt16();
+                    if (whoAreThey != myPlayer || ServerSideCharacter)
+                    {
+                        Player plr = World.Players[whoAreThey];
+
+                        plr.statLife = reader.ReadInt16();
+                        plr.statLifeMax = reader.ReadInt16();
+                        if (plr.statLifeMax < 100)
+                        {
+                            plr.statLifeMax = 100;
+                        }
+                    }
                     break;
                 }
                 case MessageID.PlayerMana:
                 {
                     byte whoAreThey = reader.ReadByte();
                     Player plr = World.Players[whoAreThey];
-
+                    if (myPlayer == whoAreThey && !ServerSideCharacter)
+                    {
+                        break;
+                    }
                     plr.statMana = reader.ReadInt16();
                     plr.statManaMax = reader.ReadInt16();
                     break;
@@ -926,25 +940,35 @@ namespace HeadlessTerrariaClient.Client
                 case MessageID.SyncEquipment:
                 {
                     byte whoAreThey = reader.ReadByte();
+
+                    if (whoAreThey == myPlayer && !ServerSideCharacter/* && !Main.player[whoAreThey].HasLockedInventory() <--- can someone please explain what this is for?*/)
+                    {
+                        break;
+                    }
+
                     Player plr = World.Players[whoAreThey];
-                    short inventorySlot = reader.ReadInt16();
-                    Item item = plr.inventory[inventorySlot];
 
-                    short stack = reader.ReadInt16();
-                    byte prefix = reader.ReadByte();
-                    short type = reader.ReadInt16();
+                    lock (plr)
+                    {
+                        short inventorySlot = reader.ReadInt16();
+                        Item item = plr.inventory[inventorySlot];
 
-                    if (item == null)
-                    {
-                        item = new Item(type, stack, prefix);
+                        short stack = reader.ReadInt16();
+                        byte prefix = reader.ReadByte();
+                        short type = reader.ReadInt16();
+
+                        if (item == null)
+                        {
+                            item = new Item(type, stack, prefix);
+                        }
+                        else
+                        {
+                            item.type = type;
+                            item.prefix = prefix;
+                            item.stack = stack;
+                        }
+                        plr.inventory[inventorySlot] = item;
                     }
-                    else
-                    {
-                        item.type = type;
-                        item.prefix = prefix;
-                        item.stack = stack;
-                    }
-                    plr.inventory[inventorySlot] = item;
                     break;
                 }
                 case MessageID.InstancedItem:
@@ -1109,6 +1133,8 @@ namespace HeadlessTerrariaClient.Client
                     case MessageID.SyncPlayer:
                     {
                         Player plr = World.Players[number];
+
+
                         writer.Write((byte)number);
 
                         // skin variant
