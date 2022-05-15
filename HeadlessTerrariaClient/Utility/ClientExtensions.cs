@@ -80,7 +80,7 @@ namespace HeadlessTerrariaClient.Utility
             if (bypassTShock)
             {
                 client.CustomSendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI, tileX * 16f, tileY * 16f);
-                client.CustomSendData(MessageID.SyncEquipment, client.LocalPlayer.whoAmI, 0, 1, 0, BlockTypeItem.TileToItem[type]);
+                client.CustomSendData(MessageID.SyncEquipment, client.LocalPlayer.whoAmI, 0, 1, BlockTypeItem.TileToItem[type]);
 
                 client.SendData(MessageID.TileManipulation, TileManipulationID.PlaceTile, tileX, tileY, type);
             }
@@ -96,7 +96,7 @@ namespace HeadlessTerrariaClient.Utility
         {
             if (bypassTShock)
             {
-                client.CustomSendData(MessageID.SyncEquipment, client.LocalPlayer.whoAmI, 0, 1, 0, BlockTypeItem.WallToItem[type]);
+                client.CustomSendData(MessageID.SyncEquipment, client.LocalPlayer.whoAmI, 0, 1,BlockTypeItem.WallToItem[type]);
 
                 client.CustomSendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI, tileX * 16f, tileY * 16f);
                 client.SendData(MessageID.TileManipulation, TileManipulationID.PlaceWall, tileX, tileY, type);
@@ -109,7 +109,7 @@ namespace HeadlessTerrariaClient.Utility
         {
             if (bypassTShock)
             {
-                client.CustomSendData(MessageID.SyncEquipment, client.LocalPlayer.whoAmI, 0, 1, 0, ItemID.Paintbrush);
+                client.CustomSendData(MessageID.SyncEquipment, client.LocalPlayer.whoAmI, 0, 1,ItemID.Paintbrush);
                 client.CustomSendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI, tileX * 16f, tileY * 16f);
                 client.SendData(MessageID.PaintTile, tileX, tileY, paintType);
             }
@@ -121,7 +121,7 @@ namespace HeadlessTerrariaClient.Utility
             if (bypassTShock)
             {
                 client.CustomSendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI, tileX * 16f, tileY * 16f);
-                client.CustomSendData(MessageID.SyncEquipment, client.LocalPlayer.whoAmI, 0, 1, 0, ItemID.PaintRoller);
+                client.CustomSendData(MessageID.SyncEquipment, client.LocalPlayer.whoAmI, 0, 1, ItemID.PaintRoller);
                 client.SendData(MessageID.PaintWall, tileX, tileY, paintType);
             }
             else
@@ -226,23 +226,18 @@ namespace HeadlessTerrariaClient.Utility
                 {
                     case MessageID.SyncEquipment:
                     {
-                        // player id
+                        // player index
                         writer.Write((byte)number);
 
-                        // slot
+                        // inventory index
                         writer.Write((short)number2);
 
-                        // stack
+                        // stack?
                         writer.Write((short)number3);
-
-                        // prefix
-                        writer.Write((byte)number4);
-
-                        // type
-                        if (number5 == -1)
-                            writer.Write((short)0);
-                        else
-                            writer.Write((short)number5);
+                        // prefix?
+                        writer.Write((byte)0);
+                        // type?
+                        writer.Write((short)number4);
                         break;
                     }
                     case MessageID.PlayerControls:

@@ -433,6 +433,9 @@ namespace HeadlessTerrariaClient.Client
                         // Swap players
                         World.Players[playerIndex] = World.Players[myPlayer].Clone();
                         World.Players[myPlayer].Reset();
+
+                        World.Players[playerIndex].whoAmI = playerIndex;
+                        World.Players[myPlayer].whoAmI = myPlayer;
                         myPlayer = playerIndex;
                     }
 

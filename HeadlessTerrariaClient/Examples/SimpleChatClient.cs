@@ -10,21 +10,14 @@ using HeadlessTerrariaClient.Terraria.ID;
 
 namespace HeadlessTerrariaClient.Examples
 {
-    public static class Program
-    {
-        static void Main(string[] args)
-        {
-            SimpleChatClient chatClient = new SimpleChatClient();
-
-            chatClient.Start().Wait();
-        }
-    }
+    /// <summary>
+    /// Very simple example client that connects to a server and prints chat messages to the console
+    /// </summary>
     public class SimpleChatClient
     {
         const string ServerIP = "127.0.0.1";
         const int ServerPort = 7777;
         
-
         public async Task Start()
         {
             // Create a new client
