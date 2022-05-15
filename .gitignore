@@ -363,5 +363,7 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # Ignore debug client
-Examples/DebugClient.cs
 /HeadlessTerrariaClient/Examples/DebugClient.cs
+
+# Ignore sln (solution) file because it's unneeded to build
+*.sln
