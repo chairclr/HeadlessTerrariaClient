@@ -80,7 +80,6 @@ namespace HeadlessTerrariaClient.Examples
                 return false;
             }
 
-
             // When someone breaks a wall, place the same wall back
             if (manipulation.action == TileManipulationID.KillWall)
             {
@@ -103,7 +102,7 @@ namespace HeadlessTerrariaClient.Examples
             }
 
             // Break a tile when someone else places it
-            if (manipulation.action == TileManipulationID.PlaceTile)
+            if (manipulation.action == TileManipulationID.PlaceTile || manipulation.action == TileManipulationID.ReplaceTile)
             {
                 // Limit number of actions we can do in an amount of time
                 if (placeRateLimit > 500)
@@ -112,7 +111,16 @@ namespace HeadlessTerrariaClient.Examples
                     placeRateLimit = 0;
                 }
 
-                client.SendBreakTile(manipulation.tileX, manipulation.tileY);
+                if (client.World.CurrentWorld.tile[manipulation.tileX, manipulation.tileY].GetTileActive())
+                {
+                    client.SendPlaceTile(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.tile[manipulation.tileX, manipulation.tileY].tileType);
+                    // Make sure to paint it again
+                    client.SendPaintTile(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.tile[manipulation.tileX, manipulation.tileY].GetTilePaint());
+                }
+                else
+                {
+                    client.SendBreakTile(manipulation.tileX, manipulation.tileY);
+                }
 
                 placeRateLimit++;
 
@@ -131,6 +139,28 @@ namespace HeadlessTerrariaClient.Examples
                 }
 
                 client.SendBreakWall(manipulation.tileX, manipulation.tileY);
+
+                placeRateLimit++;
+
+                // Return false so the tile stays the same on client
+                return false;
+            }
+
+            // Replace a wall a wall when someone else places it
+            if (manipulation.action == TileManipulationID.ReplaceWall)
+            {
+                // Limit number of actions we can do in an amount of time
+                if (placeRateLimit > 500)
+                {
+                    Task.Delay(250).Wait();
+                    placeRateLimit = 0;
+                }
+
+                client.SendBreakWall(manipulation.tileX, manipulation.tileY);
+
+                client.SendPlaceWall(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.tile[manipulation.tileX, manipulation.tileY].wallType);
+                // Make sure to paint it again
+                client.SendPaintWall(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.tile[manipulation.tileX, manipulation.tileY].GetWallPaint());
 
                 placeRateLimit++;
 
