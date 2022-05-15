@@ -379,8 +379,6 @@ namespace HeadlessTerrariaClient.Client
         }
 
         
-
-        
         /// <summary>
         /// Handler for a packet being received
         /// </summary>
