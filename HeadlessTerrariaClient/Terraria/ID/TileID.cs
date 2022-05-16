@@ -1258,6 +1258,108 @@ namespace HeadlessTerrariaClient.Terraria.ID
 
 		public const ushort Count = 625;
 
+		public static Dictionary<int, int> GrassToTile = new Dictionary<int, int>() { { 2, 0 }, { 23, 0 }, { 199, 0 }, { 70, TileID.Mud }, { 60, TileID.Mud }, { 109, 0 }, };
+		public static Dictionary<int, int> UnsafeWallToSafe = new Dictionary<int, int>() {
+			{ WallID.GrassUnsafe, WallID.Grass },
+			{ WallID.MudUnsafe, WallID.MudWallEcho },
+
+			{ WallID.JungleUnsafe, WallID.Jungle },
+			{ WallID.JungleUnsafe1, WallID.Jungle1Echo },
+			{ WallID.JungleUnsafe2, WallID.Jungle2Echo },
+			{ WallID.JungleUnsafe3, WallID.Jungle3Echo },
+			{ WallID.JungleUnsafe4, WallID.Jungle4Echo },
+
+			{ WallID.AmethystUnsafe, WallID.AmethystEcho },
+			{ WallID.TopazUnsafe, WallID.TopazEcho },
+			{ WallID.DiamondUnsafe, WallID.DiamondEcho },
+			{ WallID.SapphireUnsafe, WallID.SapphireEcho },
+			{ WallID.RubyUnsafe, WallID.RubyEcho },
+			{ WallID.EmeraldUnsafe, WallID.EmeraldEcho },
+
+			{ WallID.DirtUnsafe, WallID.Dirt },
+			{ WallID.DirtUnsafe1, WallID.Dirt1Echo },
+			{ WallID.DirtUnsafe2, WallID.Dirt2Echo },
+			{ WallID.DirtUnsafe3, WallID.Dirt3Echo },
+			{ WallID.DirtUnsafe4, WallID.Dirt4Echo },
+
+			{ WallID.BlueDungeonUnsafe,     WallID.BlueDungeon },
+			{ WallID.BlueDungeonTileUnsafe, WallID.BlueDungeonTile },
+			{ WallID.BlueDungeonSlabUnsafe, WallID.BlueDungeonSlab },
+
+			{ WallID.PinkDungeonUnsafe,     WallID.PinkDungeon },
+			{ WallID.PinkDungeonTileUnsafe, WallID.PinkDungeonTile },
+			{ WallID.PinkDungeonSlabUnsafe, WallID.PinkDungeonSlab },
+
+			{ WallID.GreenDungeonUnsafe,     WallID.GreenDungeon },
+			{ WallID.GreenDungeonTileUnsafe, WallID.GreenDungeonTile },
+			{ WallID.GreenDungeonSlabUnsafe, WallID.GreenDungeonSlab },
+
+			{ WallID.CaveUnsafe,  WallID.Cave1Echo },
+			{ WallID.Cave2Unsafe, WallID.Cave2Echo },
+			{ WallID.Cave3Unsafe, WallID.Cave3Echo },
+			{ WallID.Cave4Unsafe, WallID.Cave4Echo },
+			{ WallID.Cave5Unsafe, WallID.Cave5Echo },
+			{ WallID.Cave6Unsafe, WallID.Cave6Echo },
+			{ WallID.Cave7Unsafe, WallID.Cave7Echo },
+
+			{ WallID.CaveWall,  WallID.CaveWall1Echo },
+			{ WallID.CaveWall2, WallID.CaveWall2Echo },
+
+			{ WallID.CorruptionUnsafe1,     WallID.Corruption1Echo },
+			{ WallID.CorruptionUnsafe2,     WallID.Corruption2Echo },
+			{ WallID.CorruptionUnsafe3,     WallID.Corruption3Echo },
+			{ WallID.CorruptionUnsafe4,     WallID.Corruption4Echo },
+			{ WallID.CorruptSandstone,      WallID.CorruptSandstoneEcho },
+			{ WallID.CorruptGrassUnsafe,    WallID.CorruptGrassEcho },
+			{ WallID.CorruptHardenedSand,   WallID.CorruptHardenedSandEcho },
+			{ WallID.EbonstoneUnsafe,       WallID.EbonstoneEcho },
+
+			{ WallID.CrimsonUnsafe1,        WallID.Crimson1Echo },
+			{ WallID.CrimsonUnsafe2,        WallID.Crimson2Echo },
+			{ WallID.CrimsonUnsafe3,        WallID.Crimson3Echo },
+			{ WallID.CrimsonUnsafe4,        WallID.Crimson4Echo },
+			{ WallID.CrimsonSandstone,      WallID.CrimsonSandstoneEcho },
+			{ WallID.CrimsonGrassUnsafe,    WallID.CrimsonGrassEcho },
+			{ WallID.CrimsonHardenedSand,   WallID.CrimsonHardenedSandEcho },
+			{ WallID.CrimstoneUnsafe,       WallID.CrimstoneEcho },
+
+			{ WallID.HallowUnsafe1,         WallID.Hallow1Echo },
+			{ WallID.HallowUnsafe2,         WallID.Hallow2Echo },
+			{ WallID.HallowUnsafe3,         WallID.Hallow3Echo },
+			{ WallID.HallowUnsafe4,         WallID.Hallow4Echo },
+			{ WallID.HallowSandstone,      WallID.HallowSandstoneEcho },
+			{ WallID.HallowedGrassUnsafe,    WallID.HallowedGrassEcho },
+			{ WallID.HallowHardenedSand,   WallID.HallowHardenedSandEcho },
+
+			{ WallID.FlowerUnsafe, WallID.Flower },
+			{ WallID.GraniteUnsafe, WallID.Granite },
+
+			{ WallID.HellstoneBrickUnsafe,   WallID.HellstoneBrick },
+			{ WallID.HiveUnsafe,   WallID.Hive },
+			{ WallID.IceUnsafe,   WallID.IceEcho },
+
+			{ WallID.LavaUnsafe1,   WallID.Lava1Echo },
+			{ WallID.LavaUnsafe2,   WallID.Lava2Echo },
+			{ WallID.LavaUnsafe3,   WallID.Lava3Echo },
+			{ WallID.LavaUnsafe4,   WallID.Lava4Echo },
+
+			{ WallID.LihzahrdBrickUnsafe,   WallID.LihzahrdBrick },
+			{ WallID.MarbleUnsafe,   WallID.Marble },
+			{ WallID.MushroomUnsafe,   WallID.Mushroom },
+			{ WallID.ObsidianBackUnsafe,   WallID.ObsidianBackEcho },
+			{ WallID.ObsidianBrickUnsafe,   WallID.ObsidianBrick },
+			{ WallID.PearlstoneBrickUnsafe,   WallID.PearlstoneBrick },
+
+			{ WallID.RocksUnsafe1,   WallID.Rocks1Echo },
+			{ WallID.RocksUnsafe2,   WallID.Rocks2Echo },
+			{ WallID.RocksUnsafe3,   WallID.Rocks3Echo },
+			{ WallID.RocksUnsafe4,   WallID.Rocks4Echo },
+
+			{ WallID.SnowWallUnsafe,   WallID.SnowWallEcho },
+			{ WallID.SpiderUnsafe,   WallID.SpiderEcho },
+			};
+		public static Dictionary<int, int> GrassToGrassType = new Dictionary<int, int>() { { TileID.Grass, GrassID.Grass }, { TileID.CorruptGrass, GrassID.CorruptGrass }, { TileID.CrimsonGrass, GrassID.CrimsonGrass }, { TileID.JungleGrass, GrassID.JungleGrass }, { TileID.MushroomGrass, GrassID.MushroomGrass }, { TileID.HallowedGrass, GrassID.HallowedGrass }, };
+		public static int[] GrassToTileType = new int[] { TileID.Grass, TileID.JungleGrass, TileID.MushroomGrass, TileID.CorruptGrass, TileID.CrimsonGrass, TileID.HallowedGrass };
 
 		public static bool[] IsTileFrameImportant = new bool[Count];
 
@@ -1270,7 +1372,6 @@ namespace HeadlessTerrariaClient.Terraria.ID
 		public static bool[] tileMossBrick = new bool[Count];
 
 		public static bool[] IsATreeTrunk = new bool[Count];
-
 
 		static TileID()
         {

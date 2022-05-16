@@ -15,12 +15,18 @@ namespace HeadlessTerrariaClient.Examples
     /// </summary>
     public class ProtectionClient
     {
-        const string ServerIP = "127.0.0.1";
-        const int ServerPort = 7777;
+        string ServerIP = "127.0.0.1";
+        short ServerPort = 7777;
 
         const int RateLimit = 500;
         const int RateLimitTimeout = 150;
         int placeRateLimit = 0;
+
+        public ProtectionClient(string ip = "127.0.0.1", short port = 7777)
+        {
+            ServerIP = ip;
+            ServerPort = (short)port;
+        }
 
         public async Task Start()
         {
@@ -69,10 +75,25 @@ namespace HeadlessTerrariaClient.Examples
                     placeRateLimit = 0;
                 }
 
-                client.SendPlaceTile(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY].tileType);
-                // Make sure to paint it again
-                client.SendPaintTile(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY].GetTilePaint());
+                Tile tile = client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY];
 
+
+                if (tile.GetTileActive())
+                {
+
+                    if (TileID.GrassToTile.ContainsKey(tile.tileType))
+                    {
+                        client.SendPlaceTile(manipulation.tileX, manipulation.tileY, TileID.GrassToTile[tile.tileType]);
+                        client.SendPlaceTile(manipulation.tileX, manipulation.tileY, TileID.GrassToTileType[TileID.GrassToTile[tile.tileType]]);
+                    }
+                    else
+                    {
+                        client.SendPlaceTile(manipulation.tileX, manipulation.tileY, tile.tileType);
+
+                    }
+                    // Make sure to paint it again
+                    client.SendPaintTile(manipulation.tileX, manipulation.tileY, tile.GetTilePaint());
+                }
 
                 placeRateLimit++;
 
@@ -90,9 +111,18 @@ namespace HeadlessTerrariaClient.Examples
                     placeRateLimit = 0;
                 }
 
-                client.SendPlaceWall(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY].wallType);
+                Tile tile = client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY];
+
+                if (TileID.UnsafeWallToSafe.ContainsKey(tile.wallType))
+                {
+                    client.SendPlaceWall(manipulation.tileX, manipulation.tileY, TileID.UnsafeWallToSafe[tile.wallType]);
+                }
+                else
+                {
+                    client.SendPlaceWall(manipulation.tileX, manipulation.tileY, tile.wallType);
+                }
                 // Make sure to paint it again
-                client.SendPaintWall(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY].GetWallPaint());
+                client.SendPaintWall(manipulation.tileX, manipulation.tileY, tile.GetWallPaint());
 
 
                 placeRateLimit++;
@@ -111,11 +141,13 @@ namespace HeadlessTerrariaClient.Examples
                     placeRateLimit = 0;
                 }
 
-                if (client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY].GetTileActive())
+                Tile tile = client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY];
+
+                if (tile.GetTileActive())
                 {
-                    client.SendPlaceTile(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY].tileType);
+                    client.SendPlaceTile(manipulation.tileX, manipulation.tileY, tile.tileType);
                     // Make sure to paint it again
-                    client.SendPaintTile(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY].GetTilePaint());
+                    client.SendPaintTile(manipulation.tileX, manipulation.tileY, tile.GetTilePaint());
                 }
                 else
                 {
@@ -156,11 +188,20 @@ namespace HeadlessTerrariaClient.Examples
                     placeRateLimit = 0;
                 }
 
+                Tile tile = client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY];
+
                 client.SendBreakWall(manipulation.tileX, manipulation.tileY);
 
-                client.SendPlaceWall(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY].wallType);
+                if (TileID.UnsafeWallToSafe.ContainsKey(tile.wallType))
+                {
+                    client.SendPlaceWall(manipulation.tileX, manipulation.tileY, TileID.UnsafeWallToSafe[tile.wallType]);
+                }
+                else
+                {
+                    client.SendPlaceWall(manipulation.tileX, manipulation.tileY, tile.wallType);
+                }
                 // Make sure to paint it again
-                client.SendPaintWall(manipulation.tileX, manipulation.tileY, client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY].GetWallPaint());
+                client.SendPaintWall(manipulation.tileX, manipulation.tileY, tile.GetWallPaint());
 
                 placeRateLimit++;
 
