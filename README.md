@@ -81,6 +81,7 @@ Questions?
 ---
 
 Join the Discord server if you have any questions 
+
 [![Banner](https://discordapp.com/api/guilds/977944638356877312/widget.png?style=banner4)](https://discord.gg/DHh73r5td8)
 
 
