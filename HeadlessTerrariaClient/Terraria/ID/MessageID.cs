@@ -55,7 +55,7 @@ namespace HeadlessTerrariaClient.Terraria.ID
 
 		public const byte ToggleDoorState = 19;
 
-		public const byte Unknown20 = 20;
+		public const byte SendTileSquare = 20;
 
 		public const byte SyncItem = 21;
 
@@ -65,9 +65,9 @@ namespace HeadlessTerrariaClient.Terraria.ID
 
 		public const byte UnusedMeleeStrike = 24;
 
-		public const byte Unused25 = 25;
+		public const byte Null25 = 25;
 
-		public const byte Unused26 = 26;
+		public const byte Null26 = 26;
 
 		public const byte SyncProjectile = 27;
 
@@ -101,13 +101,13 @@ namespace HeadlessTerrariaClient.Terraria.ID
 
 		public const byte PlayerMana = 42;
 
-		public const byte Unknown43 = 43;
+		public const byte ManaEffect = 43;
 
-		public const byte Unknown44 = 44;
+		public const byte Null44 = 44;
 
-		public const byte Unknown45 = 45;
+		public const byte PlayerTeam = 45;
 
-		public const byte Unknown46 = 46;
+		public const byte RequestSign = 46;
 
 		public const byte UpdateSign = 47;
 
@@ -119,11 +119,11 @@ namespace HeadlessTerrariaClient.Terraria.ID
 
 		public const byte MiscDataSync = 51;
 
-		public const byte Unknown52 = 52;
+		public const byte UnlockTile = 52;
 
-		public const byte Unknown53 = 53;
+		public const byte AddNPCBuff = 53;
 
-		public const byte Unknown54 = 54;
+		public const byte UpdateNPCBuff = 54;
 
 		public const byte AddPlayerBuff = 55;
 
@@ -135,11 +135,11 @@ namespace HeadlessTerrariaClient.Terraria.ID
 
 		public const byte HitSwitch = 59;
 
-		public const byte Unknown60 = 60;
+		public const byte UpdateNPCHome = 60;
 
-		public const byte Unknown61 = 61;
+		public const byte SpawnBoss = 61;
 
-		public const byte Unknown62 = 62;
+		public const byte PlayerDodge = 62;
 
 		public const byte PaintTile = 63;
 
