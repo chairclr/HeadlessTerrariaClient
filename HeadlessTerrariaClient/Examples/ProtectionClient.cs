@@ -86,7 +86,7 @@ namespace HeadlessTerrariaClient.Examples
                         if (TileID.GrassToTile.ContainsKey(tile.tileType))
                         {
                             client.SendPlaceTile(manipulation.tileX, manipulation.tileY, TileID.GrassToTile[tile.tileType]);
-                            client.SendPlaceTile(manipulation.tileX, manipulation.tileY, TileID.GrassToTileType[TileID.GrassToTile[tile.tileType]]);
+                            client.SendPlaceTile(manipulation.tileX, manipulation.tileY, TileID.GrassToTileType[TileID.GrassToGrassType[tile.tileType]]);
                         }
                         else
                         {
