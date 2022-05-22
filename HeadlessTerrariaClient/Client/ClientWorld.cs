@@ -18,14 +18,17 @@ namespace HeadlessTerrariaClient.Client
         /// <summary>
         /// Players in the world
         /// </summary>
-        public Player[] Players { get; set; }
+        public Player[] Players;
 
         /// <summary>
         /// World object containing information about the world
         /// </summary>
         public World CurrentWorld;
 
-        public Item[] Items { get; set; }
+        /// <summary>
+        /// The items on the ground in the world
+        /// </summary>
+        public Item[] Items;
 
         public ClientWorld()
         {

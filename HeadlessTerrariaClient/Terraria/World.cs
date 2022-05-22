@@ -120,6 +120,8 @@ namespace HeadlessTerrariaClient.Terraria
 
 		public Tile[,] Tiles;
 		public bool[,] LoadedTileSections;
+		public int MaxTileSectionsX => maxTilesX / 200;
+		public int MaxTileSectionsY => maxTilesY / 150;
 
 		public Chest[] Chests = new Chest[8000];
 
@@ -127,7 +129,6 @@ namespace HeadlessTerrariaClient.Terraria
 		#endregion
 
 		public int UnderworldLayer => maxTilesY - 200;
-
 
 		public void SetupTiles(bool loadTileSections)
 		{
@@ -138,11 +139,14 @@ namespace HeadlessTerrariaClient.Terraria
 
 			LoadedTileSections = new bool[maxTilesX / 200, maxTilesY / 150];
 		}
-
+		
+		/// <returns>Whether or not a tile section is loaded</returns>
 		public bool IsTileSectionLoaded(int tileSectionX, int tileSectionY)
 		{
 			return LoadedTileSections[tileSectionX, tileSectionY];
 		}
+
+		/// <returns>Whether or not a tile is in a loaded tile section</returns>
 		public bool IsTileInLoadedSection(int tileX, int tileY)
 		{
 			return IsTileSectionLoaded(tileX / 200, tileY / 150);

@@ -12,8 +12,15 @@ using HeadlessTerrariaClient.Client;
 
 namespace HeadlessTerrariaClient.Utility
 {
+    /// <summary>
+    /// Extensions to HeadlessClient that are very useful, yet aren't actually part of the client
+    /// </summary>
     public static class ClientExtensions
     {
+        /// <summary>
+        /// Sends a chat message to the server
+        /// </summary>
+        /// <param name="msg">message to send</param>
         public static void SendChatMessage(this HeadlessClient client, string msg)
         {
             lock (client.WriteBuffer)
@@ -39,6 +46,12 @@ namespace HeadlessTerrariaClient.Utility
                 client.TCPClient.Send(client.WriteBuffer, length);
             }
         }
+
+        /// <summary>
+        /// Gets a players index by their name
+        /// </summary>
+        /// <param name="name">name to be searched for</param>
+        /// <returns>the index into client.World.Players[] if the player was found, but -1 if no player by that name exists</returns>
         public static int FindPlayerByName(this HeadlessClient client, string name)
         {
             for (int i = 0; i < 255; i++)
@@ -51,30 +64,57 @@ namespace HeadlessTerrariaClient.Utility
             return -1;
         }
 
-
-        public static void Teleport(this HeadlessClient client, Vector2 positoin)
+        /// <summary>
+        /// Teleports the player directly to that position (does NOT update client.LocalPlayer.position)
+        /// </summary>
+        /// <param name="position">position to teleport to</param>
+        public static void Teleport(this HeadlessClient client, Vector2 position)
         {
-             client.CustomSendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI, positoin.X, positoin.Y);
+             client.CustomSendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI, position.X, position.Y);
         }
+
+        /// <summary>
+        /// Teleports the player directly to the tile (does NOT update client.LocalPlayer.position)
+        /// </summary>
+        /// <param name="tileX">position to teleport to</param>
+        /// <param name="tileY">position to teleport to</param>
         public static void Teleport(this HeadlessClient client, int tileX, int tileY)
         {
              client.Teleport(new Vector2(tileX * 16, tileY * 16));
         }
 
-        public static void TeleportThereAndBack(this HeadlessClient client, Vector2 positoin)
+        /// <summary>
+        /// Teleports the client directly to position and then back 
+        /// </summary>
+        /// <param name="position">position to teleport to</param>
+        public static void TeleportThereAndBack(this HeadlessClient client, Vector2 position)
         {
-            client.CustomSendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI, positoin.X, positoin.Y);
+            client.CustomSendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI, position.X, position.Y);
             client.SendData(MessageID.PlayerControls, client.LocalPlayer.whoAmI);
         }
+
+        /// <summary>
+        /// Teleports the client directly to the tile and then back 
+        /// </summary>
+        /// <param name="tileX">position to teleport to</param>
+        /// <param name="tileY">position to teleport to</param>
         public static void TeleportThereAndBack(this HeadlessClient client, int tileX, int tileY)
         {
             client.TeleportThereAndBack(new Vector2(tileX * 16, tileY * 16));
         }
 
+        /// <summary>
+        /// Breaks a tile
+        /// </summary>
         public static void SendBreakTile(this HeadlessClient client, int tileX, int tileY)
         {
             client.SendData(MessageID.TileManipulation, TileManipulationID.KillTileNoItem, tileX, tileY);
         }
+
+        /// <summary>
+        /// Places a tile
+        /// </summary>
+        /// <param name="bypassTShock">whether or not to attempt to bypass TShock's default anti-cheat</param>
         public static void SendPlaceTile(this HeadlessClient client, int tileX, int tileY, int type, bool bypassTShock = true)
         {
             if (bypassTShock)
@@ -88,10 +128,18 @@ namespace HeadlessTerrariaClient.Utility
                 client.SendData(MessageID.TileManipulation, TileManipulationID.PlaceTile, tileX, tileY, type);
         }
 
+        /// <summary>
+        /// Breaks a wall
+        /// </summary>
         public static void SendBreakWall(this HeadlessClient client, int tileX, int tileY)
         {
             client.SendData(MessageID.TileManipulation, TileManipulationID.KillWall, tileX, tileY);
         }
+
+        /// <summary>
+        /// Places a wall
+        /// </summary>
+        /// <param name="bypassTShock">whether or not to attempt to bypass TShock's default anti-cheat</param>
         public static void SendPlaceWall(this HeadlessClient client, int tileX, int tileY, int type, bool bypassTShock = true)
         {
             if (bypassTShock)
@@ -105,6 +153,10 @@ namespace HeadlessTerrariaClient.Utility
                 client.SendData(MessageID.TileManipulation, TileManipulationID.PlaceWall, tileX, tileY, type);
         }
 
+        /// <summary>
+        /// Paints a tile
+        /// </summary>
+        /// <param name="bypassTShock">whether or not to attempt to bypass TShock's default anti-cheat</param>
         public static void SendPaintTile(this HeadlessClient client, int tileX, int tileY, int paintType, bool bypassTShock = true)
         {
             if (bypassTShock)
@@ -116,6 +168,11 @@ namespace HeadlessTerrariaClient.Utility
             else
                 client.SendData(MessageID.PaintTile, tileX, tileY, paintType);
         }
+
+        /// <summary>
+        /// Paints a wall
+        /// </summary>
+        /// <param name="bypassTShock">whether or not to attempt to bypass TShock's default anti-cheat</param>
         public static void SendPaintWall(this HeadlessClient client, int tileX, int tileY, int paintType, bool bypassTShock = true)
         {
             if (bypassTShock)
@@ -128,6 +185,10 @@ namespace HeadlessTerrariaClient.Utility
                 client.SendData(MessageID.PaintWall, tileX, tileY, paintType);
         }
 
+        /// <summary>
+        /// Deletes or "picks up" an item off the ground
+        /// </summary>
+        /// <param name="bypassTShock">whether or not to attempt to bypass TShock's default anti-cheat</param>
         public static void RemoveItem(this HeadlessClient client, int i, bool bypassTShock = true)
         {
             if (bypassTShock)
@@ -138,6 +199,12 @@ namespace HeadlessTerrariaClient.Utility
             client.World.Items[i].prefix = 0;
             client.SendData(MessageID.SyncItem, i);
         }
+
+        /// <summary>
+        /// Spawns or "throws" an item onto the ground
+        /// </summary>
+        /// <param name="stack">number of items in the stack</param>
+        /// <param name="bypassTShock">whether or not to attempt to bypass TShock's default anti-cheat</param>
         public static void SpawnItem(this HeadlessClient client, int type, int stack, Vector2 positoin, Vector2 velocity, bool bypassTShock = true)
         {
             if (bypassTShock)
@@ -164,9 +231,9 @@ namespace HeadlessTerrariaClient.Utility
             client.SendData(MessageID.SyncItem, nextItemIndex);
         }
 
-
-        
-
+        /// <summary>
+        /// Loads the entire world into memory
+        /// </summary>
         public static Task LoadEntireWorld(this HeadlessClient client, int timeout = 25)
         {
             return Task.Run(async () =>
@@ -200,6 +267,9 @@ namespace HeadlessTerrariaClient.Utility
             });
         }
 
+        /// <summary>
+        /// Waits for the client to be fully connected
+        /// </summary>
         public static Task WaitForClientToFinishConnecting(this HeadlessClient client)
         {
             return Task.Run(async () =>
@@ -211,6 +281,9 @@ namespace HeadlessTerrariaClient.Utility
             });
         }
 
+        /// <summary>
+        /// For trolling
+        /// </summary>
         public static void CustomSendData(this HeadlessClient client, int messageType, int number = 0, float number2 = 0, float number3 = 0, float number4 = 0, float number5 = 0, float number6 = 0, float number7 = 0, float number8 = 0)
         {
             if (client.TCPClient == null)

@@ -155,6 +155,9 @@ namespace HeadlessTerrariaClient.Terraria
             inventory[2] = new Item(ItemID.CopperAxe);
         }
 
+        /// <summary>
+        /// Resets the player to default
+        /// </summary>
         public void Reset()
         {
             ResetInventory();
@@ -162,6 +165,9 @@ namespace HeadlessTerrariaClient.Terraria
             active = false;
         }
 
+        /// <summary>
+        /// Resets the players inventory
+        /// </summary>
         public void ResetInventory()
         {
             inventory = new Item[260];
@@ -181,6 +187,7 @@ namespace HeadlessTerrariaClient.Terraria
             LoadDefaultInventory();
         }
 
+        /// <returns>returns a shallow copy of this player</returns>
         public Player Clone()
         {
             return (Player)MemberwiseClone();

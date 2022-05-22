@@ -51,10 +51,6 @@ namespace ArkNetwork
         /// </summary>
         public bool Exit = false;
 
-
-
-        public bool IsWriting = false;
-
         /// <summary>
         /// Constructs the TCP client
         /// </summary>
@@ -64,11 +60,11 @@ namespace ArkNetwork
         /// <param name="OnRecieve">callback for when bytes are received</param>
         public ArkTCPClient(IPAddress ip, byte[] readBuffer, int port, Action<int> OnRecieve)
         {
-            IPAddress = ip;
+            this.IPAddress = ip;
             this.port = port;
             this.OnRecieve = OnRecieve;
-            ReadBuffer = readBuffer;
-            client = new Socket(IPAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            this.ReadBuffer = readBuffer;
+            this.client = new Socket(IPAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         }
 
         /// <summary>
@@ -117,7 +113,7 @@ namespace ArkNetwork
                         {
                             bytesRead += NetworkStream.Read(ReadBuffer, bytesRead, len - bytesRead);
 
-                            // Sleep here for the rest of the data to come
+                            // Sleep here for the rest of the data to come when a packet is bigger than what's already been read
                             if (len > bytesRead)
                                 Thread.Sleep(1);
                         }
@@ -136,8 +132,8 @@ namespace ArkNetwork
         /// <summary>
         /// Sends data to the server
         /// </summary>
-        /// <param name="data">byte array to send</param>
-        /// <param name="length">length of data to send, if length is -1, send the entire buffer</param>
+        /// <param name="data">buffer to send</param>
+        /// <param name="length">length of data to send</param>
         public void Send(byte[] data, int length)
         {
             NetworkStream.Write(data, 0, length);
@@ -147,11 +143,11 @@ namespace ArkNetwork
         /// <summary>
         /// Sends data to the server but it has the async keyword
         /// </summary>
-        /// <param name="data">byte array to send</param>
-        /// <param name="length">length of data to send, if length is -1, send the entire buffer</param>
-        public async Task SendAsync(byte[] data, int length)
+        /// <param name="data">buffer to send</param>
+        /// <param name="length">length of data to send</param>
+        public Task SendAsync(byte[] data, int length)
         {
-            await NetworkStream.WriteAsync(data, 0, length);
+            return NetworkStream.WriteAsync(data, 0, length);
         }
     }
 }

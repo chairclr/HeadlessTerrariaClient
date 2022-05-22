@@ -15,6 +15,9 @@ namespace HeadlessTerrariaClient.Terraria
 {
     public class TileManipulationHandler
     {
+        /// <summary>
+        /// Handles the default action for someone manipulating a tile
+        /// </summary>
         public static void Handle(HeadlessClient client, int action, int x, int y, int flags1, int flags2)
         {
             if (!client.IsInWorld || client.Settings.IgnoreTileChunks || !client.Settings.LoadTileSections)

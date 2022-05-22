@@ -11,7 +11,7 @@ using HeadlessTerrariaClient.Terraria.ID;
 namespace HeadlessTerrariaClient.Examples
 {
     /// <summary>
-    /// Example client that protects the entire world from tile edits
+    /// More complicated example client that protects the entire world from tile edits
     /// </summary>
     public class ProtectionClient
     {
@@ -54,6 +54,7 @@ namespace HeadlessTerrariaClient.Examples
             // Wait for client to join the world
             await HeadlessClient.WaitForClientToFinishConnecting();
 
+
             // Load every section in the world
             await HeadlessClient.LoadEntireWorld();
 
@@ -63,150 +64,155 @@ namespace HeadlessTerrariaClient.Examples
         // Handle tile manipulation, and do the opposite to protect the world
         public bool HandleTileManipulation(HeadlessClient client, TileManipulation manipulation)
         {
-            // When someone breaks a tile, place the same tile back
-            if (manipulation.action == TileManipulationID.KillTile 
-                || manipulation.action == TileManipulationID.KillTileNoItem 
-                || manipulation.action == TileManipulationID.KillTile2)
+            try
             {
-                // Limit number of actions we can do in an amount of time
-                if (placeRateLimit > RateLimit)
+                // When someone breaks a tile, place the same tile back
+                if (manipulation.action == TileManipulationID.KillTile
+                    || manipulation.action == TileManipulationID.KillTileNoItem
+                    || manipulation.action == TileManipulationID.KillTile2)
                 {
-                    Task.Delay(250).Wait();
-                    placeRateLimit = 0;
+                    // Limit number of actions we can do in an amount of time
+                    if (placeRateLimit > RateLimit)
+                    {
+                        Task.Delay(250).Wait();
+                        placeRateLimit = 0;
+                    }
+
+                    Tile tile = client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY];
+
+
+                    if (tile.GetTileActive())
+                    {
+                        if (TileID.GrassToTile.ContainsKey(tile.tileType))
+                        {
+                            client.SendPlaceTile(manipulation.tileX, manipulation.tileY, TileID.GrassToTile[tile.tileType]);
+                            client.SendPlaceTile(manipulation.tileX, manipulation.tileY, TileID.GrassToTileType[TileID.GrassToTile[tile.tileType]]);
+                        }
+                        else
+                        {
+                            client.SendPlaceTile(manipulation.tileX, manipulation.tileY, tile.tileType);
+
+                        }
+                        // Make sure to paint it again
+                        client.SendPaintTile(manipulation.tileX, manipulation.tileY, tile.GetTilePaint());
+                    }
+
+                    placeRateLimit++;
+
+                    // Return false so the tile stays the same on client
+                    return false;
                 }
 
-                Tile tile = client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY];
-
-
-                if (tile.GetTileActive())
+                // When someone breaks a wall, place the same wall back
+                if (manipulation.action == TileManipulationID.KillWall)
                 {
-
-                    if (TileID.GrassToTile.ContainsKey(tile.tileType))
+                    // Limit number of actions we can do in an amount of time
+                    if (placeRateLimit > RateLimit)
                     {
-                        client.SendPlaceTile(manipulation.tileX, manipulation.tileY, TileID.GrassToTile[tile.tileType]);
-                        client.SendPlaceTile(manipulation.tileX, manipulation.tileY, TileID.GrassToTileType[TileID.GrassToTile[tile.tileType]]);
+                        Task.Delay(RateLimitTimeout).Wait();
+                        placeRateLimit = 0;
+                    }
+
+                    Tile tile = client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY];
+
+                    if (TileID.UnsafeWallToSafe.ContainsKey(tile.wallType))
+                    {
+                        client.SendPlaceWall(manipulation.tileX, manipulation.tileY, TileID.UnsafeWallToSafe[tile.wallType]);
                     }
                     else
                     {
-                        client.SendPlaceTile(manipulation.tileX, manipulation.tileY, tile.tileType);
-
+                        client.SendPlaceWall(manipulation.tileX, manipulation.tileY, tile.wallType);
                     }
                     // Make sure to paint it again
-                    client.SendPaintTile(manipulation.tileX, manipulation.tileY, tile.GetTilePaint());
+                    client.SendPaintWall(manipulation.tileX, manipulation.tileY, tile.GetWallPaint());
+
+                    placeRateLimit++;
+
+                    // Return false so the tile stays the same on client
+                    return false;
                 }
 
-                placeRateLimit++;
-
-                // Return false so the tile stays the same on client
-                return false;
-            }
-
-            // When someone breaks a wall, place the same wall back
-            if (manipulation.action == TileManipulationID.KillWall)
-            {
-                // Limit number of actions we can do in an amount of time
-                if (placeRateLimit > RateLimit)
+                // Break a tile when someone else places it
+                if (manipulation.action == TileManipulationID.PlaceTile || manipulation.action == TileManipulationID.ReplaceTile)
                 {
-                    Task.Delay(RateLimitTimeout).Wait();
-                    placeRateLimit = 0;
+                    // Limit number of actions we can do in an amount of time
+                    if (placeRateLimit > 500)
+                    {
+                        Task.Delay(RateLimitTimeout).Wait();
+                        placeRateLimit = 0;
+                    }
+
+                    Tile tile = client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY];
+
+                    if (tile.GetTileActive())
+                    {
+                        client.SendPlaceTile(manipulation.tileX, manipulation.tileY, tile.tileType);
+                        // Make sure to paint it again
+                        client.SendPaintTile(manipulation.tileX, manipulation.tileY, tile.GetTilePaint());
+                    }
+                    else
+                    {
+                        client.SendBreakTile(manipulation.tileX, manipulation.tileY);
+                    }
+
+                    placeRateLimit++;
+
+                    // Return false so the tile stays the same on client
+                    return false;
                 }
 
-                Tile tile = client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY];
-
-                if (TileID.UnsafeWallToSafe.ContainsKey(tile.wallType))
+                // Break a wall when someone else places it
+                if (manipulation.action == TileManipulationID.PlaceWall)
                 {
-                    client.SendPlaceWall(manipulation.tileX, manipulation.tileY, TileID.UnsafeWallToSafe[tile.wallType]);
-                }
-                else
-                {
-                    client.SendPlaceWall(manipulation.tileX, manipulation.tileY, tile.wallType);
-                }
-                // Make sure to paint it again
-                client.SendPaintWall(manipulation.tileX, manipulation.tileY, tile.GetWallPaint());
+                    // Limit number of actions we can do in an amount of time
+                    if (placeRateLimit > 500)
+                    {
+                        Task.Delay(250).Wait();
+                        placeRateLimit = 0;
+                    }
 
+                    client.SendBreakWall(manipulation.tileX, manipulation.tileY);
 
-                placeRateLimit++;
+                    placeRateLimit++;
 
-                // Return false so the tile stays the same on client
-                return false;
-            }
-
-            // Break a tile when someone else places it
-            if (manipulation.action == TileManipulationID.PlaceTile || manipulation.action == TileManipulationID.ReplaceTile)
-            {
-                // Limit number of actions we can do in an amount of time
-                if (placeRateLimit > 500)
-                {
-                    Task.Delay(RateLimitTimeout).Wait();
-                    placeRateLimit = 0;
+                    // Return false so the tile stays the same on client
+                    return false;
                 }
 
-                Tile tile = client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY];
-
-                if (tile.GetTileActive())
+                // Replace a wall a wall when someone else places it
+                if (manipulation.action == TileManipulationID.ReplaceWall)
                 {
-                    client.SendPlaceTile(manipulation.tileX, manipulation.tileY, tile.tileType);
+                    // Limit number of actions we can do in an amount of time
+                    if (placeRateLimit > 500)
+                    {
+                        Task.Delay(250).Wait();
+                        placeRateLimit = 0;
+                    }
+
+                    Tile tile = client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY];
+
+                    client.SendBreakWall(manipulation.tileX, manipulation.tileY);
+
+                    if (TileID.UnsafeWallToSafe.ContainsKey(tile.wallType))
+                    {
+                        client.SendPlaceWall(manipulation.tileX, manipulation.tileY, TileID.UnsafeWallToSafe[tile.wallType]);
+                    }
+                    else
+                    {
+                        client.SendPlaceWall(manipulation.tileX, manipulation.tileY, tile.wallType);
+                    }
                     // Make sure to paint it again
-                    client.SendPaintTile(manipulation.tileX, manipulation.tileY, tile.GetTilePaint());
-                }
-                else
-                {
-                    client.SendBreakTile(manipulation.tileX, manipulation.tileY);
-                }
+                    client.SendPaintWall(manipulation.tileX, manipulation.tileY, tile.GetWallPaint());
 
-                placeRateLimit++;
+                    placeRateLimit++;
 
-                // Return false so the tile stays the same on client
-                return false;
+                    // Return false so the tile stays the same on client
+                    return false;
+                }
             }
-
-            // Break a wall when someone else places it
-            if (manipulation.action == TileManipulationID.PlaceWall)
+            catch (Exception e)
             {
-                // Limit number of actions we can do in an amount of time
-                if (placeRateLimit > 500)
-                {
-                    Task.Delay(250).Wait();
-                    placeRateLimit = 0;
-                }
 
-                client.SendBreakWall(manipulation.tileX, manipulation.tileY);
-
-                placeRateLimit++;
-
-                // Return false so the tile stays the same on client
-                return false;
-            }
-
-            // Replace a wall a wall when someone else places it
-            if (manipulation.action == TileManipulationID.ReplaceWall)
-            {
-                // Limit number of actions we can do in an amount of time
-                if (placeRateLimit > 500)
-                {
-                    Task.Delay(250).Wait();
-                    placeRateLimit = 0;
-                }
-
-                Tile tile = client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY];
-
-                client.SendBreakWall(manipulation.tileX, manipulation.tileY);
-
-                if (TileID.UnsafeWallToSafe.ContainsKey(tile.wallType))
-                {
-                    client.SendPlaceWall(manipulation.tileX, manipulation.tileY, TileID.UnsafeWallToSafe[tile.wallType]);
-                }
-                else
-                {
-                    client.SendPlaceWall(manipulation.tileX, manipulation.tileY, tile.wallType);
-                }
-                // Make sure to paint it again
-                client.SendPaintWall(manipulation.tileX, manipulation.tileY, tile.GetWallPaint());
-
-                placeRateLimit++;
-
-                // Return false so the tile stays the same on client
-                return false;
             }
 
             return true;
