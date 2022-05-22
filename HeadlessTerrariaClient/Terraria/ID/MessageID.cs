@@ -147,9 +147,9 @@ namespace HeadlessTerrariaClient.Terraria.ID
 
 		public const byte TeleportEntity = 65;
 
-		public const byte Unknown66 = 66;
+		public const byte HealOtherPlayer = 66;
 
-		public const byte Unknown67 = 67;
+		public const byte Placeholder = 67;
 
 		public const byte ClientUUID = 68;
 
