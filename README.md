@@ -72,8 +72,6 @@ Contributing
 
 To contribute, open a pull request and I will review it and accept the PR if it suitable.
 
----
-
 <h2>
 Questions?
 </h2>
