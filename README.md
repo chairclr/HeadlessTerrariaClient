@@ -72,5 +72,16 @@ Contributing
 
 To contribute, open a pull request and I will review it and accept the PR if it suitable.
 
+---
+
+<h2>
+Questions?
+</h2>
+
+---
+
+Join the Discord server if you have any questions 
+[![Banner](https://discordapp.com/api/guilds/977944638356877312/widget.png?style=banner4)](https://discord.gg/DHh73r5td8)
+
 
 ###### Still no head :(
