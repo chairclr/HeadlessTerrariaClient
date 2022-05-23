@@ -691,6 +691,7 @@ namespace HeadlessTerrariaClient.Client
                         return;
                     }
                 }
+                Console.WriteLine($"sent {MessageID.GetName(messageType)}");
                 TCPClient.Send(WriteBuffer, length);
             }
         }
@@ -713,6 +714,7 @@ namespace HeadlessTerrariaClient.Client
                 return;
             }
 
+            Console.WriteLine($"received {MessageID.GetName(packetType)}");
             Action<BinaryReader> handler = _packetHandlers[packetType];
 
             if (handler != null)
@@ -1025,14 +1027,16 @@ namespace HeadlessTerrariaClient.Client
             {
                 SendData(MessageID.PlayerSpawn, myPlayer, 1);
 
-                for (int i = 0; i < 40; i++)
-                {
-                    SendData(MessageID.SyncEquipment, myPlayer, i);
-                }
+                // Temporarily commenting this out since this doesn't actually do anything lmfao
 
-                SendData(MessageID.SyncPlayerZone, myPlayer);
-                SendData(MessageID.PlayerControls, myPlayer);
-                SendData(MessageID.ClientSyncedInventory, myPlayer);
+                //for (int i = 0; i < 40; i++)
+                //{
+                //    SendData(MessageID.SyncEquipment, myPlayer, i);
+                //}
+
+                //SendData(MessageID.SyncPlayerZone, myPlayer);
+                //SendData(MessageID.PlayerControls, myPlayer);
+                //SendData(MessageID.ClientSyncedInventory, myPlayer);
             }
             IsInWorld = true;
             ClientConnectionCompleted?.Invoke(this);
@@ -1371,19 +1375,19 @@ namespace HeadlessTerrariaClient.Client
             int chestY = reader.ReadInt16();
             if (chestId >= 0 && chestId < 8000)
             {
-                Chest chest3 = World.CurrentWorld.Chests[chestId];
-                if (chest3 == null)
+                Chest targetChest = World.CurrentWorld.Chests[chestId];
+                if (targetChest == null)
                 {
-                    chest3 = new Chest();
-                    chest3.x = chestX;
-                    chest3.y = chestY;
-                    World.CurrentWorld.Chests[chestId] = chest3;
+                    targetChest = new Chest();
+                    targetChest.x = chestX;
+                    targetChest.y = chestY;
+                    World.CurrentWorld.Chests[chestId] = targetChest;
                 }
-                else if (chest3.x != chestX || chest3.y != chestY)
+                else if (targetChest.x != chestX || targetChest.y != chestY)
                 {
                     return;
                 }
-                chest3.Name = reader.ReadString();
+                targetChest.Name = reader.ReadString();
             }
         }
         private void HandlePlaceChest(BinaryReader reader)

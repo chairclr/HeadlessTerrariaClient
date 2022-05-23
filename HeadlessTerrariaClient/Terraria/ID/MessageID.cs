@@ -2,17 +2,18 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
-
+using System.Linq;
 namespace HeadlessTerrariaClient.Terraria.ID
 {
 	public class MessageID
 	{
+		private static string[] fieldNames = typeof(MessageID).GetFields().Select(x => x.Name).ToArray();
+
 		public static string GetName(int id)
         {
-			FieldInfo[] fieldInfo = typeof(MessageID).GetFields();
-			if (id < 0 || id >= fieldInfo.Length)
+			if (id < 0 || id >= fieldNames.Length)
 				return "null";
-			return fieldInfo[id].Name;
+			return fieldNames[id];
         }
 
 		public const byte NeverCalled = 0;
@@ -129,7 +130,7 @@ namespace HeadlessTerrariaClient.Terraria.ID
 
 		public const byte UniqueTownNPCInfoSyncRequest = 56;
 
-		public const byte Unknown57 = 57;
+		public const byte UpdateGoodEvil = 57;
 
 		public const byte InstrumentSound = 58;
 

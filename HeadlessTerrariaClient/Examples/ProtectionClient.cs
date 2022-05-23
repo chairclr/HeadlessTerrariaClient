@@ -80,6 +80,8 @@ namespace HeadlessTerrariaClient.Examples
 
                     Tile tile = client.World.CurrentWorld.Tiles[manipulation.tileX, manipulation.tileY];
 
+                    if (tile == null)
+                        return false;
 
                     if (tile.GetTileActive())
                     {

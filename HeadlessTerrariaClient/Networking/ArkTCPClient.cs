@@ -84,21 +84,21 @@ namespace ArkNetwork
         {
             using (NetworkStream = new NetworkStream(client))
             {
-                while (client.Connected)
+                try
                 {
-                    if (Exit)
-                        break;
-
-                    // Wait for any data to be available 
-                    if (!NetworkStream.CanRead)
+                    while (client.Connected)
                     {
-                        Task.Delay(16).Wait();
-                        continue;
-                    }
+                        if (Exit)
+                            break;
 
-
-                    try
-                    {
+                        // Wait for any data, so we dont be cringe
+                        if (!NetworkStream.DataAvailable)
+                        {
+                            Thread.Sleep(1);
+                            continue;
+                        }
+                        
+                        
                         int bytesRead = NetworkStream.Read(ReadBuffer, 0, 2);
 
                         // sanity check
@@ -112,19 +112,14 @@ namespace ArkNetwork
                         while (len > bytesRead)
                         {
                             bytesRead += NetworkStream.Read(ReadBuffer, bytesRead, len - bytesRead);
-
-                            // Sleep here for the rest of the data to come when a packet is bigger than what's already been read
-                            if (len > bytesRead)
-                                Thread.Sleep(1);
                         }
 
                         this.OnRecieve(bytesRead);
                     }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e.ToString());
-                        break;
-                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
                 }
             }
         }
