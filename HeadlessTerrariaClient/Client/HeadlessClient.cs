@@ -691,7 +691,6 @@ namespace HeadlessTerrariaClient.Client
                         return;
                     }
                 }
-                Console.WriteLine($"sent {MessageID.GetName(messageType)}");
                 TCPClient.Send(WriteBuffer, length);
             }
         }
@@ -714,7 +713,6 @@ namespace HeadlessTerrariaClient.Client
                 return;
             }
 
-            Console.WriteLine($"received {MessageID.GetName(packetType)}");
             Action<BinaryReader> handler = _packetHandlers[packetType];
 
             if (handler != null)
