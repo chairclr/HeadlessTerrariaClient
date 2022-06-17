@@ -78,11 +78,7 @@ Questions?
 
 ---
 
-Join the Discord server if you have any questions 
-
-https://discord.gg/DHh73r5td8
-
-[![Banner](https://discordapp.com/api/guilds/977944638356877312/widget.png?style=banner2)](https://discord.gg/DHh73r5td8)
+Open an issue.
 
 
 ###### Still no head :(
