@@ -23,10 +23,6 @@ public class OutgoingMessagesGenerator : ISourceGenerator
 
     public void Execute(GeneratorExecutionContext context)
     {
-
-        //if (!Debugger.IsAttached)
-        //    Debugger.Launch();
-
         Compilation compilation = context.Compilation;
 
         IEnumerable<SyntaxNode> allNodes = compilation.SyntaxTrees.SelectMany(s => s.GetRoot().DescendantNodes());
@@ -47,10 +43,11 @@ public class OutgoingMessagesGenerator : ISourceGenerator
 
             if (methodSymbol.Name.StartsWith("Write") && methodSymbol.Name.Length > 5)
             {
+                string messageTypeString = GetOutgoingMessageTypeFromAttribute(methodSymbol);
+
                 source.Append("public void Send");
                 source.Append(methodSymbol.Name.Remove(0, 5));
                 source.Append("(");
-
                 if (methodSymbol.Parameters.Length > 0)
                 {
                     for (int i = 0; i < methodSymbol.Parameters.Length; i++)
@@ -78,12 +75,11 @@ public class OutgoingMessagesGenerator : ISourceGenerator
                         }
                     }
                 }
-
                 source.Append(") ");
                 source.Append("{ ");
+                source.Append($"MessageWriter.BeginMessage({messageTypeString}); ");
                 source.Append(methodSymbol.Name);
                 source.Append("(");
-
                 if (methodSymbol.Parameters.Length > 0)
                 {
                     for (int i = 0; i < methodSymbol.Parameters.Length; i++)
@@ -98,7 +94,6 @@ public class OutgoingMessagesGenerator : ISourceGenerator
                         }
                     }
                 }
-
                 source.Append("); TerrariaNetworkClient.Send(MessageWriter.EndMessage());");
                 source.AppendLine(" }");
 
@@ -140,9 +135,9 @@ public class OutgoingMessagesGenerator : ISourceGenerator
                     source.Append("Async(CancellationToken cancellationToken = default) ");
                 }
                 source.Append("{ ");
+                source.Append($"MessageWriter.BeginMessage({messageTypeString}); ");
                 source.Append(methodSymbol.Name);
                 source.Append("(");
-
                 if (methodSymbol.Parameters.Length > 0)
                 {
                     for (int i = 0; i < methodSymbol.Parameters.Length; i++)
@@ -157,7 +152,6 @@ public class OutgoingMessagesGenerator : ISourceGenerator
                         }
                     }
                 }
-
                 source.Append("); await TerrariaNetworkClient.SendAsync(MessageWriter.EndMessage(), cancellationToken);");
                 source.AppendLine(" }");
             }
@@ -166,5 +160,14 @@ public class OutgoingMessagesGenerator : ISourceGenerator
         source.AppendLine("}");
 
         context.AddSource("HeadlessClientOutgoingMessages.g.cs", source.ToString());
+    }
+
+    private string GetOutgoingMessageTypeFromAttribute(IMethodSymbol methodSymbol)
+    {
+        AttributeData attribute = methodSymbol.GetAttributes().Single(x => x.AttributeClass is not null && x.AttributeClass!.Name == AttributeName || x.AttributeClass!.Name == AttributeNameShort);
+
+        TypedConstant constant = attribute.ConstructorArguments.First();
+
+        return constant.ToCSharpString();
     }
 }

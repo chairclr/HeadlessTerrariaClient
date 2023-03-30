@@ -8,19 +8,15 @@ namespace HeadlessTerrariaClient;
 
 public partial class HeadlessClient
 {
-    [OutgoingMessage]
+    [OutgoingMessage(MessageType.Hello)]
     private void WriteHello(int version = 279)
     {
-        MessageWriter.BeginMessage(MessageType.Hello);
-
         MessageWriter.Writer.Write($"Terraria{version}");
     }
 
-    [OutgoingMessage]
+    [OutgoingMessage(MessageType.SyncPlayer)]
     private void WriteSyncLocalPlayer()
     {
-        MessageWriter.BeginMessage(MessageType.SyncPlayer);
-
         MessageWriter.Writer.Write((byte)LocalPlayerIndex);
 
         MessageWriter.Writer.Write((byte)LocalPlayer.Style.SkinVariant);
@@ -93,27 +89,21 @@ public partial class HeadlessClient
         MessageWriter.Writer.Write(miscBuffs);
     }
 
-    [OutgoingMessage]
+    [OutgoingMessage(MessageType.ClientUUID)]
     private void WriteClientUUID()
     {
-        MessageWriter.BeginMessage(MessageType.ClientUUID);
-
         MessageWriter.Writer.Write(ClientUUID);
     }
 
-    [OutgoingMessage]
+    [OutgoingMessage(MessageType.ClientUUID)]
     private void WriteClientUUID(string uuid)
     {
-        MessageWriter.BeginMessage(MessageType.ClientUUID);
-
         MessageWriter.Writer.Write(uuid);
     }
 
-    [OutgoingMessage]
+    [OutgoingMessage(MessageType.PlayerLife)]
     private void WritePlayerLife()
     {
-        MessageWriter.BeginMessage(MessageType.PlayerLife);
-
         MessageWriter.Writer.Write((byte)LocalPlayerIndex);
 
         MessageWriter.Writer.Write((short)LocalPlayer.Life);
@@ -121,11 +111,9 @@ public partial class HeadlessClient
         MessageWriter.Writer.Write((short)LocalPlayer.LifeMax);
     }
 
-    [OutgoingMessage]
+    [OutgoingMessage(MessageType.PlayerLife)]
     private void WritePlayerLife(int life, int? lifeMax = null)
     {
-        MessageWriter.BeginMessage(MessageType.PlayerLife);
-
         MessageWriter.Writer.Write((byte)LocalPlayerIndex);
 
         MessageWriter.Writer.Write((short)life);
@@ -140,11 +128,9 @@ public partial class HeadlessClient
         }
     }
 
-    [OutgoingMessage]
+    [OutgoingMessage(MessageType.PlayerMana)]
     private void WritePlayerMana()
     {
-        MessageWriter.BeginMessage(MessageType.PlayerMana);
-
         MessageWriter.Writer.Write((byte)LocalPlayerIndex);
 
         MessageWriter.Writer.Write((short)LocalPlayer.Mana);
@@ -152,11 +138,9 @@ public partial class HeadlessClient
         MessageWriter.Writer.Write((short)LocalPlayer.ManaMax);
     }
 
-    [OutgoingMessage]
+    [OutgoingMessage(MessageType.PlayerMana)]
     private void WritePlayerMana(int mana, int? manaMax = null)
     {
-        MessageWriter.BeginMessage(MessageType.PlayerMana);
-
         MessageWriter.Writer.Write((byte)LocalPlayerIndex);
 
         MessageWriter.Writer.Write((short)mana);
@@ -171,11 +155,9 @@ public partial class HeadlessClient
         }
     }
 
-    [OutgoingMessage]
+    [OutgoingMessage(MessageType.PlayerBuffs)]
     private void WriteSyncPlayerBuffs()
     {
-        MessageWriter.BeginMessage(MessageType.PlayerBuffs);
-
         MessageWriter.Writer.Write((byte)LocalPlayerIndex);
 
         for (int i = 0; i < 44; i++)
@@ -185,17 +167,15 @@ public partial class HeadlessClient
         }
     }
 
-    [OutgoingMessage]
+    [OutgoingMessage(MessageType.RequestWorldData)]
     private void WriteRequestWorldData()
     {
-        MessageWriter.BeginMessage(MessageType.RequestWorldData);
+
     }
 
-    [OutgoingMessage]
+    [OutgoingMessage(MessageType.SyncEquipment)]
     private void WriteSyncEquipment(int slot)
     {
-        MessageWriter.BeginMessage(MessageType.SyncEquipment);
-
         MessageWriter.Writer.Write((byte)LocalPlayerIndex);
 
         MessageWriter.Writer.Write((short)slot);
@@ -207,11 +187,9 @@ public partial class HeadlessClient
         MessageWriter.Writer.Write((short)LocalPlayer.Inventory[slot].Type);
     }
 
-    [OutgoingMessage]
+    [OutgoingMessage(MessageType.SyncEquipment)]
     private void WriteSyncEquipment(int slot, Item item)
     {
-        MessageWriter.BeginMessage(MessageType.SyncEquipment);
-
         MessageWriter.Writer.Write((byte)LocalPlayerIndex);
 
         MessageWriter.Writer.Write((short)slot);
@@ -223,11 +201,9 @@ public partial class HeadlessClient
         MessageWriter.Writer.Write((short)item.Type);
     }
 
-    [OutgoingMessage]
+    [OutgoingMessage(MessageType.SyncLoadout)]
     private void WriteSyncLoadout(int loadoutIndex = 0)
     {
-        MessageWriter.BeginMessage(MessageType.SyncLoadout);
-
         MessageWriter.Writer.Write((byte)LocalPlayerIndex);
 
         // Current loadout index
@@ -236,31 +212,25 @@ public partial class HeadlessClient
         MessageWriter.Writer.WriteAccessoryVisibility(new bool[10]);
     }
 
-    [OutgoingMessage]
+    [OutgoingMessage(MessageType.SpawnTileData)]
     private void WriteSpawnTileData()
     {
-        MessageWriter.BeginMessage(MessageType.SpawnTileData);
-
         MessageWriter.Writer.Write(-1);
 
         MessageWriter.Writer.Write(-1);
     }
 
-    [OutgoingMessage]
+    [OutgoingMessage(MessageType.SpawnTileData)]
     private void WriteSpawnTileData(int spawnX, int spawnY)
     {
-        MessageWriter.BeginMessage(MessageType.SpawnTileData);
-
         MessageWriter.Writer.Write(spawnX);
 
         MessageWriter.Writer.Write(spawnY);
     }
 
-    [OutgoingMessage]
+    [OutgoingMessage(MessageType.PlayerSpawn)]
     private void WritePlayerSpawn(int context)
     {
-        MessageWriter.BeginMessage(MessageType.PlayerSpawn);
-
         MessageWriter.Writer.Write((byte)LocalPlayerIndex);
 
         MessageWriter.Writer.Write(-1);
