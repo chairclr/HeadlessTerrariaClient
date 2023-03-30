@@ -89,16 +89,69 @@ public partial class HeadlessClient
         MessageWriter.Writer.Write(miscBuffs);
     }
 
-    [OutgoingMessage(MessageType.ClientUUID)]
-    private void WriteClientUUID()
+    [OutgoingMessage(MessageType.SyncEquipment)]
+    private void WriteSyncEquipment(int slot)
     {
-        MessageWriter.Writer.Write(ClientUUID);
+        MessageWriter.Writer.Write((byte)LocalPlayerIndex);
+
+        MessageWriter.Writer.Write((short)slot);
+
+        MessageWriter.Writer.Write((short)LocalPlayer.Inventory[slot].Stack);
+
+        MessageWriter.Writer.Write((byte)LocalPlayer.Inventory[slot].Prefix);
+
+        MessageWriter.Writer.Write((short)LocalPlayer.Inventory[slot].Type);
     }
 
-    [OutgoingMessage(MessageType.ClientUUID)]
-    private void WriteClientUUID(string uuid)
+    [OutgoingMessage(MessageType.SyncEquipment)]
+    private void WriteSyncEquipment(int slot, Item item)
     {
-        MessageWriter.Writer.Write(uuid);
+        MessageWriter.Writer.Write((byte)LocalPlayerIndex);
+
+        MessageWriter.Writer.Write((short)slot);
+
+        MessageWriter.Writer.Write((short)item.Stack);
+
+        MessageWriter.Writer.Write((byte)item.Prefix);
+
+        MessageWriter.Writer.Write((short)item.Type);
+    }
+
+    [OutgoingMessage(MessageType.RequestWorldData)]
+    private void WriteRequestWorldData()
+    {
+
+    }
+
+    [OutgoingMessage(MessageType.SpawnTileData)]
+    private void WriteSpawnTileData()
+    {
+        MessageWriter.Writer.Write(-1);
+
+        MessageWriter.Writer.Write(-1);
+    }
+
+    [OutgoingMessage(MessageType.SpawnTileData)]
+    private void WriteSpawnTileData(int spawnX, int spawnY)
+    {
+        MessageWriter.Writer.Write(spawnX);
+
+        MessageWriter.Writer.Write(spawnY);
+    }
+
+    [OutgoingMessage(MessageType.PlayerSpawn)]
+    private void WritePlayerSpawn(int context)
+    {
+        MessageWriter.Writer.Write((byte)LocalPlayerIndex);
+
+        MessageWriter.Writer.Write(-1);
+        MessageWriter.Writer.Write(-1);
+
+        MessageWriter.Writer.Write(LocalPlayer.RespawnTimer);
+
+        MessageWriter.Writer.Write(0);
+        MessageWriter.Writer.Write(0);
+        MessageWriter.Writer.Write((byte)context);
     }
 
     [OutgoingMessage(MessageType.PlayerLife)]
@@ -167,40 +220,18 @@ public partial class HeadlessClient
         }
     }
 
-    [OutgoingMessage(MessageType.RequestWorldData)]
-    private void WriteRequestWorldData()
+    [OutgoingMessage(MessageType.ClientUUID)]
+    private void WriteClientUUID()
     {
-
+        MessageWriter.Writer.Write(ClientUUID);
     }
 
-    [OutgoingMessage(MessageType.SyncEquipment)]
-    private void WriteSyncEquipment(int slot)
+    [OutgoingMessage(MessageType.ClientUUID)]
+    private void WriteClientUUID(string uuid)
     {
-        MessageWriter.Writer.Write((byte)LocalPlayerIndex);
-
-        MessageWriter.Writer.Write((short)slot);
-
-        MessageWriter.Writer.Write((short)LocalPlayer.Inventory[slot].Stack);
-
-        MessageWriter.Writer.Write((byte)LocalPlayer.Inventory[slot].Prefix);
-
-        MessageWriter.Writer.Write((short)LocalPlayer.Inventory[slot].Type);
+        MessageWriter.Writer.Write(uuid);
     }
-
-    [OutgoingMessage(MessageType.SyncEquipment)]
-    private void WriteSyncEquipment(int slot, Item item)
-    {
-        MessageWriter.Writer.Write((byte)LocalPlayerIndex);
-
-        MessageWriter.Writer.Write((short)slot);
-
-        MessageWriter.Writer.Write((short)item.Stack);
-
-        MessageWriter.Writer.Write((byte)item.Prefix);
-
-        MessageWriter.Writer.Write((short)item.Type);
-    }
-
+    
     [OutgoingMessage(MessageType.SyncLoadout)]
     private void WriteSyncLoadout(int loadoutIndex = 0)
     {
@@ -210,36 +241,5 @@ public partial class HeadlessClient
         MessageWriter.Writer.Write((byte)loadoutIndex);
 
         MessageWriter.Writer.WriteAccessoryVisibility(new bool[10]);
-    }
-
-    [OutgoingMessage(MessageType.SpawnTileData)]
-    private void WriteSpawnTileData()
-    {
-        MessageWriter.Writer.Write(-1);
-
-        MessageWriter.Writer.Write(-1);
-    }
-
-    [OutgoingMessage(MessageType.SpawnTileData)]
-    private void WriteSpawnTileData(int spawnX, int spawnY)
-    {
-        MessageWriter.Writer.Write(spawnX);
-
-        MessageWriter.Writer.Write(spawnY);
-    }
-
-    [OutgoingMessage(MessageType.PlayerSpawn)]
-    private void WritePlayerSpawn(int context)
-    {
-        MessageWriter.Writer.Write((byte)LocalPlayerIndex);
-
-        MessageWriter.Writer.Write(-1);
-        MessageWriter.Writer.Write(-1);
-
-        MessageWriter.Writer.Write(LocalPlayer.RespawnTimer);
-
-        MessageWriter.Writer.Write(0);
-        MessageWriter.Writer.Write(0);
-        MessageWriter.Writer.Write((byte)context);
     }
 }
