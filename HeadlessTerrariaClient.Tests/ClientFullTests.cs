@@ -34,8 +34,6 @@ public class ClientFullTests
 
         Assert.That(client.ConnectionState, Is.EqualTo(ConnectionState.None));
 
-        client.LocalPlayer.Name = "chair";
-
         await client.JoinWorldAsync();
 
         Assert.That(client.Connected, Is.True);

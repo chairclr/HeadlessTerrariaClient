@@ -14,7 +14,13 @@ public class TerrariaNetworkClient : INetworkClient, IDisposable
 {
     public bool Connected { get; private set; }
 
-    internal TCPNetworkClient TCPNetworkClient;
+    private Socket Socket;
+
+    private readonly IPAddress IPAddress;
+
+    private readonly int Port;
+
+    internal NetworkStream? NetworkStream;
 
     private Task? ReceiveLoopTask;
 
@@ -34,7 +40,18 @@ public class TerrariaNetworkClient : INetworkClient, IDisposable
 
     public TerrariaNetworkClient(IPAddress ip, int port)
     {
-        TCPNetworkClient = new TCPNetworkClient(ip, port);
+        ArgumentNullException.ThrowIfNull(ip, nameof(ip));
+
+        if (port < ushort.MinValue || port > ushort.MaxValue)
+        {
+            throw new ArgumentOutOfRangeException(nameof(port));
+        }
+
+        Socket = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+        IPAddress = ip;
+
+        Port = port;
 
         Reader = new BinaryReader(ReadBuffer);
 
@@ -48,7 +65,9 @@ public class TerrariaNetworkClient : INetworkClient, IDisposable
             throw new InvalidOperationException("Already connected.");
         }
 
-        TCPNetworkClient.Connect();
+        Socket.Connect(IPAddress, Port);
+
+        NetworkStream = new NetworkStream(Socket);
 
         Connected = true;
 
@@ -62,7 +81,9 @@ public class TerrariaNetworkClient : INetworkClient, IDisposable
             throw new InvalidOperationException("Already connected.");
         }
 
-        await TCPNetworkClient.ConnectAsync(cancellationToken);
+        await Socket.ConnectAsync(IPAddress, Port, cancellationToken);
+
+        NetworkStream = new NetworkStream(Socket);
 
         Connected = true;
 
@@ -76,7 +97,7 @@ public class TerrariaNetworkClient : INetworkClient, IDisposable
             throw new InvalidOperationException("Not connected.");
         }
 
-        TCPNetworkClient.Send(data);
+        NetworkStream!.Write(data.Span);
     }
 
     public async ValueTask SendAsync(ReadOnlyMemory<byte> data, CancellationToken cancellationToken = default)
@@ -86,7 +107,7 @@ public class TerrariaNetworkClient : INetworkClient, IDisposable
             throw new InvalidOperationException("Not connected.");
         }
 
-        await TCPNetworkClient.SendAsync(data, cancellationToken);
+        await NetworkStream!.WriteAsync(data, cancellationToken);
     }
 
     public void Disconnect()
@@ -100,7 +121,8 @@ public class TerrariaNetworkClient : INetworkClient, IDisposable
 
         ReceiveLoopTask!.Wait();
 
-        TCPNetworkClient.Dispose();
+        Socket.Dispose();
+        NetworkStream?.Dispose();
 
         Connected = false;
     }
@@ -116,7 +138,8 @@ public class TerrariaNetworkClient : INetworkClient, IDisposable
 
         await ReceiveLoopTask!;
 
-        TCPNetworkClient.Dispose();
+        Socket.Dispose();
+        NetworkStream?.Dispose();
 
         Connected = false;
     }
@@ -131,11 +154,11 @@ public class TerrariaNetworkClient : INetworkClient, IDisposable
             {
                 ReadBuffer.Position = 0;
 
-                await TCPNetworkClient.NetworkStream!.ReadExactlyAsync(rawReadBuffer.AsMemory(0, 2), ReceiveLoopCancellationToken);
+                await NetworkStream!.ReadExactlyAsync(rawReadBuffer.AsMemory(0, 2), ReceiveLoopCancellationToken);
 
                 ushort messageLength = Reader.ReadUInt16();
 
-                await TCPNetworkClient.NetworkStream!.ReadExactlyAsync(rawReadBuffer.AsMemory(2, messageLength - 2), ReceiveLoopCancellationToken);
+                await NetworkStream!.ReadExactlyAsync(rawReadBuffer.AsMemory(2, messageLength - 2), ReceiveLoopCancellationToken);
 
                 if (OnReceiveCallback is not null)
                 {
@@ -151,7 +174,8 @@ public class TerrariaNetworkClient : INetworkClient, IDisposable
         {
             Connected = false;
 
-            TCPNetworkClient.Dispose();
+            Socket.Dispose();
+            NetworkStream?.Dispose();
         }
     }
 
@@ -161,7 +185,8 @@ public class TerrariaNetworkClient : INetworkClient, IDisposable
         {
             if (disposing)
             {
-                TCPNetworkClient.Dispose();
+                Socket.Dispose();
+                NetworkStream?.Dispose();
 
                 ReadBuffer.Dispose();
                 Reader.Dispose();
