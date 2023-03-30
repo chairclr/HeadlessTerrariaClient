@@ -86,7 +86,7 @@ public partial class HeadlessClient
     }
 
     [IncomingMessage(MessageType.UpdateWorldEvil)]
-    internal async ValueTask HandleUpdateWorldEvil(BinaryReader reader)
+    internal void HandleUpdateWorldEvil(BinaryReader reader)
     {
         byte good = reader.ReadByte();
         byte evil = reader.ReadByte();
@@ -94,7 +94,7 @@ public partial class HeadlessClient
     }
 
     [IncomingMessage(MessageType.FinishedConnectingToServer)]
-    internal async ValueTask HandleFinishedConnectingToServer(BinaryReader reader)
+    internal void HandleFinishedConnectingToServer(BinaryReader reader)
     {
         ConnectionState = ConnectionState.FinishedConnecting;
     }

@@ -8,7 +8,7 @@ using HeadlessTerrariaClient.Messages;
 namespace HeadlessTerrariaClient;
 
 [AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
-public class OutgoingMessageAttribute : Attribute
+internal class OutgoingMessageAttribute : Attribute
 {
     public MessageType MessageType;
 
