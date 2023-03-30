@@ -122,6 +122,25 @@ public partial class HeadlessClient
     }
 
     [OutgoingMessage]
+    private void WritePlayerLife(short life, short? lifeMax = null)
+    {
+        MessageWriter.BeginMessage(MessageType.PlayerLife);
+
+        MessageWriter.Writer.Write((byte)LocalPlayerIndex);
+
+        MessageWriter.Writer.Write(life);
+
+        if (lifeMax.HasValue)
+        {
+            MessageWriter.Writer.Write(lifeMax.Value);
+        }
+        else
+        {
+            MessageWriter.Writer.Write((short)LocalPlayer.LifeMax);
+        }
+    }
+
+    [OutgoingMessage]
     private void WritePlayerMana()
     {
         MessageWriter.BeginMessage(MessageType.PlayerMana);
@@ -131,6 +150,25 @@ public partial class HeadlessClient
         MessageWriter.Writer.Write((short)LocalPlayer.Mana);
 
         MessageWriter.Writer.Write((short)LocalPlayer.ManaMax);
+    }
+
+    [OutgoingMessage]
+    private void WritePlayerMana(short mana, short? manaMax = null)
+    {
+        MessageWriter.BeginMessage(MessageType.PlayerMana);
+
+        MessageWriter.Writer.Write((byte)LocalPlayerIndex);
+
+        MessageWriter.Writer.Write((short)mana);
+
+        if (manaMax.HasValue)
+        {
+            MessageWriter.Writer.Write(manaMax.Value);
+        }
+        else
+        {
+            MessageWriter.Writer.Write((short)LocalPlayer.ManaMax);
+        }
     }
 
     [OutgoingMessage]
