@@ -23,37 +23,33 @@ public partial class HeadlessClient
 
         MessageWriter.Writer.Write((byte)LocalPlayerIndex);
 
-        MessageWriter.Writer.Write(LocalPlayer.Style.SkinVariant);
+        MessageWriter.Writer.Write((byte)LocalPlayer.Style.SkinVariant);
 
-        MessageWriter.Writer.Write(LocalPlayer.Style.HairType);
+        MessageWriter.Writer.Write((byte)LocalPlayer.Style.HairType);
 
         MessageWriter.Writer.Write(LocalPlayer.Name);
 
         MessageWriter.Writer.Write(LocalPlayer.Style.HairDye);
 
-        BitsByte hideVisibleAccessory = 0;
-        MessageWriter.Writer.Write(hideVisibleAccessory);
-
-        BitsByte hideVisibleAccessory2 = 0;
-        MessageWriter.Writer.Write(hideVisibleAccessory2);
+        MessageWriter.Writer.WriteAccessoryVisibility(new bool[10]);
 
         BitsByte hideMisc = 0;
         MessageWriter.Writer.Write(hideMisc);
 
         MessageWriter.Writer.Write(LocalPlayer.Style.HairColor);
-
+        
         MessageWriter.Writer.Write(LocalPlayer.Style.SkinColor);
-
+        
         MessageWriter.Writer.Write(LocalPlayer.Style.EyeColor);
-
+        
         MessageWriter.Writer.Write(LocalPlayer.Style.ShirtColor);
-
+        
         MessageWriter.Writer.Write(LocalPlayer.Style.UnderShirtColor);
-
+        
         MessageWriter.Writer.Write(LocalPlayer.Style.PantsColor);
-
+        
         MessageWriter.Writer.Write(LocalPlayer.Style.ShoeColor);
-
+        
         BitsByte bites = (byte)0;
 
         if (LocalPlayer.Difficulty == PlayerDifficulty.Mediumcore)
@@ -69,31 +65,38 @@ public partial class HeadlessClient
             bites[3] = true;
         }
 
-        // ?? no idea
+        // extraAccessory
         bites[2] = false;
-
+        
         MessageWriter.Writer.Write(bites);
 
-        BitsByte bitsByte8 = 0;
+        BitsByte torchAndSuperCart = 0;
 
-        //UsingBiomeTorches;
-        bitsByte8[0] = false;
+        //torchAndSuperCart[0] = LocalPlayer.UsingBiomeTorches;
+        //torchAndSuperCart[1] = LocalPlayer.happyFunTorchTime;
+        //torchAndSuperCart[2] = LocalPlayer.unlockedBiomeTorches;
+        //torchAndSuperCart[3] = LocalPlayer.unlockedSuperCart;
+        //torchAndSuperCart[4] = LocalPlayer.enabledSuperCart;
 
-        //happyFunTorchTime;
-        bitsByte8[1] = false;
+        MessageWriter.Writer.Write(torchAndSuperCart);
 
-        //unlockedBiomeTorches;
-        bitsByte8[2] = false;
+        BitsByte miscBuffs = 0;
 
-        MessageWriter.Writer.Write(bitsByte8);
+        //miscBuffs[0] = LocalPlayer.usedAegisCrystal;
+        //miscBuffs[1] = LocalPlayer.usedAegisFruit;
+        //miscBuffs[2] = LocalPlayer.usedArcaneCrystal;
+        //miscBuffs[3] = LocalPlayer.usedGalaxyPearl;
+        //miscBuffs[4] = LocalPlayer.usedGummyWorm;
+        //miscBuffs[5] = LocalPlayer.usedAmbrosia;
+        //miscBuffs[6] = LocalPlayer.ateArtisanBread;
+
+        MessageWriter.Writer.Write(miscBuffs);
     }
 
     [OutgoingMessage]
     private void WriteClientUUID()
     {
         MessageWriter.BeginMessage(MessageType.ClientUUID);
-
-        MessageWriter.Writer.Write((byte)LocalPlayerIndex);
 
         MessageWriter.Writer.Write(ClientUUID);
     }
@@ -156,5 +159,16 @@ public partial class HeadlessClient
         MessageWriter.Writer.Write((byte)LocalPlayer.Inventory[slot].Prefix);
 
         MessageWriter.Writer.Write((short)LocalPlayer.Inventory[slot].Type);
+    }
+
+    [OutgoingMessage]
+    private void WriteSyncLoadout()
+    {
+        MessageWriter.BeginMessage(MessageType.SyncLoadout);
+
+        MessageWriter.Writer.Write((byte)LocalPlayerIndex);
+
+        // Current loadout index
+        MessageWriter.Writer.Write((byte)0);
     }
 }

@@ -100,6 +100,8 @@ public class TerrariaNetworkClient : INetworkClient, IDisposable
 
         ReceiveLoopTask!.Wait();
 
+        TCPNetworkClient.Dispose();
+
         Connected = false;
     }
 
@@ -113,6 +115,8 @@ public class TerrariaNetworkClient : INetworkClient, IDisposable
         ReceiveLoopCancellationToken = new CancellationToken(true);
 
         await ReceiveLoopTask!;
+
+        TCPNetworkClient.Dispose();
 
         Connected = false;
     }
@@ -142,6 +146,12 @@ public class TerrariaNetworkClient : INetworkClient, IDisposable
         catch (TaskCanceledException)
         {
             return;
+        }
+        catch (EndOfStreamException)
+        {
+            Connected = false;
+
+            TCPNetworkClient.Dispose();
         }
     }
 

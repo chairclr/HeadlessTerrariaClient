@@ -41,6 +41,26 @@ internal class TerrariaMessageHandler
 
         MessageType messageType = (MessageType)Reader.ReadByte();
 
+#if DEBUG
+        byte[] internalBuffer = InternalStream.GetBuffer();
+
+        StringBuilder builder = new StringBuilder();
+
+        builder.Append($"T: {(int)messageType,3} L: {length + 2,5} B: {{ ");
+
+        for (int i = start - 2; i < start + length; i++)
+        {
+            builder.Append(internalBuffer[i]);
+
+            if (i + 1 < start + length)
+                builder.Append(", ");
+        }
+
+        builder.Append(" }");
+
+        Console.WriteLine($"↓ {builder.ToString()}");
+#endif
+
         if (MessageHandlerCache.TryGetValue(messageType, out HandleMessageMethod? method))
         {
             await method(Reader);

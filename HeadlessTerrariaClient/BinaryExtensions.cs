@@ -51,4 +51,18 @@ public static class BinaryExtensions
     {
         return new Vector2(reader.ReadSingle(), reader.ReadSingle());
     }
+
+    public static void WriteAccessoryVisibility(this BinaryWriter writer, bool[] hideVisibleAccessory)
+    {
+        ushort num = 0;
+        for (int i = 0; i < hideVisibleAccessory.Length; i++)
+        {
+            if (hideVisibleAccessory[i])
+            {
+                num = (ushort)(num | (ushort)(1 << i));
+            }
+        }
+
+        writer.Write(num);
+    }
 }

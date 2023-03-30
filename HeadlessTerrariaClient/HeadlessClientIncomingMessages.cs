@@ -34,6 +34,7 @@ public partial class HeadlessClient
         await SendPlayerLifeAsync();
         await SendPlayerManaAsync();
         await SendSyncPlayerBuffsAsync();
+        await SendSyncLoadoutAsync();
 
         for (int i = 0; i < 350; i++)
         {
