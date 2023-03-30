@@ -97,7 +97,7 @@ public class OutgoingMessagesGenerator : ISourceGenerator
                 source.Append("); TerrariaNetworkClient.Send(MessageWriter.EndMessage());");
                 source.AppendLine(" }");
 
-                source.Append("public async Task Send");
+                source.Append("public async ValueTask Send");
                 source.Append(methodSymbol.Name.Remove(0, 5));
                 if (methodSymbol.Parameters.Length > 0)
                 {

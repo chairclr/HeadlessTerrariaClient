@@ -55,7 +55,7 @@ public class TerrariaNetworkClient : INetworkClient, IDisposable
         ReceiveLoopTask = Task.Run(ReceiveLoop);
     }
 
-    public async Task ConnectAsync(CancellationToken cancellationToken = default)
+    public async ValueTask ConnectAsync(CancellationToken cancellationToken = default)
     {
         if (Connected)
         {
@@ -79,7 +79,7 @@ public class TerrariaNetworkClient : INetworkClient, IDisposable
         TCPNetworkClient.Send(data);
     }
 
-    public async Task SendAsync(ReadOnlyMemory<byte> data, CancellationToken cancellationToken = default)
+    public async ValueTask SendAsync(ReadOnlyMemory<byte> data, CancellationToken cancellationToken = default)
     {
         if (!Connected)
         {
@@ -105,7 +105,7 @@ public class TerrariaNetworkClient : INetworkClient, IDisposable
         Connected = false;
     }
 
-    public async Task DisconnectAsync()
+    public async ValueTask DisconnectAsync()
     {
         if (!Connected)
         {

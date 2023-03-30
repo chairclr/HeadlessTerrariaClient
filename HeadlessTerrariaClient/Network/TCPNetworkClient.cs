@@ -38,7 +38,7 @@ internal class TCPNetworkClient : INetworkClient, IDisposable
         NetworkStream = new NetworkStream(Socket);
     }
 
-    public async Task ConnectAsync(CancellationToken cancellationToken = default)
+    public async ValueTask ConnectAsync(CancellationToken cancellationToken = default)
     {
         await Socket.ConnectAsync(IPAddress, Port, cancellationToken);
 
@@ -50,7 +50,7 @@ internal class TCPNetworkClient : INetworkClient, IDisposable
         NetworkStream!.Write(data.Span);
     }
 
-    public async Task SendAsync(ReadOnlyMemory<byte> data, CancellationToken cancellationToken = default)
+    public async ValueTask SendAsync(ReadOnlyMemory<byte> data, CancellationToken cancellationToken = default)
     {
         await NetworkStream!.WriteAsync(data, cancellationToken);
     }

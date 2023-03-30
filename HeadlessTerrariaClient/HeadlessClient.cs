@@ -81,7 +81,7 @@ public partial class HeadlessClient : IDisposable
         ConnectionState = ConnectionState.SyncingPlayer;
     }
 
-    public async Task ConnectAsync(CancellationToken cancellationToken = default)
+    public async ValueTask ConnectAsync(CancellationToken cancellationToken = default)
     {
         await TerrariaNetworkClient.ConnectAsync(cancellationToken);
     }
@@ -93,7 +93,7 @@ public partial class HeadlessClient : IDisposable
         TerrariaNetworkClient.Disconnect();
     }
 
-    public async Task DisconnectAsync()
+    public async ValueTask DisconnectAsync()
     {
         ConnectionState = ConnectionState.None;
 
@@ -156,7 +156,7 @@ public partial class HeadlessClient : IDisposable
         return false;
     }
 
-    public async Task<bool> JoinWorldAsync(CancellationToken cancellationToken = default)
+    public async ValueTask<bool> JoinWorldAsync(CancellationToken cancellationToken = default)
     {
         await SendHelloAsync(cancellationToken: cancellationToken);
 
@@ -180,7 +180,7 @@ public partial class HeadlessClient : IDisposable
         return false;
     }
 
-    public async Task<bool> JoinWorldAsync(TimeSpan timeout, CancellationToken cancellationToken = default)
+    public async ValueTask<bool> JoinWorldAsync(TimeSpan timeout, CancellationToken cancellationToken = default)
     {
         await SendHelloAsync(cancellationToken: cancellationToken);
 

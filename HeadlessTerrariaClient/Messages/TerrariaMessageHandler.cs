@@ -68,4 +68,4 @@ internal class TerrariaMessageHandler
     }
 }
 
-internal delegate Task HandleMessageMethod(BinaryReader reader);
+internal delegate ValueTask HandleMessageMethod(BinaryReader reader);

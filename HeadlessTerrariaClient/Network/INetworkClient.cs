@@ -4,9 +4,9 @@ internal interface INetworkClient
 {
     public void Connect();
 
-    public Task ConnectAsync(CancellationToken cancellationToken);
+    public ValueTask ConnectAsync(CancellationToken cancellationToken);
 
     public void Send(ReadOnlyMemory<byte> data);
 
-    public Task SendAsync(ReadOnlyMemory<byte> data, CancellationToken cancellationToken);
+    public ValueTask SendAsync(ReadOnlyMemory<byte> data, CancellationToken cancellationToken);
 }

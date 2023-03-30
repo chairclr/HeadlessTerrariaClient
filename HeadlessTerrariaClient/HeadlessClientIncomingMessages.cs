@@ -13,7 +13,7 @@ namespace HeadlessTerrariaClient;
 public partial class HeadlessClient
 {
     [IncomingMessage(MessageType.PlayerInfo)]
-    internal async Task HandlePlayerInfo(BinaryReader reader)
+    internal async ValueTask HandlePlayerInfo(BinaryReader reader)
     {
         int playerIndex = reader.ReadByte();
 
@@ -54,7 +54,7 @@ public partial class HeadlessClient
     }
 
     [IncomingMessage(MessageType.WorldData)]
-    internal async Task HandleWorldData(BinaryReader reader)
+    internal async ValueTask HandleWorldData(BinaryReader reader)
     {
         World.HandleWorldData(reader);
 
@@ -68,7 +68,7 @@ public partial class HeadlessClient
     }
 
     [IncomingMessage(MessageType.InitialSpawn)]
-    internal async Task HandleInitialSpawn(BinaryReader reader)
+    internal async ValueTask HandleInitialSpawn(BinaryReader reader)
     {
         if (ConnectionState == ConnectionState.RequestingSpawnTileData)
         {
@@ -86,7 +86,7 @@ public partial class HeadlessClient
     }
 
     [IncomingMessage(MessageType.UpdateWorldEvil)]
-    internal async Task HandleUpdateWorldEvil(BinaryReader reader)
+    internal async ValueTask HandleUpdateWorldEvil(BinaryReader reader)
     {
         byte good = reader.ReadByte();
         byte evil = reader.ReadByte();
@@ -94,7 +94,7 @@ public partial class HeadlessClient
     }
 
     [IncomingMessage(MessageType.FinishedConnectingToServer)]
-    internal async Task HandleFinishedConnectingToServer(BinaryReader reader)
+    internal async ValueTask HandleFinishedConnectingToServer(BinaryReader reader)
     {
         ConnectionState = ConnectionState.FinishedConnecting;
     }
