@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using HeadlessTerrariaClient.Network;
 
 namespace HeadlessTerrariaClient;
 
@@ -64,5 +65,15 @@ public static class BinaryExtensions
         }
 
         writer.Write(num);
+    }
+
+    public static void Write(this BinaryWriter writer, NetworkText networkText)
+    {
+        networkText.Serialize(writer);
+    }
+
+    public static NetworkText ReadNetworkText(this BinaryReader reader)
+    {
+        return NetworkText.Deserialize(reader);
     }
 }

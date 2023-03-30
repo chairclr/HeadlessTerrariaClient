@@ -21,7 +21,7 @@ internal class TerrariaMessageHandler
     {
         Client = client;
 
-        Reader = Client.TerrariaNetworkClient.Reader;
+        Reader = Client.TCPNetworkClient.Reader;
 
         InternalStream = (MemoryStream)Reader.BaseStream;
 

@@ -12,6 +12,18 @@ namespace HeadlessTerrariaClient;
 
 public partial class HeadlessClient
 {
+    [IncomingMessage(MessageType.Kick)]
+    internal async ValueTask HandleKick(BinaryReader reader)
+    {
+        ConnectionState = ConnectionState.None;
+
+        WasKicked = true;
+
+        KickReason = reader.ReadNetworkText().ToString(); 
+
+        await TCPNetworkClient.DisconnectAsync();
+    }
+
     [IncomingMessage(MessageType.PlayerInfo)]
     internal async ValueTask HandlePlayerInfo(BinaryReader reader)
     {

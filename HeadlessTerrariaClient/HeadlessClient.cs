@@ -15,13 +15,13 @@ namespace HeadlessTerrariaClient;
 
 public partial class HeadlessClient : IDisposable
 {
-    internal readonly TCPNetworkClient TerrariaNetworkClient;
+    internal readonly TCPNetworkClient TCPNetworkClient;
 
     private readonly TerrariaMessageHandler MessageHandler;
 
     private readonly TerrariaMessageWriter MessageWriter;
 
-    public bool Connected => TerrariaNetworkClient.Connected;
+    public bool Connected => TCPNetworkClient.Connected;
 
     public ConnectionState ConnectionState { get; private set; } = ConnectionState.None;
 
@@ -33,7 +33,9 @@ public partial class HeadlessClient : IDisposable
 
     public string ClientUUID = Guid.NewGuid().ToString();
 
-    private AutoResetEvent JoinedWorldEvent = new AutoResetEvent(false);
+    public bool WasKicked { get; private set; }
+
+    public string? KickReason { get; private set; }
 
     private bool Disposed;
 
@@ -63,18 +65,18 @@ public partial class HeadlessClient : IDisposable
             throw new ArgumentException(null, nameof(ip));
         }
 
-        TerrariaNetworkClient = new TCPNetworkClient(foundIp, port);
+        TCPNetworkClient = new TCPNetworkClient(foundIp, port);
 
         MessageHandler = new TerrariaMessageHandler(this);
 
-        TerrariaNetworkClient.OnReceiveCallback = MessageHandler.ReceiveMessage;
+        TCPNetworkClient.OnReceiveCallback = MessageHandler.ReceiveMessage;
 
-        MessageWriter = new TerrariaMessageWriter(TerrariaNetworkClient.Writer);
+        MessageWriter = new TerrariaMessageWriter(TCPNetworkClient.Writer);
     }
 
     public void Connect()
     {
-        TerrariaNetworkClient.Connect();
+        TCPNetworkClient.Connect();
 
         SendHello();
 
@@ -83,21 +85,21 @@ public partial class HeadlessClient : IDisposable
 
     public async ValueTask ConnectAsync(CancellationToken cancellationToken = default)
     {
-        await TerrariaNetworkClient.ConnectAsync(cancellationToken);
+        await TCPNetworkClient.ConnectAsync(cancellationToken);
     }
 
     public void Disconnect()
     {
         ConnectionState = ConnectionState.None;
 
-        TerrariaNetworkClient.Disconnect();
+        TCPNetworkClient.Disconnect();
     }
 
     public async ValueTask DisconnectAsync()
     {
         ConnectionState = ConnectionState.None;
 
-        await TerrariaNetworkClient.DisconnectAsync();
+        await TCPNetworkClient.DisconnectAsync();
     }
 
     public bool JoinWorld(CancellationToken cancellationToken = default)
@@ -218,7 +220,7 @@ public partial class HeadlessClient : IDisposable
         {
             if (disposing)
             {
-                TerrariaNetworkClient.Dispose();
+                TCPNetworkClient.Dispose();
             }
 
             Disposed = true;

@@ -93,7 +93,7 @@ public class OutgoingMessagesGenerator : ISourceGenerator
                         }
                     }
                 }
-                source.Append("); TerrariaNetworkClient.Send(MessageWriter.EndMessage());");
+                source.Append("); TCPNetworkClient.Send(MessageWriter.EndMessage());");
                 source.AppendLine(" }");
 
                 source.Append("public async ValueTask Send");
@@ -151,7 +151,7 @@ public class OutgoingMessagesGenerator : ISourceGenerator
                         }
                     }
                 }
-                source.Append("); await TerrariaNetworkClient.SendAsync(MessageWriter.EndMessage(), cancellationToken);");
+                source.Append("); await TCPNetworkClient.SendAsync(MessageWriter.EndMessage(), cancellationToken);");
                 source.AppendLine(" }");
             }
         }
