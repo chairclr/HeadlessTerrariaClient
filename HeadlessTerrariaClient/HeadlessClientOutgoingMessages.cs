@@ -233,4 +233,24 @@ public partial class HeadlessClient
         // Current loadout index
         MessageWriter.Writer.Write((byte)loadoutIndex);
     }
+
+    [OutgoingMessage]
+    private void WriteSpawnTileData()
+    {
+        MessageWriter.BeginMessage(MessageType.SpawnTileData);
+
+        MessageWriter.Writer.Write(-1);
+
+        MessageWriter.Writer.Write(-1);
+    }
+
+    [OutgoingMessage]
+    private void WriteSpawnTileData(int spawnX, int spawnY)
+    {
+        MessageWriter.BeginMessage(MessageType.SpawnTileData);
+
+        MessageWriter.Writer.Write(spawnX);
+
+        MessageWriter.Writer.Write(spawnY);
+    }
 }
