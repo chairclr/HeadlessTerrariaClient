@@ -10,7 +10,7 @@ using System.Threading;
 
 namespace HeadlessTerrariaClient.Network;
 
-public class TerrariaNetworkClient : INetworkClient, IDisposable
+public class TCPNetworkClient : INetworkClient, IDisposable
 {
     public bool Connected { get; private set; }
 
@@ -38,7 +38,7 @@ public class TerrariaNetworkClient : INetworkClient, IDisposable
 
     private bool Disposed;
 
-    public TerrariaNetworkClient(IPAddress ip, int port)
+    public TCPNetworkClient(IPAddress ip, int port)
     {
         ArgumentNullException.ThrowIfNull(ip, nameof(ip));
 

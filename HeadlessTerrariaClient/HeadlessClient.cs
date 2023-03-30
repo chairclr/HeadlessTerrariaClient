@@ -15,7 +15,7 @@ namespace HeadlessTerrariaClient;
 
 public partial class HeadlessClient : IDisposable
 {
-    internal readonly TerrariaNetworkClient TerrariaNetworkClient;
+    internal readonly TCPNetworkClient TerrariaNetworkClient;
 
     private readonly TerrariaMessageHandler MessageHandler;
 
@@ -63,7 +63,7 @@ public partial class HeadlessClient : IDisposable
             throw new ArgumentException(null, nameof(ip));
         }
 
-        TerrariaNetworkClient = new TerrariaNetworkClient(foundIp, port);
+        TerrariaNetworkClient = new TCPNetworkClient(foundIp, port);
 
         MessageHandler = new TerrariaMessageHandler(this);
 
