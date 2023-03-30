@@ -27,7 +27,7 @@ internal class TerrariaMessageHandler
 
         foreach (MethodInfo method in client.GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Instance))
         {
-            HandleMessageAttribute? handleMessageAttribute = method.GetCustomAttribute<HandleMessageAttribute>();
+            IncomingMessageAttribute? handleMessageAttribute = method.GetCustomAttribute<IncomingMessageAttribute>();
             if (handleMessageAttribute is not null)
             {
                 MessageHandlerCache.Add(handleMessageAttribute.MessageType, (HandleMessageMethod)method.CreateDelegate(typeof(HandleMessageMethod), Client));
@@ -64,10 +64,6 @@ internal class TerrariaMessageHandler
         if (MessageHandlerCache.TryGetValue(messageType, out HandleMessageMethod? method))
         {
             await method(Reader);
-        }
-        else
-        {
-             Console.WriteLine($"Unhandled packet of type: {messageType} Length: {length}");
         }
     }
 }

@@ -21,12 +21,22 @@ public enum ConnectionState : int
     RequestingWorldData,
 
     /// <summary>
-    /// The client is requesting the tile data of the server
+    /// The client is requesting the spawn tile data of the server
     /// </summary>
-    RequestingTileData,
+    RequestingSpawnTileData,
+
+    /// <summary>
+    /// The client is spawning the player
+    /// </summary>
+    SpawningPlayer,
 
     /// <summary>
     /// The client is fully connected to the server
     /// </summary>
     Connected,
+
+    /// <summary>
+    /// The client has finished the connection process and is ready to do some stuff
+    /// </summary>
+    FinishedConnecting,
 }

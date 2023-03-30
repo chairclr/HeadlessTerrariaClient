@@ -3,11 +3,11 @@
 namespace HeadlessTerrariaClient;
 
 [AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
-internal class HandleMessageAttribute : Attribute
+internal class IncomingMessageAttribute : Attribute
 {
     public MessageType MessageType;
 
-    public HandleMessageAttribute(MessageType messageType)
+    public IncomingMessageAttribute(MessageType messageType)
     {
         MessageType = messageType;
     }

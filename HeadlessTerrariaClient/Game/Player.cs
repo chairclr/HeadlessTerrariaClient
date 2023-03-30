@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -28,6 +29,8 @@ public class Player
     public Vector2 Position;
 
     public Vector2 Velocity;
+
+    public bool Dead;
 
     public Vector2? PotionOfReturnOriginalUsePosition;
 
@@ -77,6 +80,8 @@ public class Player
 
     public int GravDir;
 
+    public float RespawnTimer;
+
     public class PlayerStyle
     {
         public int SkinVariant;
@@ -124,5 +129,17 @@ public class Player
         {
             Inventory[i] = new Item();
         }
+    }
+
+    public void Spawn(int spawnX, int spawnY)
+    {
+        if (Dead)
+        {
+            // add case later
+        }
+
+        Position = new Vector2(spawnX * 16f, spawnY * 16f);
+
+        
     }
 }

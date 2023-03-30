@@ -29,7 +29,7 @@ public partial class HeadlessClient
 
         MessageWriter.Writer.Write(LocalPlayer.Name);
 
-        MessageWriter.Writer.Write(LocalPlayer.Style.HairDye);
+        MessageWriter.Writer.Write((byte)LocalPlayer.Style.HairDye);
 
         MessageWriter.Writer.WriteAccessoryVisibility(new bool[10]);
 
@@ -232,6 +232,8 @@ public partial class HeadlessClient
 
         // Current loadout index
         MessageWriter.Writer.Write((byte)loadoutIndex);
+
+        MessageWriter.Writer.WriteAccessoryVisibility(new bool[10]);
     }
 
     [OutgoingMessage]
@@ -252,5 +254,22 @@ public partial class HeadlessClient
         MessageWriter.Writer.Write(spawnX);
 
         MessageWriter.Writer.Write(spawnY);
+    }
+
+    [OutgoingMessage]
+    private void WritePlayerSpawn(int context)
+    {
+        MessageWriter.BeginMessage(MessageType.PlayerSpawn);
+
+        MessageWriter.Writer.Write((byte)LocalPlayerIndex);
+
+        MessageWriter.Writer.Write(-1);
+        MessageWriter.Writer.Write(-1);
+
+        MessageWriter.Writer.Write(LocalPlayer.RespawnTimer);
+
+        MessageWriter.Writer.Write(0);
+        MessageWriter.Writer.Write(0);
+        MessageWriter.Writer.Write((byte)context);
     }
 }

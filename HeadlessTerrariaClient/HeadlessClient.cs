@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using HeadlessTerrariaClient.Game;
 using HeadlessTerrariaClient.Messages;
@@ -30,6 +32,8 @@ public partial class HeadlessClient : IDisposable
     public Player LocalPlayer => World.Players[LocalPlayerIndex];
 
     public string ClientUUID = Guid.NewGuid().ToString();
+
+    private AutoResetEvent JoinedWorldEvent = new AutoResetEvent(false);
 
     private bool Disposed;
 
@@ -80,10 +84,6 @@ public partial class HeadlessClient : IDisposable
     public async Task ConnectAsync(CancellationToken cancellationToken = default)
     {
         await TerrariaNetworkClient.ConnectAsync(cancellationToken);
-
-        await SendHelloAsync(cancellationToken: cancellationToken);
-
-        ConnectionState = ConnectionState.SyncingPlayer;
     }
 
     public void Disconnect()
@@ -98,6 +98,118 @@ public partial class HeadlessClient : IDisposable
         ConnectionState = ConnectionState.None;
 
         await TerrariaNetworkClient.DisconnectAsync();
+    }
+
+    public bool JoinWorld(CancellationToken cancellationToken = default)
+    {
+        SendHello();
+
+        ConnectionState = ConnectionState.SyncingPlayer;
+
+        while (!cancellationToken.IsCancellationRequested)
+        { 
+            if (ConnectionState == ConnectionState.FinishedConnecting)
+            {
+                return true;
+            }
+
+            if (ConnectionState == ConnectionState.None)
+            {
+                return false;
+            }
+
+            Thread.Sleep(1);
+        }
+
+        return false;
+    }
+
+    public bool JoinWorld(TimeSpan timeout, CancellationToken cancellationToken = default)
+    {
+        SendHello();
+
+        ConnectionState = ConnectionState.SyncingPlayer;
+
+        Stopwatch watch = new Stopwatch();
+        watch.Start();
+
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            if (watch.Elapsed > timeout)
+            {
+                return false;
+            }
+
+            if (ConnectionState == ConnectionState.FinishedConnecting)
+            {
+                return true;
+            }
+
+            if (ConnectionState == ConnectionState.None)
+            {
+                return false;
+            }
+
+            Thread.Sleep(1);
+        }
+
+        return false;
+    }
+
+    public async Task<bool> JoinWorldAsync(CancellationToken cancellationToken = default)
+    {
+        await SendHelloAsync(cancellationToken: cancellationToken);
+
+        ConnectionState = ConnectionState.SyncingPlayer;
+
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            if (ConnectionState == ConnectionState.FinishedConnecting)
+            {
+                return true;
+            }
+
+            if (ConnectionState == ConnectionState.None)
+            {
+                return false;
+            }
+
+            await Task.Delay(1, cancellationToken);
+        }
+
+        return false;
+    }
+
+    public async Task<bool> JoinWorldAsync(TimeSpan timeout, CancellationToken cancellationToken = default)
+    {
+        await SendHelloAsync(cancellationToken: cancellationToken);
+
+        ConnectionState = ConnectionState.SyncingPlayer;
+
+        Stopwatch watch = new Stopwatch();
+        watch.Start();
+
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            if (watch.Elapsed > timeout)
+            {
+                return false;
+            }
+
+            if (ConnectionState == ConnectionState.FinishedConnecting)
+            {
+                return true;
+            }
+
+            if (ConnectionState == ConnectionState.None)
+            {
+                return false;
+            }
+
+            await Task.Delay(1, cancellationToken);
+        }
+
+        return false;
     }
 
     protected virtual void Dispose(bool disposing)

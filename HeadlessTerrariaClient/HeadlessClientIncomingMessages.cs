@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using HeadlessTerrariaClient.Game;
 using HeadlessTerrariaClient.Messages;
+using HeadlessTerrariaClient.Network;
 
 namespace HeadlessTerrariaClient;
 
 public partial class HeadlessClient
 {
-    [HandleMessage(MessageType.PlayerInfo)]
+    [IncomingMessage(MessageType.PlayerInfo)]
     internal async Task HandlePlayerInfo(BinaryReader reader)
     {
         int playerIndex = reader.ReadByte();
@@ -22,6 +24,8 @@ public partial class HeadlessClient
             lock (World)
             {
                 (World.Players[LocalPlayerIndex], World.Players[playerIndex]) = (World.Players[playerIndex], World.Players[LocalPlayerIndex]);
+
+                LocalPlayerIndex = playerIndex;
 
                 World.UpdatePlayerIndexes();
             }
@@ -41,8 +45,57 @@ public partial class HeadlessClient
             await SendSyncEquipmentAsync(i);
         }
 
-        ConnectionState = Network.ConnectionState.RequestingWorldData;
+        if (ConnectionState == ConnectionState.SyncingPlayer)
+        {
+            ConnectionState = ConnectionState.RequestingWorldData;
+        }
 
         await SendRequestWorldDataAsync();
+    }
+
+    [IncomingMessage(MessageType.WorldData)]
+    internal async Task HandleWorldData(BinaryReader reader)
+    {
+        World.HandleWorldData(reader);
+
+        World.Tile.ResetHeap();
+
+        if (ConnectionState == ConnectionState.RequestingWorldData)
+        {
+            ConnectionState = ConnectionState.RequestingSpawnTileData;
+            await SendSpawnTileDataAsync();
+        }
+    }
+
+    [IncomingMessage(MessageType.InitialSpawn)]
+    internal async Task HandleInitialSpawn(BinaryReader reader)
+    {
+        if (ConnectionState == ConnectionState.RequestingSpawnTileData)
+        {
+            ConnectionState = ConnectionState.SpawningPlayer;
+        }
+
+        LocalPlayer.Spawn(World.SpawnTileX, World.SpawnTileY);
+
+        if (ConnectionState == ConnectionState.SpawningPlayer)
+        {
+            await SendPlayerSpawnAsync(1);
+
+            ConnectionState = ConnectionState.Connected;
+        }
+    }
+
+    [IncomingMessage(MessageType.UpdateWorldEvil)]
+    internal async Task HandleUpdateWorldEvil(BinaryReader reader)
+    {
+        byte good = reader.ReadByte();
+        byte evil = reader.ReadByte();
+        byte blood = reader.ReadByte();
+    }
+
+    [IncomingMessage(MessageType.FinishedConnectingToServer)]
+    internal async Task HandleFinishedConnectingToServer(BinaryReader reader)
+    {
+        ConnectionState = ConnectionState.FinishedConnecting;
     }
 }

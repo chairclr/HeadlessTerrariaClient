@@ -32,9 +32,15 @@ public class ClientFullTests
 
         Assert.That(client.Connected, Is.True);
 
-        await Task.Delay(1000);
+        Assert.That(client.ConnectionState, Is.EqualTo(ConnectionState.None));
 
-        Assert.That(client.ConnectionState, Is.EqualTo(ConnectionState.RequestingWorldData));
+        client.LocalPlayer.Name = "chair";
+
+        await client.JoinWorldAsync();
+
+        Assert.That(client.Connected, Is.True);
+
+        Assert.That(client.ConnectionState, Is.EqualTo(ConnectionState.FinishedConnecting));
 
         await client.DisconnectAsync();
 
