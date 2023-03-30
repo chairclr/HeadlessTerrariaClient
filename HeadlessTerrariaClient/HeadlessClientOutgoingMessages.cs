@@ -102,6 +102,14 @@ public partial class HeadlessClient
     }
 
     [OutgoingMessage]
+    private void WriteClientUUID(string uuid)
+    {
+        MessageWriter.BeginMessage(MessageType.ClientUUID);
+
+        MessageWriter.Writer.Write(uuid);
+    }
+
+    [OutgoingMessage]
     private void WritePlayerLife()
     {
         MessageWriter.BeginMessage(MessageType.PlayerLife);
