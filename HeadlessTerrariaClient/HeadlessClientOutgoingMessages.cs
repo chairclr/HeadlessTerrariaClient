@@ -122,17 +122,17 @@ public partial class HeadlessClient
     }
 
     [OutgoingMessage]
-    private void WritePlayerLife(short life, short? lifeMax = null)
+    private void WritePlayerLife(int life, int? lifeMax = null)
     {
         MessageWriter.BeginMessage(MessageType.PlayerLife);
 
         MessageWriter.Writer.Write((byte)LocalPlayerIndex);
 
-        MessageWriter.Writer.Write(life);
+        MessageWriter.Writer.Write((short)life);
 
         if (lifeMax.HasValue)
         {
-            MessageWriter.Writer.Write(lifeMax.Value);
+            MessageWriter.Writer.Write((short)lifeMax.Value);
         }
         else
         {
@@ -153,7 +153,7 @@ public partial class HeadlessClient
     }
 
     [OutgoingMessage]
-    private void WritePlayerMana(short mana, short? manaMax = null)
+    private void WritePlayerMana(int mana, int? manaMax = null)
     {
         MessageWriter.BeginMessage(MessageType.PlayerMana);
 
@@ -163,7 +163,7 @@ public partial class HeadlessClient
 
         if (manaMax.HasValue)
         {
-            MessageWriter.Writer.Write(manaMax.Value);
+            MessageWriter.Writer.Write((short)manaMax.Value);
         }
         else
         {
@@ -208,13 +208,29 @@ public partial class HeadlessClient
     }
 
     [OutgoingMessage]
-    private void WriteSyncLoadout()
+    private void WriteSyncEquipment(int slot, Item item)
+    {
+        MessageWriter.BeginMessage(MessageType.SyncEquipment);
+
+        MessageWriter.Writer.Write((byte)LocalPlayerIndex);
+
+        MessageWriter.Writer.Write((short)slot);
+
+        MessageWriter.Writer.Write((short)item.Stack);
+
+        MessageWriter.Writer.Write((byte)item.Prefix);
+
+        MessageWriter.Writer.Write((short)item.Type);
+    }
+
+    [OutgoingMessage]
+    private void WriteSyncLoadout(int loadoutIndex = 0)
     {
         MessageWriter.BeginMessage(MessageType.SyncLoadout);
 
         MessageWriter.Writer.Write((byte)LocalPlayerIndex);
 
         // Current loadout index
-        MessageWriter.Writer.Write((byte)0);
+        MessageWriter.Writer.Write((byte)loadoutIndex);
     }
 }
