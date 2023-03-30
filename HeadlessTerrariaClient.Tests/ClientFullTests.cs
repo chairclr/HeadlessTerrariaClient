@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HeadlessTerrariaClient.Network;
 
 namespace HeadlessTerrariaClient.Tests;
 
@@ -33,8 +34,12 @@ public class ClientFullTests
 
         await Task.Delay(1000);
 
+        Assert.That(client.ConnectionState, Is.EqualTo(ConnectionState.RequestingWorldData));
+
         await client.DisconnectAsync();
 
         Assert.That(client.Connected, Is.Not.True);
+
+        Assert.That(client.ConnectionState, Is.EqualTo(ConnectionState.None));
     }
 }

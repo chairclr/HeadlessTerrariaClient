@@ -73,6 +73,8 @@ public partial class HeadlessClient : IDisposable
         TerrariaNetworkClient.Connect();
 
         SendHello();
+
+        ConnectionState = ConnectionState.SyncingPlayer;
     }
 
     public async Task ConnectAsync(CancellationToken cancellationToken = default)
@@ -86,11 +88,15 @@ public partial class HeadlessClient : IDisposable
 
     public void Disconnect()
     {
+        ConnectionState = ConnectionState.None;
+
         TerrariaNetworkClient.Disconnect();
     }
 
     public async Task DisconnectAsync()
     {
+        ConnectionState = ConnectionState.None;
+
         await TerrariaNetworkClient.DisconnectAsync();
     }
 
