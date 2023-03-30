@@ -25,11 +25,12 @@ public class OutgoingMessagesGenerator : ISourceGenerator
     {
         Compilation compilation = context.Compilation;
 
-        IEnumerable<SyntaxNode> allNodes = compilation.SyntaxTrees.SelectMany(s => s.GetRoot().DescendantNodes());
-        IEnumerable<MethodDeclarationSyntax> methodsToGeneratorSendMethodsFor = allNodes
-            .Where(d => d.IsKind(SyntaxKind.MethodDeclaration))
-            .OfType<MethodDeclarationSyntax>()
-            .Where(s => s.AttributeLists.SelectMany(a => a.Attributes).Select(a => a.Name.ToString()).Where(n => n == AttributeName || n == AttributeNameShort).Any());
+        INamedTypeSymbol headlessClientSymbol = compilation.GetTypeByMetadataName("HeadlessTerrariaClient.HeadlessClient")!;
+
+        IEnumerable<IMethodSymbol> methodsWithAttribute = headlessClientSymbol.GetMembers()
+            .Where(x => x.Kind == SymbolKind.Method)
+            .Cast<IMethodSymbol>()
+            .Where(x => x.GetAttributes().Select(x => x.AttributeClass!.Name).Where(n => n == AttributeName).Any());
 
         StringBuilder source = new StringBuilder();
 
@@ -37,22 +38,20 @@ public class OutgoingMessagesGenerator : ISourceGenerator
         source.AppendLine("public partial class HeadlessClient");
         source.AppendLine("{");
 
-        foreach (MethodDeclarationSyntax method in methodsToGeneratorSendMethodsFor)
+        foreach (IMethodSymbol method in methodsWithAttribute)
         {
-            IMethodSymbol methodSymbol = compilation.GetSemanticModel(method.SyntaxTree).GetDeclaredSymbol(method)!;
-
-            if (methodSymbol.Name.StartsWith("Write") && methodSymbol.Name.Length > 5)
+            if (method.Name.StartsWith("Write") && method.Name.Length > 5)
             {
-                string messageTypeString = GetOutgoingMessageTypeFromAttribute(methodSymbol);
+                string messageTypeString = GetOutgoingMessageTypeFromAttribute(method);
 
                 source.Append("public void Send");
-                source.Append(methodSymbol.Name.Remove(0, 5));
+                source.Append(method.Name.Remove(0, 5));
                 source.Append("(");
-                if (methodSymbol.Parameters.Length > 0)
+                if (method.Parameters.Length > 0)
                 {
-                    for (int i = 0; i < methodSymbol.Parameters.Length; i++)
+                    for (int i = 0; i < method.Parameters.Length; i++)
                     {
-                        IParameterSymbol parameter = methodSymbol.Parameters[i];
+                        IParameterSymbol parameter = method.Parameters[i];
 
                         source.Append(parameter.ToString());
 
@@ -69,7 +68,7 @@ public class OutgoingMessagesGenerator : ISourceGenerator
                             }
                         }
 
-                        if (i + 1 < methodSymbol.Parameters.Length)
+                        if (i + 1 < method.Parameters.Length)
                         {
                             source.Append(", ");
                         }
@@ -78,17 +77,17 @@ public class OutgoingMessagesGenerator : ISourceGenerator
                 source.Append(") ");
                 source.Append("{ ");
                 source.Append($"MessageWriter.BeginMessage({messageTypeString}); ");
-                source.Append(methodSymbol.Name);
+                source.Append(method.Name);
                 source.Append("(");
-                if (methodSymbol.Parameters.Length > 0)
+                if (method.Parameters.Length > 0)
                 {
-                    for (int i = 0; i < methodSymbol.Parameters.Length; i++)
+                    for (int i = 0; i < method.Parameters.Length; i++)
                     {
-                        IParameterSymbol parameter = methodSymbol.Parameters[i];
+                        IParameterSymbol parameter = method.Parameters[i];
 
                         source.Append(parameter.Name.ToString());
 
-                        if (i + 1 < methodSymbol.Parameters.Length)
+                        if (i + 1 < method.Parameters.Length)
                         {
                             source.Append(", ");
                         }
@@ -98,14 +97,14 @@ public class OutgoingMessagesGenerator : ISourceGenerator
                 source.AppendLine(" }");
 
                 source.Append("public async ValueTask Send");
-                source.Append(methodSymbol.Name.Remove(0, 5));
-                if (methodSymbol.Parameters.Length > 0)
+                source.Append(method.Name.Remove(0, 5));
+                if (method.Parameters.Length > 0)
                 {
                     source.Append("Async(");
 
-                    for (int i = 0; i < methodSymbol.Parameters.Length; i++)
+                    for (int i = 0; i < method.Parameters.Length; i++)
                     {
-                        IParameterSymbol parameter = methodSymbol.Parameters[i];
+                        IParameterSymbol parameter = method.Parameters[i];
 
                         source.Append(parameter.ToString());
 
@@ -122,7 +121,7 @@ public class OutgoingMessagesGenerator : ISourceGenerator
                             }
                         }
 
-                        if (i + 1 < methodSymbol.Parameters.Length)
+                        if (i + 1 < method.Parameters.Length)
                         {
                             source.Append(", ");
                         }
@@ -136,17 +135,17 @@ public class OutgoingMessagesGenerator : ISourceGenerator
                 }
                 source.Append("{ ");
                 source.Append($"MessageWriter.BeginMessage({messageTypeString}); ");
-                source.Append(methodSymbol.Name);
+                source.Append(method.Name);
                 source.Append("(");
-                if (methodSymbol.Parameters.Length > 0)
+                if (method.Parameters.Length > 0)
                 {
-                    for (int i = 0; i < methodSymbol.Parameters.Length; i++)
+                    for (int i = 0; i < method.Parameters.Length; i++)
                     {
-                        IParameterSymbol parameter = methodSymbol.Parameters[i];
+                        IParameterSymbol parameter = method.Parameters[i];
 
                         source.Append(parameter.Name.ToString());
 
-                        if (i + 1 < methodSymbol.Parameters.Length)
+                        if (i + 1 < method.Parameters.Length)
                         {
                             source.Append(", ");
                         }
