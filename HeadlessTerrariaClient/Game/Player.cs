@@ -17,13 +17,13 @@ public class Player
 
     public PlayerStyle Style = PlayerStyle.Default;
 
-    public int Life;
+    public int Life = 100;
 
-    public int LifeMax;
+    public int LifeMax = 100;
 
-    public int Mana;
+    public int Mana = 20;
 
-    public int ManaMax;
+    public int ManaMax = 20;
 
     public Vector2 Position;
 
@@ -33,7 +33,7 @@ public class Player
 
     public Vector2? PotionOfReturnHomePosition;
 
-    public PlayerDifficulty Difficulty;
+    public PlayerDifficulty Difficulty = PlayerDifficulty.Normal;
 
     public bool IsVoidVaultEnabled;
 
