@@ -1,4 +1,5 @@
-﻿using HeadlessTerrariaClient.Game;
+﻿using System.IO.Compression;
+using HeadlessTerrariaClient.Game;
 using HeadlessTerrariaClient.Messages;
 using HeadlessTerrariaClient.Network;
 
@@ -167,6 +168,20 @@ public partial class HeadlessClient
             ConnectionState = ConnectionState.RequestingSpawnTileData;
             await SendSpawnTileDataAsync();
         }
+    }
+
+    [IncomingMessage(MessageType.TileSection)]
+    internal void HandleTileSection(BinaryReader reader)
+    {
+        using DeflateStream deflateStream = new DeflateStream(reader.BaseStream, CompressionMode.Decompress, true);
+        using BinaryReader sectionReader = new BinaryReader(deflateStream);
+
+        int xStart = sectionReader.ReadInt32();
+        int yStart = sectionReader.ReadInt32();
+        int width = sectionReader.ReadInt16();
+        int height = sectionReader.ReadInt16();
+
+        World.HandleTileSection(sectionReader, xStart, yStart, width, height);
     }
 
     [IncomingMessage(MessageType.PlayerActive)]

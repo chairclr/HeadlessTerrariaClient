@@ -1,4 +1,6 @@
-﻿namespace HeadlessTerrariaClient.Messages;
+﻿using System.Text;
+
+namespace HeadlessTerrariaClient.Messages;
 
 public class TerrariaMessageWriter
 {

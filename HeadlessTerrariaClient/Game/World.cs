@@ -1,4 +1,5 @@
-﻿using HeadlessTerrariaClient.Network;
+﻿using System.Runtime.CompilerServices;
+using HeadlessTerrariaClient.Network;
 
 namespace HeadlessTerrariaClient.Game;
 
@@ -446,5 +447,145 @@ public class World
         LobbyID = reader.ReadUInt64();
 
         Sandstorm.IntendedSeverity = reader.ReadSingle();
+    }
+
+    internal void HandleTileSection(BinaryReader reader, int xStart, int yStart, int width, int height)
+    {
+        HandleSectionTiles(reader, xStart, yStart, width, height);
+    }
+
+    private void HandleSectionTiles(BinaryReader reader, int xStart, int yStart, int width, int height)
+    {
+        ref TileData tileCache = ref Unsafe.NullRef<TileData>();
+        int num = 0;
+        for (int i = yStart; i < yStart + height; i++)
+        {
+            for (int j = xStart; j < xStart + width; j++)
+            {
+                if (num != 0)
+                {
+                    num--;
+                    Tile.GetTileRef(j, i).CopyFrom(ref tileCache);
+                    continue;
+                }
+                byte b;
+                byte b2 = (b = 0);
+                tileCache = ref Tile.GetTileRef(j, i);
+                tileCache.ClearEverything();
+                byte b3 = reader.ReadByte();
+                if ((b3 & 1) == 1)
+                {
+                    b2 = reader.ReadByte();
+                    if ((b2 & 1) == 1)
+                    {
+                        b = reader.ReadByte();
+                    }
+                }
+                byte b4;
+                if ((b3 & 2) == 2)
+                {
+                    tileCache.active(active: true);
+                    ushort type = tileCache.type;
+                    int num2;
+                    if ((b3 & 0x20) == 32)
+                    {
+                        b4 = reader.ReadByte();
+                        num2 = reader.ReadByte();
+                        num2 = (num2 << 8) | b4;
+                    }
+                    else
+                    {
+                        num2 = reader.ReadByte();
+                    }
+                    tileCache.type = (ushort)num2;
+                    if (TileFrame.TileFrameImportant[num2])
+                    {
+                        tileCache.frameX = reader.ReadInt16();
+                        tileCache.frameY = reader.ReadInt16();
+                    }
+                    if ((b & 8) == 8)
+                    {
+                        tileCache.color(reader.ReadByte());
+                    }
+                }
+                if ((b3 & 4) == 4)
+                {
+                    tileCache.wall = reader.ReadByte();
+                    if ((b & 0x10) == 16)
+                    {
+                        tileCache.wallColor(reader.ReadByte());
+                    }
+                }
+                b4 = (byte)((b3 & 0x18) >> 3);
+                if (b4 != 0)
+                {
+                    tileCache.liquid = reader.ReadByte();
+                    if (b4 > 1)
+                    {
+                        if (b4 == 2)
+                        {
+                            tileCache.lava(lava: true);
+                        }
+                        else
+                        {
+                            tileCache.honey(honey: true);
+                        }
+                    }
+                }
+                if (b2 > 1)
+                {
+                    if ((b2 & 2) == 2)
+                    {
+                        tileCache.wire(wire: true);
+                    }
+                    if ((b2 & 4) == 4)
+                    {
+                        tileCache.wire2(wire2: true);
+                    }
+                    if ((b2 & 8) == 8)
+                    {
+                        tileCache.wire3(wire3: true);
+                    }
+                    b4 = (byte)((b2 & 0x70) >> 4);
+                    if (b4 != 0)
+                    {
+                        if (b4 == 1)
+                        {
+                            tileCache.halfBrick(halfBrick: true);
+                        }
+                        else
+                        {
+                            tileCache.slope((byte)(b4 - 1));
+                        }
+                    }
+                }
+                if (b > 0)
+                {
+                    if ((b & 2) == 2)
+                    {
+                        tileCache.actuator(actuator: true);
+                    }
+                    if ((b & 4) == 4)
+                    {
+                        tileCache.inActive(inActive: true);
+                    }
+                    if ((b & 0x20) == 32)
+                    {
+                        tileCache.wire4(wire4: true);
+                    }
+                    if ((b & 0x40) == 64)
+                    {
+                        b4 = reader.ReadByte();
+                        tileCache.wall = (ushort)((b4 << 8) | tileCache.wall);
+                    }
+                }
+                num = (byte)((b3 & 0xC0) >> 6) switch
+                {
+                    0 => 0,
+                    1 => reader.ReadByte(),
+                    _ => reader.ReadInt16(),
+                };
+            }
+        }
     }
 }

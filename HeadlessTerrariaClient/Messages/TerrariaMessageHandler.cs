@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Text;
 
 namespace HeadlessTerrariaClient.Messages;
 
@@ -11,6 +12,8 @@ internal class TerrariaMessageHandler
     private readonly MemoryStream InternalStream;
 
     public Dictionary<MessageType, (HandleMessageMethod?, HandleMessageMethodAsync?)> MessageHandlerCache = new Dictionary<MessageType, (HandleMessageMethod?, HandleMessageMethodAsync?)>();
+
+    internal int LastPacketLength = 0;
 
     public TerrariaMessageHandler(HeadlessClient client)
     {
@@ -42,6 +45,8 @@ internal class TerrariaMessageHandler
         InternalStream.Position = start;
 
         MessageType messageType = (MessageType)Reader.ReadByte();
+
+        LastPacketLength = length;
 
 #if DEBUG
         byte[] internalBuffer = InternalStream.GetBuffer();

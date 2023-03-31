@@ -36,6 +36,8 @@ public class ClientFullTests
 
         Assert.That(client.ConnectionState, Is.EqualTo(ConnectionState.FinishedConnecting));
 
+        await Task.Delay(1000);
+
         await client.DisconnectAsync();
 
         Assert.That(client.Connected, Is.Not.True);
