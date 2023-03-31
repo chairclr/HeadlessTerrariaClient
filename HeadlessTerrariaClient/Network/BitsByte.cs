@@ -1,4 +1,5 @@
 ﻿namespace HeadlessTerrariaClient.Network;
+
 public struct BitsByte
 {
     private static bool Null;

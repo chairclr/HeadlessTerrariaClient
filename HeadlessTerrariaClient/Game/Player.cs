@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Reflection.PortableExecutable;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Numerics;
 
 namespace HeadlessTerrariaClient.Game;
 
@@ -49,19 +43,19 @@ public class Player
     public bool IsSitting;
 
     public bool ControlUp;
-    
+
     public bool ControlDown;
-    
+
     public bool ControlLeft;
-    
+
     public bool ControlRight;
-    
+
     public bool ControlJump;
-    
+
     public bool TryKeepingHoveringDown;
-    
+
     public bool TryKeepingHoveringUp;
-    
+
     public bool ControlUseItem;
 
     public Item[] Inventory = new Item[350];
@@ -69,9 +63,9 @@ public class Player
     public int SelectedItem;
 
     public bool Pulley;
-    
+
     public bool VortexStealthActive;
-    
+
     public bool Ghost;
 
     public byte PulleyDir;
@@ -140,6 +134,6 @@ public class Player
 
         Position = new Vector2(spawnX * 16f, spawnY * 16f);
 
-        
+
     }
 }

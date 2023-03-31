@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
-using HeadlessTerrariaClient.Game;
+﻿using HeadlessTerrariaClient.Game;
 using HeadlessTerrariaClient.Messages;
 using HeadlessTerrariaClient.Network;
 
@@ -19,7 +13,7 @@ public partial class HeadlessClient
 
         WasKicked = true;
 
-        KickReason = reader.ReadNetworkText().ToString(); 
+        KickReason = reader.ReadNetworkText().ToString();
 
         await TCPNetworkClient.DisconnectAsync();
     }
@@ -175,7 +169,6 @@ public partial class HeadlessClient
         }
     }
 
-
     [IncomingMessage(MessageType.PlayerActive)]
     internal void HandlePlayerActive(BinaryReader reader)
     {
@@ -201,7 +194,6 @@ public partial class HeadlessClient
             World.Players[playerIndex].Active = false;
         }
     }
-
 
     [IncomingMessage(MessageType.InitialSpawn)]
     internal async ValueTask HandleInitialSpawn(BinaryReader reader)

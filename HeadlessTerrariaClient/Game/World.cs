@@ -193,31 +193,31 @@ public class World
     public Guid WorldUUID;
 
     public ulong WorldGenVer;
-    
+
     public bool UnlockedSlimeGreenSpawn;
-    
+
     public bool UnlockedSlimeOldSpawn;
-    
+
     public bool UnlockedSlimePurpleSpawn;
-    
+
     public bool UnlockedSlimeRainbowSpawn;
-    
+
     public bool UnlockedSlimeRedSpawn;
-    
+
     public bool UnlockedSlimeYellowSpawn;
-    
+
     public bool UnlockedSlimeCopperSpawn;
-    
+
     public bool FastForwardTimeToDusk;
-    
+
     public bool NoTrapsWorld;
-    
+
     public bool ZenithWorld;
-    
+
     public bool UnlockedTruffleSpawn;
-    
+
     public byte SundialCooldown;
-    
+
     public byte MoondialCooldown;
 
     public class SandstormInfo
@@ -268,7 +268,7 @@ public class World
         Height = reader.ReadInt16();
 
         SpawnTileX = reader.ReadInt16();
-        SpawnTileX = reader.ReadInt16();
+        SpawnTileY = reader.ReadInt16();
 
         WorldSurface = reader.ReadInt16();
         RockLayer = reader.ReadInt16();

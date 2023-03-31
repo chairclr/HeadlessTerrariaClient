@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Numerics;
+﻿using System.Numerics;
 using HeadlessTerrariaClient.Game;
 using HeadlessTerrariaClient.Messages;
 using HeadlessTerrariaClient.Network;
@@ -34,19 +32,19 @@ public partial class HeadlessClient
         MessageWriter.Writer.Write(hideMisc);
 
         MessageWriter.Writer.Write(LocalPlayer.Style.HairColor);
-        
+
         MessageWriter.Writer.Write(LocalPlayer.Style.SkinColor);
-        
+
         MessageWriter.Writer.Write(LocalPlayer.Style.EyeColor);
-        
+
         MessageWriter.Writer.Write(LocalPlayer.Style.ShirtColor);
-        
+
         MessageWriter.Writer.Write(LocalPlayer.Style.UnderShirtColor);
-        
+
         MessageWriter.Writer.Write(LocalPlayer.Style.PantsColor);
-        
+
         MessageWriter.Writer.Write(LocalPlayer.Style.ShoeColor);
-        
+
         BitsByte bites = (byte)0;
 
         if (LocalPlayer.Difficulty == PlayerDifficulty.Mediumcore)
@@ -64,7 +62,7 @@ public partial class HeadlessClient
 
         // extraAccessory
         bites[2] = false;
-        
+
         MessageWriter.Writer.Write(bites);
 
         BitsByte torchAndSuperCart = 0;
@@ -185,7 +183,7 @@ public partial class HeadlessClient
 
         MessageWriter.Writer.Write((short)netId);
     }
-    
+
     [OutgoingMessage(MessageType.RequestWorldData)]
     private void WriteRequestWorldData()
     {
@@ -376,7 +374,7 @@ public partial class HeadlessClient
     {
         MessageWriter.Writer.Write(uuid);
     }
-    
+
     [OutgoingMessage(MessageType.SyncLoadout)]
     private void WriteSyncLoadout(int loadoutIndex = 0)
     {
