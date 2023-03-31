@@ -185,6 +185,43 @@ public partial class HeadlessClient
 
         MessageWriter.Writer.Write((short)netId);
     }
+    
+    [OutgoingMessage(MessageType.RequestWorldData)]
+    private void WriteRequestWorldData()
+    {
+
+    }
+
+    [OutgoingMessage(MessageType.SpawnTileData)]
+    private void WriteSpawnTileData()
+    {
+        MessageWriter.Writer.Write(-1);
+
+        MessageWriter.Writer.Write(-1);
+    }
+
+    [OutgoingMessage(MessageType.SpawnTileData)]
+    private void WriteSpawnTileData(int spawnX, int spawnY)
+    {
+        MessageWriter.Writer.Write(spawnX);
+
+        MessageWriter.Writer.Write(spawnY);
+    }
+
+    [OutgoingMessage(MessageType.PlayerSpawn)]
+    private void WritePlayerSpawn(int context)
+    {
+        MessageWriter.Writer.Write((byte)LocalPlayerIndex);
+
+        MessageWriter.Writer.Write(-1);
+        MessageWriter.Writer.Write(-1);
+
+        MessageWriter.Writer.Write(LocalPlayer.RespawnTimer);
+
+        MessageWriter.Writer.Write(0);
+        MessageWriter.Writer.Write(0);
+        MessageWriter.Writer.Write((byte)context);
+    }
 
     [OutgoingMessage(MessageType.PlayerControls)]
     private void WritePlayerControls()
@@ -260,43 +297,6 @@ public partial class HeadlessClient
         MessageWriter.Writer.Write((byte)seletedItem);
 
         MessageWriter.Writer.Write(position);
-    }
-
-    [OutgoingMessage(MessageType.RequestWorldData)]
-    private void WriteRequestWorldData()
-    {
-
-    }
-
-    [OutgoingMessage(MessageType.SpawnTileData)]
-    private void WriteSpawnTileData()
-    {
-        MessageWriter.Writer.Write(-1);
-
-        MessageWriter.Writer.Write(-1);
-    }
-
-    [OutgoingMessage(MessageType.SpawnTileData)]
-    private void WriteSpawnTileData(int spawnX, int spawnY)
-    {
-        MessageWriter.Writer.Write(spawnX);
-
-        MessageWriter.Writer.Write(spawnY);
-    }
-
-    [OutgoingMessage(MessageType.PlayerSpawn)]
-    private void WritePlayerSpawn(int context)
-    {
-        MessageWriter.Writer.Write((byte)LocalPlayerIndex);
-
-        MessageWriter.Writer.Write(-1);
-        MessageWriter.Writer.Write(-1);
-
-        MessageWriter.Writer.Write(LocalPlayer.RespawnTimer);
-
-        MessageWriter.Writer.Write(0);
-        MessageWriter.Writer.Write(0);
-        MessageWriter.Writer.Write((byte)context);
     }
 
     [OutgoingMessage(MessageType.PlayerLife)]
