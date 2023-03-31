@@ -46,7 +46,7 @@ Main features
   - World Data Recieved
   - Finished Connecting to Server
   - Client Connection Completed
-  - Chat Message Recieved
+  - Chat Message Received
   - Tile Manipulation Message Recieved
   - Net Message Received
   - Net Message Sent
