@@ -10,7 +10,6 @@ namespace HeadlessTerrariaClient.Generators;
 public class OutgoingMessagesGenerator : ISourceGenerator
 {
     private static readonly string AttributeName = "OutgoingMessageAttribute";
-    private static readonly string AttributeNameShort = "OutgoingMessage";
 
     public void Initialize(GeneratorInitializationContext context)
     {
@@ -22,11 +21,12 @@ public class OutgoingMessagesGenerator : ISourceGenerator
         Compilation compilation = context.Compilation;
 
         INamedTypeSymbol headlessClientSymbol = compilation.GetTypeByMetadataName("HeadlessTerrariaClient.HeadlessClient")!;
+        INamedTypeSymbol outgoingMessagesAttributeSymbol = compilation.GetTypeByMetadataName("HeadlessTerrariaClient.Messages.OutgoingMessageAttribute")!;
 
         IEnumerable<IMethodSymbol> methodsWithAttribute = headlessClientSymbol.GetMembers()
             .Where(x => x.Kind == SymbolKind.Method)
             .Cast<IMethodSymbol>()
-            .Where(x => x.GetAttributes().Select(x => x.AttributeClass!.Name).Where(n => n == AttributeName).Any());
+            .Where(x => x.GetAttributes().Any(x => SymbolEqualityComparer.Default.Equals(x.AttributeClass, outgoingMessagesAttributeSymbol)));
 
         StringBuilder source = new StringBuilder();
 
@@ -38,7 +38,7 @@ public class OutgoingMessagesGenerator : ISourceGenerator
         {
             if (method.Name.StartsWith("Write") && method.Name.Length > 5)
             {
-                string messageTypeString = GetOutgoingMessageTypeFromAttribute(method);
+                string messageTypeString = GetOutgoingMessageTypeFromAttribute(method, outgoingMessagesAttributeSymbol);
 
                 source.Append("public void Send");
                 source.Append(method.Name.Remove(0, 5));
@@ -123,11 +123,11 @@ public class OutgoingMessagesGenerator : ISourceGenerator
                         }
                     }
 
-                    source.Append(", CancellationToken cancellationToken = default) ");
+                    source.Append(") ");
                 }
                 else
                 {
-                    source.Append("Async(CancellationToken cancellationToken = default) ");
+                    source.Append("Async() ");
                 }
                 source.Append("{ ");
                 source.Append($"MessageWriter.BeginMessage({messageTypeString}); ");
@@ -147,7 +147,7 @@ public class OutgoingMessagesGenerator : ISourceGenerator
                         }
                     }
                 }
-                source.Append("); await TCPNetworkClient.SendAsync(MessageWriter.EndMessage(), cancellationToken);");
+                source.Append("); await TCPNetworkClient.SendAsync(MessageWriter.EndMessage());");
                 source.AppendLine(" }");
             }
         }
@@ -157,9 +157,9 @@ public class OutgoingMessagesGenerator : ISourceGenerator
         context.AddSource("HeadlessClientOutgoingMessages.g.cs", source.ToString());
     }
 
-    private string GetOutgoingMessageTypeFromAttribute(IMethodSymbol methodSymbol)
+    private string GetOutgoingMessageTypeFromAttribute(IMethodSymbol methodSymbol, INamedTypeSymbol outgoingMessagesAttributeSymbol)
     {
-        AttributeData attribute = methodSymbol.GetAttributes().Single(x => x.AttributeClass is not null && x.AttributeClass!.Name == AttributeName || x.AttributeClass!.Name == AttributeNameShort);
+        AttributeData attribute = methodSymbol.GetAttributes().Single(x => SymbolEqualityComparer.Default.Equals(x.AttributeClass, outgoingMessagesAttributeSymbol));
 
         TypedConstant constant = attribute.ConstructorArguments.First();
 

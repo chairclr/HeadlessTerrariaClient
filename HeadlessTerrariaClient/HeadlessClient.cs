@@ -70,6 +70,7 @@ public partial class HeadlessClient : IDisposable
         MessageWriter = new TerrariaMessageWriter(TCPNetworkClient.Writer);
     }
 
+
     public void Connect()
     {
         TCPNetworkClient.Connect();
@@ -156,7 +157,7 @@ public partial class HeadlessClient : IDisposable
 
     public async ValueTask<bool> JoinWorldAsync(CancellationToken cancellationToken = default)
     {
-        await SendHelloAsync(cancellationToken: cancellationToken);
+        await SendHelloAsync();
 
         ConnectionState = ConnectionState.SyncingPlayer;
 
@@ -180,7 +181,7 @@ public partial class HeadlessClient : IDisposable
 
     public async ValueTask<bool> JoinWorldAsync(TimeSpan timeout, CancellationToken cancellationToken = default)
     {
-        await SendHelloAsync(cancellationToken: cancellationToken);
+        await SendHelloAsync();
 
         ConnectionState = ConnectionState.SyncingPlayer;
 

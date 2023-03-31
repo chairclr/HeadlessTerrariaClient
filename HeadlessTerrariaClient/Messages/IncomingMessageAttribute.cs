@@ -1,6 +1,4 @@
-﻿using HeadlessTerrariaClient.Messages;
-
-namespace HeadlessTerrariaClient;
+﻿namespace HeadlessTerrariaClient.Messages;
 
 [AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
 internal class IncomingMessageAttribute : Attribute

@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 
 namespace HeadlessTerrariaClient.Network;
 
@@ -98,14 +99,14 @@ public class TCPNetworkClient : INetworkClient, IDisposable
         NetworkStream!.Write(data.Span);
     }
 
-    public async ValueTask SendAsync(ReadOnlyMemory<byte> data, CancellationToken cancellationToken = default)
+    public async ValueTask SendAsync(ReadOnlyMemory<byte> data)
     {
         if (!Connected)
         {
             throw new InvalidOperationException("Not connected.");
         }
 
-        await NetworkStream!.WriteAsync(data, cancellationToken);
+        await NetworkStream!.WriteAsync(data);
     }
 
     public void Disconnect()
@@ -142,25 +143,26 @@ public class TCPNetworkClient : INetworkClient, IDisposable
         Connected = false;
     }
 
-    private async Task ReceiveLoop()
+    private void ReceiveLoop()
     {
         byte[] rawReadBuffer = ReadBuffer.GetBuffer();
+        ref byte messageLengthPointer = ref rawReadBuffer[0];
 
         try
         {
             while (!ReceiveLoopCancellationToken.IsCancellationRequested)
             {
-                ReadBuffer.Position = 0;
+                NetworkStream!.ReadExactly(rawReadBuffer.AsSpan(0, 2));
 
-                await NetworkStream!.ReadExactlyAsync(rawReadBuffer.AsMemory(0, 2), ReceiveLoopCancellationToken);
+                ushort messageLength = Unsafe.ReadUnaligned<ushort>(ref messageLengthPointer);
 
-                ushort messageLength = Reader.ReadUInt16();
+                NetworkStream!.ReadExactly(rawReadBuffer.AsSpan(2, messageLength - 2));
 
-                await NetworkStream!.ReadExactlyAsync(rawReadBuffer.AsMemory(2, messageLength - 2), ReceiveLoopCancellationToken);
+                ReadBuffer.Position = 2;
 
                 if (OnReceiveCallback is not null)
                 {
-                    await OnReceiveCallback(2, messageLength - 2);
+                    OnReceiveCallback(2, messageLength - 2);
                 }
             }
         }
@@ -203,5 +205,5 @@ public class TCPNetworkClient : INetworkClient, IDisposable
         GC.SuppressFinalize(this);
     }
     
-    public delegate Task ReceiveCallback(int start, int length);
+    public delegate void ReceiveCallback(int start, int length);
 }

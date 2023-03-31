@@ -8,5 +8,5 @@ internal interface INetworkClient
 
     public void Send(ReadOnlyMemory<byte> data);
 
-    public ValueTask SendAsync(ReadOnlyMemory<byte> data, CancellationToken cancellationToken);
+    public ValueTask SendAsync(ReadOnlyMemory<byte> data);
 }

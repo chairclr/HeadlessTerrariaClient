@@ -3,15 +3,13 @@ using System.Text;
 
 namespace HeadlessTerrariaClient.Messages;
 
-internal class TerrariaMessageHandler
+internal partial class TerrariaMessageHandler
 {
     private readonly HeadlessClient Client;
 
     private readonly BinaryReader Reader;
 
     private readonly MemoryStream InternalStream;
-
-    public Dictionary<MessageType, (HandleMessageMethod?, HandleMessageMethodAsync?)> MessageHandlerCache = new Dictionary<MessageType, (HandleMessageMethod?, HandleMessageMethodAsync?)>();
 
     internal int LastPacketLength = 0;
 
@@ -22,25 +20,9 @@ internal class TerrariaMessageHandler
         Reader = Client.TCPNetworkClient.Reader;
 
         InternalStream = (MemoryStream)Reader.BaseStream;
-
-        foreach (MethodInfo method in client.GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Instance))
-        {
-            IncomingMessageAttribute? handleMessageAttribute = method.GetCustomAttribute<IncomingMessageAttribute>();
-            if (handleMessageAttribute is not null)
-            {
-                if (method.ReturnType == typeof(Task) || method.ReturnType == typeof(ValueTask))
-                {
-                    MessageHandlerCache.Add(handleMessageAttribute.MessageType, (null, (HandleMessageMethodAsync)method.CreateDelegate(typeof(HandleMessageMethodAsync), Client)));
-                }
-                else if (method.ReturnType == typeof(void))
-                {
-                    MessageHandlerCache.Add(handleMessageAttribute.MessageType, ((HandleMessageMethod)method.CreateDelegate(typeof(HandleMessageMethod), Client), null));
-                }
-            }
-        }
     }
 
-    public async Task ReceiveMessage(int start, int length)
+    public async void ReceiveMessage(int start, int length)
     {
         InternalStream.Position = start;
 
@@ -68,19 +50,7 @@ internal class TerrariaMessageHandler
         Console.WriteLine($"↓ {builder.ToString()}");
 #endif
 
-        if (MessageHandlerCache.TryGetValue(messageType, out (HandleMessageMethod?, HandleMessageMethodAsync?) methods))
-        {
-            if (methods.Item1 is not null)
-            {
-                methods.Item1(Reader);
-            }
-            else if (methods.Item2 is not null)
-            {
-                await methods.Item2(Reader);
-            }
-        }
+        await HandleIncomingMessageAsync(messageType, Reader);
+        HandleIncomingMessage(messageType, Reader);
     }
 }
-
-internal delegate void HandleMessageMethod(BinaryReader reader);
-internal delegate ValueTask HandleMessageMethodAsync(BinaryReader reader);
