@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace HeadlessTerrariaClient.Messages;
+﻿namespace HeadlessTerrariaClient.Messages;
 
 public class TerrariaMessageWriter
 {
@@ -34,8 +32,9 @@ public class TerrariaMessageWriter
 
         Writer.Write(length);
 
-        byte[] internalBuffer = InternalStream.GetBuffer();
 #if DEBUG
+        byte[] internalBuffer = InternalStream.GetBuffer();
+
         StringBuilder builder = new StringBuilder();
 
         builder.Append($"T: {(int)internalBuffer[2],3} L: {length,5} B: {{ ");
