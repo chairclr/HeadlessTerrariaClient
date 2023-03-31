@@ -65,6 +65,102 @@ public partial class HeadlessClient
         await SendRequestWorldDataAsync();
     }
 
+    [IncomingMessage(MessageType.SyncPlayer)]
+    internal void HandleSyncPlayer(BinaryReader reader)
+    {
+        int playerIndex = reader.ReadByte();
+
+        if (playerIndex == LocalPlayerIndex && !World.ServerSideCharacters)
+        {
+            return;
+        }
+
+        Player player = World.Players[playerIndex];
+
+        player.Index = playerIndex;
+
+        player.Style.SkinVariant = reader.ReadByte();
+
+        player.Style.SkinVariant = (int)Math.Clamp(player.Style.SkinVariant, 0f, 11);
+
+        player.Style.HairType = reader.ReadByte();
+        if (player.Style.HairType >= 165)
+        {
+            player.Style.HairType = 0;
+        }
+
+        player.Name = reader.ReadString().Trim().Trim();
+
+        player.Style.HairDye = reader.ReadByte();
+
+        reader.ReadAccessoryVisibility(new bool[10]);
+
+        //player.HideMisc = reader.ReadByte();
+        reader.ReadByte();
+        player.Style.HairColor = reader.ReadRGB();
+        player.Style.SkinColor = reader.ReadRGB();
+        player.Style.EyeColor = reader.ReadRGB();
+        player.Style.ShirtColor = reader.ReadRGB();
+        player.Style.UnderShirtColor = reader.ReadRGB();
+        player.Style.PantsColor = reader.ReadRGB();
+        player.Style.ShoeColor = reader.ReadRGB();
+
+        BitsByte playerDifficultyData = reader.ReadByte();
+        player.Difficulty = PlayerDifficulty.Normal;
+        if (playerDifficultyData[0])
+        {
+            player.Difficulty = PlayerDifficulty.Mediumcore;
+        }
+        if (playerDifficultyData[1])
+        {
+            player.Difficulty = PlayerDifficulty.Hardcode;
+        }
+        if (playerDifficultyData[3])
+        {
+            player.Difficulty = PlayerDifficulty.Creative;
+        }
+
+        //player.ExtraAccessory = bitsByte24[2];
+
+        BitsByte torchAndCartData = reader.ReadByte();
+        //player.UsingBiomeTorches = bitsByte25[0];
+        //player.HappyFunTorchTime = bitsByte25[1];
+        //player.UnlockedBiomeTorches = bitsByte25[2];
+        //player.UnlockedSuperCart = bitsByte25[3];
+        //player.EnabledSuperCart = bitsByte25[4];
+
+        BitsByte extraBuffData = reader.ReadByte();
+        //player.UsedAegisCrystal = bitsByte26[0];
+        //player.UsedAegisFruit = bitsByte26[1];
+        //player.UsedArcaneCrystal = bitsByte26[2];
+        //player.UsedGalaxyPearl = bitsByte26[3];
+        //player.UsedGummyWorm = bitsByte26[4];
+        //player.UsedAmbrosia = bitsByte26[5];
+        //player.AteArtisanBread = bitsByte26[6];
+    }
+
+    [IncomingMessage(MessageType.SyncEquipment)]
+    internal void HandleSyncEquipment(BinaryReader reader)
+    {
+        int playerIndex = reader.ReadByte();
+
+        Player player = World.Players[playerIndex];
+
+        if (playerIndex == LocalPlayerIndex && !World.ServerSideCharacters)
+        {
+            return;
+        }
+
+        int slot = reader.ReadInt16();
+        int stack = reader.ReadInt16();
+        int prefix = reader.ReadByte();
+        int netId = reader.ReadInt16();
+
+        player.Inventory[slot].SetTypeFromNetId(netId);
+        player.Inventory[slot].Prefix = prefix;
+        player.Inventory[slot].Stack = stack;
+    }
+
     [IncomingMessage(MessageType.WorldData)]
     internal async ValueTask HandleWorldData(BinaryReader reader)
     {

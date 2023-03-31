@@ -67,6 +67,16 @@ public static class BinaryExtensions
         writer.Write(num);
     }
 
+    public static void ReadAccessoryVisibility(this BinaryReader reader, bool[] hideVisibleAccessory)
+    {
+        ushort num = reader.ReadUInt16();
+
+        for (int i = 0; i < hideVisibleAccessory.Length; i++)
+        {
+            hideVisibleAccessory[i] = (num & (1 << i)) != 0;
+        }
+    }
+
     public static void Write(this BinaryWriter writer, NetworkText networkText)
     {
         networkText.Serialize(writer);
