@@ -175,6 +175,34 @@ public partial class HeadlessClient
         }
     }
 
+
+    [IncomingMessage(MessageType.PlayerActive)]
+    internal void HandlePlayerActive(BinaryReader reader)
+    {
+        int playerIndex = reader.ReadByte();
+
+        Player player = World.Players[playerIndex];
+
+        bool active = reader.ReadBoolean();
+
+        if (active)
+        {
+            if (!player.Active)
+            {
+                World.Players[playerIndex] = new Player();
+
+                World.UpdatePlayerIndexes();
+            }
+
+            World.Players[playerIndex].Active = true;
+        }
+        else
+        {
+            World.Players[playerIndex].Active = false;
+        }
+    }
+
+
     [IncomingMessage(MessageType.InitialSpawn)]
     internal async ValueTask HandleInitialSpawn(BinaryReader reader)
     {
