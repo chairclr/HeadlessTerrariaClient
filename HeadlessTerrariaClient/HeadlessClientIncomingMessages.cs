@@ -221,6 +221,27 @@ public partial class HeadlessClient
         byte blood = reader.ReadByte();
     }
 
+    [IncomingMessage(MessageType.NetModules)]
+    internal void HandleNetModules(BinaryReader reader)
+    {
+        NetModuleType netModule = (NetModuleType)reader.ReadUInt16();
+
+        switch (netModule)
+        {
+            case NetModuleType.Text:
+                {
+                    int authorIndex = reader.ReadByte();
+                    NetworkText text = reader.ReadNetworkText();
+
+                    if (ChatMessageReceived is not null)
+                    {
+                        ChatMessageReceived(authorIndex, text);
+                    }
+                }
+                break;
+        }
+    }
+
     [IncomingMessage(MessageType.FinishedConnectingToServer)]
     internal void HandleFinishedConnectingToServer(BinaryReader reader)
     {

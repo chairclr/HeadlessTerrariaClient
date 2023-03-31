@@ -375,6 +375,14 @@ public partial class HeadlessClient
         MessageWriter.Writer.Write(uuid);
     }
 
+    [OutgoingMessage(MessageType.NetModules)]
+    private void WriteChatMessage(string message)
+    {
+        MessageWriter.Writer.Write((ushort)NetModuleType.Text);
+
+        MessageWriter.Writer.Write(new NetworkText(message));
+    }
+
     [OutgoingMessage(MessageType.SyncLoadout)]
     private void WriteSyncLoadout(int loadoutIndex = 0)
     {

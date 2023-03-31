@@ -1,4 +1,5 @@
-﻿using HeadlessTerrariaClient.Network;
+﻿using System.Diagnostics;
+using HeadlessTerrariaClient.Network;
 
 namespace HeadlessTerrariaClient.Tests;
 
@@ -40,5 +41,46 @@ public class ClientFullTests
         Assert.That(client.Connected, Is.Not.True);
 
         Assert.That(client.ConnectionState, Is.EqualTo(ConnectionState.None));
+    }
+
+    [Test]
+    public async Task TestChat()
+    {
+        using HeadlessClient client = new HeadlessClient("127.0.0.1", 7777);
+
+        await client.ConnectAsync();
+
+        await client.JoinWorldAsync();
+
+        await Task.Delay(1000);
+
+        bool receivedOurMessage = false;
+
+        client.ChatMessageReceived += (author, message) =>
+        {
+            if (!receivedOurMessage)
+            {
+                Assert.Multiple(() =>
+                {
+                    Assert.That(message.ToString(), Is.EquivalentTo("<unnamed player>: <test message>"));
+                });
+                receivedOurMessage = true;
+            }
+        };
+
+        await client.SendChatMessageAsync("<test message>");
+
+        Stopwatch timeoutWatch = Stopwatch.StartNew();
+        while (!receivedOurMessage)
+        {
+            await Task.Delay(1);
+
+            if (timeoutWatch.Elapsed.TotalSeconds > 10f)
+            {
+                Assert.Fail("Timed out");
+            }
+        }
+
+        await client.DisconnectAsync();
     }
 }
