@@ -484,8 +484,8 @@ public class World
                 byte b4;
                 if ((b3 & 2) == 2)
                 {
-                    tileCache.active(active: true);
-                    ushort type = tileCache.type;
+                    tileCache.Active = true;
+                    ushort type = tileCache.Type;
                     int num2;
                     if ((b3 & 0x20) == 32)
                     {
@@ -497,38 +497,38 @@ public class World
                     {
                         num2 = reader.ReadByte();
                     }
-                    tileCache.type = (ushort)num2;
+                    tileCache.Type = (ushort)num2;
                     if (TileFrame.TileFrameImportant[num2])
                     {
-                        tileCache.frameX = reader.ReadInt16();
-                        tileCache.frameY = reader.ReadInt16();
+                        tileCache.FrameX = reader.ReadInt16();
+                        tileCache.FrameY = reader.ReadInt16();
                     }
                     if ((b & 8) == 8)
                     {
-                        tileCache.color(reader.ReadByte());
+                        tileCache.Color = (reader.ReadByte());
                     }
                 }
                 if ((b3 & 4) == 4)
                 {
-                    tileCache.wall = reader.ReadByte();
+                    tileCache.Wall = reader.ReadByte();
                     if ((b & 0x10) == 16)
                     {
-                        tileCache.wallColor(reader.ReadByte());
+                        tileCache.WallColor = (reader.ReadByte());
                     }
                 }
                 b4 = (byte)((b3 & 0x18) >> 3);
                 if (b4 != 0)
                 {
-                    tileCache.liquid = reader.ReadByte();
+                    tileCache.LiquidAmount = reader.ReadByte();
                     if (b4 > 1)
                     {
                         if (b4 == 2)
                         {
-                            tileCache.lava(lava: true);
+                            tileCache.Lava = true;
                         }
                         else
                         {
-                            tileCache.honey(honey: true);
+                            tileCache.Honey = (true);
                         }
                     }
                 }
@@ -536,26 +536,26 @@ public class World
                 {
                     if ((b2 & 2) == 2)
                     {
-                        tileCache.wire(wire: true);
+                        tileCache.Wire = true;
                     }
                     if ((b2 & 4) == 4)
                     {
-                        tileCache.wire2(wire2: true);
+                        tileCache.Wire2 = true;
                     }
                     if ((b2 & 8) == 8)
                     {
-                        tileCache.wire3(wire3: true);
+                        tileCache.Wire3 = true;
                     }
                     b4 = (byte)((b2 & 0x70) >> 4);
                     if (b4 != 0)
                     {
                         if (b4 == 1)
                         {
-                            tileCache.halfBrick(halfBrick: true);
+                            tileCache.HalfBrick = true;
                         }
                         else
                         {
-                            tileCache.slope((byte)(b4 - 1));
+                            tileCache.Slope = ((byte)(b4 - 1));
                         }
                     }
                 }
@@ -563,20 +563,20 @@ public class World
                 {
                     if ((b & 2) == 2)
                     {
-                        tileCache.actuator(actuator: true);
+                        tileCache.Actuator = true;
                     }
                     if ((b & 4) == 4)
                     {
-                        tileCache.inActive(inActive: true);
+                        tileCache.InActive = true;
                     }
                     if ((b & 0x20) == 32)
                     {
-                        tileCache.wire4(wire4: true);
+                        tileCache.Wire4 = true;
                     }
                     if ((b & 0x40) == 64)
                     {
                         b4 = reader.ReadByte();
-                        tileCache.wall = (ushort)((b4 << 8) | tileCache.wall);
+                        tileCache.Wall = (ushort)((b4 << 8) | tileCache.Wall);
                     }
                 }
                 num = (byte)((b3 & 0xC0) >> 6) switch

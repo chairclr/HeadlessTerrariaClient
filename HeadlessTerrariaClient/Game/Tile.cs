@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.ComponentModel.Design;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace HeadlessTerrariaClient.Game;
@@ -7,15 +8,16 @@ public unsafe struct Tile
 {
     public readonly TileData* Data;
     public readonly ref TileData RefData => ref Unsafe.AsRef<TileData>(Data);
-    public ref ushort type => ref Data->type;
-    public ref ushort wall => ref Data->wall;
-    public ref short frameX => ref Data->frameX;
-    public ref short frameY => ref Data->frameY;
-    public ref ushort sTileHeader => ref Data->sTileHeader;
-    public ref byte liquid => ref Data->liquid;
-    public ref byte bTileHeader => ref Data->bTileHeader;
-    public ref byte bTileHeader2 => ref Data->bTileHeader2;
-    public ref byte bTileHeader3 => ref Data->bTileHeader3;
+    public ref ushort Type => ref Data->Type;
+    public ref ushort Wall => ref Data->Wall ;
+    public ref ushort TileHeader => ref Data->TileHeader ;
+    public ref short FrameX => ref Data->FrameX ;
+    public ref short FrameY => ref Data->FrameY ;
+    public ref byte LiquidAmount => ref Data->LiquidAmount ;
+    public ref byte TileHeader1 => ref Data->TileHeader1 ;
+    public ref byte TileHeader2 => ref Data->TileHeader2 ;
+    public ref byte TileHeader3 => ref Data->TileHeader3 ;
+
     public Tile()
     {
         Data = null;
@@ -55,70 +57,97 @@ public unsafe struct Tile
 
     public void ClearTile() => Data->ClearTile();
 
-    public void CopyFrom(Tile from)
+    public void CopyFrom(Tile from) => Data->CopyFrom(ref from.RefData);
+
+    public void CopyFrom(ref TileData from) => Data->CopyFrom(ref from);
+
+    public unsafe bool IsTheSameAs(Tile compTile) => IsTheSameAs(ref compTile.RefData);
+
+    public bool IsTheSameAs(ref TileData compTile) => Data->IsTheSameAs(ref compTile);
+
+    public int BlockType
     {
-        *Data = *from.Data;
-    }
-
-    public bool isTheSameAs(Tile compTile) => Data->isTheSameAs(compTile);
-
-    public int blockType()
-    {
-        if (halfBrick())
+        get
         {
-            return 1;
-        }
+            if (HalfBrick)
+            {
+                return 1;
+            }
 
-        int num = slope();
-        if (num > 0)
-        {
-            num++;
-        }
+            int num = Slope;
+            if (num > 0)
+            {
+                num++;
+            }
 
-        return num;
-    }
-
-    public void liquidType(int liquidType)
-    {
-        switch (liquidType)
-        {
-            case 0:
-                bTileHeader &= 159;
-                break;
-            case 1:
-                lava(lava: true);
-                break;
-            case 2:
-                honey(honey: true);
-                break;
-            case 3:
-                shimmer(shimmer: true);
-                break;
+            return num;
         }
     }
 
-    public byte liquidType()
+    public int LiquidType
     {
-        return (byte)((bTileHeader & 0x60) >> 5);
-    }
-
-    public bool nactive()
-    {
-        if ((sTileHeader & 0x60) == 32)
+        get => (byte)((TileHeader1 & 0x60) >> 5);
+        set
         {
-            return true;
+            switch (value)
+            {
+                case 0:
+                    TileHeader1 &= 159;
+                    break;
+                case 1:
+                    Lava = (true);
+                    break;
+                case 2:
+                    Honey = (true);
+                    break;
+                case 3:
+                    Shimmer = (true);
+                    break;
+                default:
+                    break;
+            }
         }
-
-        return false;
     }
 
-    public void ResetToType(ushort type) => Data->ResetToType(type);
-
-    internal void ClearMetadata() => Data->ClearMetadata();
-
-    public Color actColor(Color oldColor)
+    public bool NActive
     {
-        if (!inActive())
+        get
+        {
+            if ((TileHeader & 0x60) == 32)
+            {
+                return true;
+            }
+
+            return false;
+        }
+    }
+
+    public void ResetToType(ushort type)
+    {
+        LiquidAmount = 0;
+        TileHeader = 32;
+        TileHeader1 = 0;
+        TileHeader2 = 0;
+        TileHeader3 = 0;
+        FrameX = 0;
+        FrameY = 0;
+        this.Type = type;
+    }
+
+    public void ClearMetadata()
+    {
+        LiquidAmount = 0;
+        TileHeader = 0;
+        TileHeader1 = 0;
+        TileHeader2 = 0;
+        TileHeader3 = 0;
+        FrameX = 0;
+        FrameY = 0;
+    }
+
+    public Color ActColor(Color oldColor)
+    {
+        if (!InActive)
         {
             return oldColor;
         }
@@ -127,440 +156,424 @@ public unsafe struct Tile
         return new Color((byte)(num * (double)(int)oldColor.R), (byte)(num * (double)(int)oldColor.G), (byte)(num * (double)(int)oldColor.B), oldColor.A);
     }
 
-    public void actColor(ref Vector3 oldColor)
+    public void ActColor(ref Vector3 oldColor)
     {
-        if (inActive())
+        if (InActive)
         {
             oldColor *= 0.4f;
         }
     }
 
-    public bool topSlope()
+    public bool TopSlope
     {
-        byte b = slope();
-        if (b != 1)
+        get
         {
-            return b == 2;
-        }
+            byte b = Slope;
+            if (b != 1)
+            {
+                return b == 2;
+            }
 
-        return true;
-    }
-
-    public bool bottomSlope()
-    {
-        byte b = slope();
-        if (b != 3)
-        {
-            return b == 4;
-        }
-
-        return true;
-    }
-
-    public bool leftSlope()
-    {
-        byte b = slope();
-        if (b != 2)
-        {
-            return b == 4;
-        }
-
-        return true;
-    }
-
-    public bool rightSlope()
-    {
-        byte b = slope();
-        if (b != 1)
-        {
-            return b == 3;
-        }
-
-        return true;
-    }
-
-    public bool HasSameSlope(Tile tile)
-    {
-        return (sTileHeader & 0x7400) == (tile.sTileHeader & 0x7400);
-    }
-
-    public byte wallColor()
-    {
-        return (byte)(bTileHeader & 0x1Fu);
-    }
-
-    public void wallColor(byte wallColor)
-    {
-        bTileHeader = (byte)((bTileHeader & 0xE0u) | wallColor);
-    }
-
-    public bool lava()
-    {
-        return (bTileHeader & 0x60) == 32;
-    }
-
-    public void lava(bool lava)
-    {
-        if (lava)
-        {
-            bTileHeader = (byte)((bTileHeader & 0x9Fu) | 0x20u);
-        }
-        else
-        {
-            bTileHeader &= 223;
+            return true;
         }
     }
 
-    public bool honey()
+    public bool BottomSlope
     {
-        return (bTileHeader & 0x60) == 64;
-    }
+        get
+        {
+            byte b = Slope;
+            if (b != 3)
+            {
+                return b == 4;
+            }
 
-    public void honey(bool honey)
-    {
-        if (honey)
-        {
-            bTileHeader = (byte)((bTileHeader & 0x9Fu) | 0x40u);
-        }
-        else
-        {
-            bTileHeader &= 191;
+            return true;
         }
     }
 
-    public bool shimmer()
+    public bool LeftSlope
     {
-        return (bTileHeader & 0x60) == 96;
-    }
+        get
+        {
+            byte b = Slope;
+            if (b != 2)
+            {
+                return b == 4;
+            }
 
-    public void shimmer(bool shimmer)
-    {
-        if (shimmer)
-        {
-            bTileHeader = (byte)((bTileHeader & 0x9Fu) | 0x60u);
-        }
-        else
-        {
-            bTileHeader &= 159;
+            return true;
         }
     }
 
-    public bool wire4()
+    public bool RightSlope
     {
-        return (bTileHeader & 0x80) == 128;
-    }
+        get
+        {
+            byte b = Slope;
+            if (b != 1)
+            {
+                return b == 3;
+            }
 
-    public void wire4(bool wire4)
-    {
-        if (wire4)
-        {
-            bTileHeader |= 128;
-        }
-        else
-        {
-            bTileHeader &= 127;
+            return true;
         }
     }
 
-    public int wallFrameX()
+    public bool HasSameSlope(ref TileData tile)
     {
-        return (bTileHeader2 & 0xF) * 36;
+        return (TileHeader & 0x7400) == (tile.TileHeader & 0x7400);
     }
 
-    public void wallFrameX(int wallFrameX)
+    public byte WallColor
     {
-        bTileHeader2 = (byte)((bTileHeader2 & 0xF0u) | ((uint)(wallFrameX / 36) & 0xFu));
+        get => (byte)(TileHeader1 & 0x1Fu);
+        set => TileHeader1 = (byte)((TileHeader1 & 0xE0u) | value);
     }
 
-    public byte frameNumber()
+    public bool Lava
     {
-        return (byte)((bTileHeader2 & 0x30) >> 4);
-    }
-
-    public void frameNumber(byte frameNumber)
-    {
-        bTileHeader2 = (byte)((bTileHeader2 & 0xCFu) | (uint)((frameNumber & 3) << 4));
-    }
-
-    public byte wallFrameNumber()
-    {
-        return (byte)((bTileHeader2 & 0xC0) >> 6);
-    }
-
-    public void wallFrameNumber(byte wallFrameNumber)
-    {
-        bTileHeader2 = (byte)((bTileHeader2 & 0x3Fu) | (uint)((wallFrameNumber & 3) << 6));
-    }
-
-    public int wallFrameY()
-    {
-        return (bTileHeader3 & 7) * 36;
-    }
-
-    public void wallFrameY(int wallFrameY)
-    {
-        bTileHeader3 = (byte)((bTileHeader3 & 0xF8u) | ((uint)(wallFrameY / 36) & 7u));
-    }
-
-    public bool checkingLiquid()
-    {
-        return (bTileHeader3 & 8) == 8;
-    }
-
-    public void checkingLiquid(bool checkingLiquid)
-    {
-        if (checkingLiquid)
+        get => (TileHeader1 & 0x60) == 32;
+        set
         {
-            bTileHeader3 |= 8;
-        }
-        else
-        {
-            bTileHeader3 &= 247;
+            if (value)
+            {
+                TileHeader1 = (byte)((TileHeader1 & 0x9Fu) | 0x20u);
+            }
+            else
+            {
+                TileHeader1 &= 223;
+            }
         }
     }
 
-    public bool skipLiquid()
+    public bool Honey
     {
-        return (bTileHeader3 & 0x10) == 16;
-    }
-
-    public void skipLiquid(bool skipLiquid)
-    {
-        if (skipLiquid)
+        get => (TileHeader1 & 0x60) == 64;
+        set
         {
-            bTileHeader3 |= 16;
-        }
-        else
-        {
-            bTileHeader3 &= 239;
-        }
-    }
-
-    public bool invisibleBlock()
-    {
-        return (bTileHeader3 & 0x20) == 32;
-    }
-
-    public void invisibleBlock(bool invisibleBlock)
-    {
-        if (invisibleBlock)
-        {
-            bTileHeader3 |= 32;
-        }
-        else
-        {
-            bTileHeader3 = (byte)(bTileHeader3 & 0xFFFFFFDFu);
+            if (value)
+            {
+                TileHeader1 = (byte)((TileHeader1 & 0x9Fu) | 0x40u);
+            }
+            else
+            {
+                TileHeader1 &= 191;
+            }
         }
     }
 
-    public bool invisibleWall()
+    public bool Shimmer
     {
-        return (bTileHeader3 & 0x40) == 64;
-    }
-
-    public void invisibleWall(bool invisibleWall)
-    {
-        if (invisibleWall)
+        get => (TileHeader1 & 0x60) == 96;
+        set
         {
-            bTileHeader3 |= 64;
-        }
-        else
-        {
-            bTileHeader3 = (byte)(bTileHeader3 & 0xFFFFFFBFu);
-        }
-    }
-
-    public bool fullbrightBlock()
-    {
-        return (bTileHeader3 & 0x80) == 128;
-    }
-
-    public void fullbrightBlock(bool fullbrightBlock)
-    {
-        if (fullbrightBlock)
-        {
-            bTileHeader3 |= 128;
-        }
-        else
-        {
-            bTileHeader3 = (byte)(bTileHeader3 & 0xFFFFFF7Fu);
+            if (value)
+            {
+                TileHeader1 = (byte)((TileHeader1 & 0x9Fu) | 0x60u);
+            }
+            else
+            {
+                TileHeader1 &= 159;
+            }
         }
     }
 
-    public byte color()
+    public bool Wire4
     {
-        return (byte)(sTileHeader & 0x1Fu);
-    }
-
-    public void color(byte color)
-    {
-        sTileHeader = (ushort)((sTileHeader & 0xFFE0u) | color);
-    }
-
-    public bool active()
-    {
-        return (sTileHeader & 0x20) == 32;
-    }
-
-    public void active(bool active)
-    {
-        if (active)
+        get => (TileHeader1 & 0x80) == 128;
+        set
         {
-            sTileHeader |= 32;
-        }
-        else
-        {
-            sTileHeader &= 65503;
+            if (value)
+            {
+                TileHeader1 |= 128;
+            }
+            else
+            {
+                TileHeader1 &= 127;
+            }
         }
     }
 
-    public bool inActive()
+    public int WallFrameX
     {
-        return (sTileHeader & 0x40) == 64;
-    }
-
-    public void inActive(bool inActive)
-    {
-        if (inActive)
+        get => (TileHeader2 & 0xF) * 36;
+        set
         {
-            sTileHeader |= 64;
-        }
-        else
-        {
-            sTileHeader &= 65471;
+            TileHeader2 = (byte)((TileHeader2 & 0xF0u) | ((uint)(value / 36) & 0xFu));
         }
     }
 
-    public bool wire()
+    public byte FrameNumber
     {
-        return (sTileHeader & 0x80) == 128;
-    }
-
-    public void wire(bool wire)
-    {
-        if (wire)
+        get => (byte)((TileHeader2 & 0x30) >> 4);
+        set
         {
-            sTileHeader |= 128;
-        }
-        else
-        {
-            sTileHeader &= 65407;
+            TileHeader2 = (byte)((TileHeader2 & 0xCFu) | (uint)((value & 3) << 4));
         }
     }
 
-    public bool wire2()
+    public byte WallFrameNumber
     {
-        return (sTileHeader & 0x100) == 256;
-    }
-
-    public void wire2(bool wire2)
-    {
-        if (wire2)
+        get => (byte)((TileHeader2 & 0xC0) >> 6);
+        set
         {
-            sTileHeader |= 256;
-        }
-        else
-        {
-            sTileHeader &= 65279;
+            TileHeader2 = (byte)((TileHeader2 & 0x3Fu) | (uint)((value & 3) << 6));
         }
     }
 
-    public bool wire3()
+    public int WallFrameY
     {
-        return (sTileHeader & 0x200) == 512;
-    }
-
-    public void wire3(bool wire3)
-    {
-        if (wire3)
+        get => (TileHeader3 & 7) * 36;
+        set
         {
-            sTileHeader |= 512;
-        }
-        else
-        {
-            sTileHeader &= 65023;
+            TileHeader3 = (byte)((TileHeader3 & 0xF8u) | ((uint)(value / 36) & 7u));
         }
     }
 
-    public bool halfBrick()
+    public bool CheckingLiquid
     {
-        return (sTileHeader & 0x400) == 1024;
-    }
-
-    public void halfBrick(bool halfBrick)
-    {
-        if (halfBrick)
+        get => (TileHeader3 & 8) == 8;
+        set
         {
-            sTileHeader |= 1024;
-        }
-        else
-        {
-            sTileHeader &= 64511;
-        }
-    }
-
-    public bool actuator()
-    {
-        return (sTileHeader & 0x800) == 2048;
-    }
-
-    public void actuator(bool actuator)
-    {
-        if (actuator)
-        {
-            sTileHeader |= 2048;
-        }
-        else
-        {
-            sTileHeader &= 63487;
+            if (value)
+            {
+                TileHeader3 |= 8;
+            }
+            else
+            {
+                TileHeader3 &= 247;
+            }
         }
     }
 
-    public byte slope()
+    public bool SkipLiquid
     {
-        return (byte)((sTileHeader & 0x7000) >> 12);
-    }
-
-    public void slope(byte slope)
-    {
-        sTileHeader = (ushort)((sTileHeader & 0x8FFFu) | (uint)((slope & 7) << 12));
-    }
-
-    public bool fullbrightWall()
-    {
-        return (sTileHeader & 0x8000) == 32768;
-    }
-
-    public void fullbrightWall(bool fullbrightWall)
-    {
-        if (fullbrightWall)
+        get => (TileHeader3 & 0x10) == 16;
+        set
         {
-            sTileHeader |= 32768;
-        }
-        else
-        {
-            sTileHeader = (ushort)(sTileHeader & 0xFFFF7FFFu);
+            if (value)
+            {
+                TileHeader3 |= 16;
+            }
+            else
+            {
+                TileHeader3 &= 239;
+            }
         }
     }
 
+    public bool InvisibleBlock
+    {
+        get => (TileHeader3 & 0x20) == 32;
+        set
+        {
+            if (value)
+            {
+                TileHeader3 |= 32;
+            }
+            else
+            {
+                TileHeader3 = (byte)(TileHeader3 & 0xFFFFFFDFu);
+            }
+        }
+    }
+
+    public bool InvisibleWall
+    {
+        get => (TileHeader3 & 0x40) == 64;
+        set
+        {
+            if (value)
+            {
+                TileHeader3 |= 64;
+            }
+            else
+            {
+                TileHeader3 = (byte)(TileHeader3 & 0xFFFFFFBFu);
+            }
+        }
+    }
+
+    public bool FullbrightBlock
+    {
+        get => (TileHeader3 & 0x80) == 128;
+        set
+        {
+            if (value)
+            {
+                TileHeader3 |= 128;
+            }
+            else
+            {
+                TileHeader3 = (byte)(TileHeader3 & 0xFFFFFF7Fu);
+            }
+        }
+    }
+
+    public byte Color
+    {
+        get => (byte)(TileHeader & 0x1Fu);
+        set
+        {
+            TileHeader = (ushort)((TileHeader & 0xFFE0u) | value);
+        }
+    }
+
+    public bool Active
+    {
+        get => (TileHeader & 0x20) == 32;
+        set
+        {
+            if (value)
+            {
+                TileHeader |= 32;
+            }
+            else
+            {
+                TileHeader &= 65503;
+            }
+        }
+    }
+
+    public bool InActive
+    {
+        get => (TileHeader & 0x40) == 64;
+        set
+        {
+            if (value)
+            {
+                TileHeader |= 64;
+            }
+            else
+            {
+                TileHeader &= 65471;
+            }
+        }
+    }
+
+    public bool Wire
+    {
+        get => (TileHeader & 0x80) == 128;
+        set
+        {
+            if (value)
+            {
+                TileHeader |= 128;
+            }
+            else
+            {
+                TileHeader &= 65407;
+            }
+        }
+    }
+
+    public bool Wire2
+    {
+        get => (TileHeader & 0x100) == 256;
+        set
+        {
+            if (value)
+            {
+                TileHeader |= 256;
+            }
+            else
+            {
+                TileHeader &= 65279;
+            }
+        }
+    }
+
+    public bool Wire3
+    {
+        get => (TileHeader & 0x200) == 512;
+        set
+        {
+            if (value)
+            {
+                TileHeader |= 512;
+            }
+            else
+            {
+                TileHeader &= 65023;
+            }
+        }
+    }
+
+    public bool HalfBrick
+    {
+        get => (TileHeader & 0x400) == 1024;
+        set
+        {
+            if (value)
+            {
+                TileHeader |= 1024;
+            }
+            else
+            {
+                TileHeader &= 64511;
+            }
+        }
+    }
+
+    public bool Actuator
+    {
+        get => (TileHeader & 0x800) == 2048;
+        set
+        {
+            if (value)
+            {
+                TileHeader |= 2048;
+            }
+            else
+            {
+                TileHeader &= 63487;
+            }
+        }
+    }
+
+    public byte Slope
+    {
+        get => (byte)((TileHeader & 0x7000) >> 12);
+        set
+        {
+            TileHeader = (ushort)((TileHeader & 0x8FFFu) | (uint)((value & 7) << 12));
+        }
+    }
+
+    public bool FullbrightWall
+    {
+        get => (TileHeader & 0x8000) == 32768;
+        set
+        {
+            if (value)
+            {
+                TileHeader |= 32768;
+            }
+            else
+            {
+                TileHeader = (ushort)(TileHeader & 0xFFFF7FFFu);
+            }
+        }
+    }
 
     public void CopyPaintAndCoating(Tile other) => Data->CopyPaintAndCoating(ref other.RefData);
 
     public TileColorCache BlockColorAndCoating()
     {
         TileColorCache result = default(TileColorCache);
-        result.Color = color();
-        result.FullBright = fullbrightBlock();
-        result.Invisible = invisibleBlock();
+        result.Color = Color;
+        result.FullBright = FullbrightBlock;
+        result.Invisible = InvisibleBlock;
         return result;
     }
 
     public TileColorCache WallColorAndCoating()
     {
         TileColorCache result = default(TileColorCache);
-        result.Color = wallColor();
-        result.FullBright = fullbrightWall();
-        result.Invisible = invisibleWall();
+        result.Color = WallColor;
+        result.FullBright = FullbrightWall;
+        result.Invisible = InvisibleWall;
         return result;
     }
 
@@ -576,21 +589,21 @@ public unsafe struct Tile
 
     public void ClearBlockPaintAndCoating()
     {
-        color(0);
-        fullbrightBlock(fullbrightBlock: false);
-        invisibleBlock(invisibleBlock: false);
+        Color = 0;
+        FullbrightBlock = (false);
+        InvisibleBlock = (false);
     }
 
     public void ClearWallPaintAndCoating()
     {
-        wallColor(0);
-        fullbrightWall(fullbrightWall: false);
-        invisibleWall(invisibleWall: false);
+        WallColor = (0);
+        FullbrightWall = (false);
+        InvisibleWall = (false);
     }
 
     public override string ToString()
     {
-        return "Tile Type:" + type + " Active:" + active().ToString() + " Wall:" + wall + " Slope:" + slope() + " fX:" + frameX + " fY:" + frameY;
+        return "Tile Type:" + Type + " Active:" + Active.ToString() + " Wall:" + Wall + " Slope:" + Slope + " fX:" + FrameX + " fY:" + FrameY;
     }
 }
 
@@ -601,15 +614,15 @@ public struct TileColorCache
     public bool Invisible;
     public void ApplyToBlock(Tile tile)
     {
-        tile.color(Color);
-        tile.fullbrightBlock(FullBright);
-        tile.invisibleBlock(Invisible);
+        tile.Color = (Color);
+        tile.FullbrightBlock = (FullBright);
+        tile.InvisibleBlock = (Invisible);
     }
 
     public void ApplyToWall(Tile tile)
     {
-        tile.wallColor(Color);
-        tile.fullbrightWall(FullBright);
-        tile.invisibleWall(Invisible);
+        tile.WallColor = (Color);
+        tile.FullbrightWall = (FullBright);
+        tile.InvisibleWall = (Invisible);
     }
 }

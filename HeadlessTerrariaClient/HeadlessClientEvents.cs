@@ -4,5 +4,5 @@ namespace HeadlessTerrariaClient;
 
 public partial class HeadlessClient
 {
-    public event Action<int, NetworkText> ChatMessageReceived;
+    public event Action<int, NetworkText>? ChatMessageReceived;
 }
