@@ -11,6 +11,8 @@ public partial class HeadlessClient : IDisposable
 {
     internal readonly TCPNetworkClient TCPNetworkClient;
 
+    public bool Blocking { get => TCPNetworkClient.Blocking; set => TCPNetworkClient.Blocking = value; }
+
     private readonly TerrariaMessageHandler MessageHandler;
 
     private readonly TerrariaMessageWriter MessageWriter;

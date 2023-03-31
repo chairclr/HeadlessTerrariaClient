@@ -9,6 +9,8 @@ public class TCPNetworkClient : INetworkClient, IDisposable
 
     private Socket Socket;
 
+    public bool Blocking { get => Socket.Blocking; set => Socket.Blocking = value; }
+
     private readonly IPAddress IPAddress;
 
     private readonly int Port;
@@ -40,7 +42,10 @@ public class TCPNetworkClient : INetworkClient, IDisposable
             throw new ArgumentOutOfRangeException(nameof(port));
         }
 
-        Socket = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        Socket = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp)
+        {
+            Blocking = true
+        };
 
         IPAddress = ip;
 
@@ -197,6 +202,6 @@ public class TCPNetworkClient : INetworkClient, IDisposable
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
-
+    
     public delegate Task ReceiveCallback(int start, int length);
 }
