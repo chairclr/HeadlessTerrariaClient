@@ -210,6 +210,32 @@ public partial class HeadlessClient
         }
     }
 
+    [IncomingMessage(MessageType.TileManipulation)]
+    internal void HandleTileManipulation(BinaryReader reader)
+    {
+        TileManipulationType type = (TileManipulationType)reader.ReadByte();
+
+        int x = reader.ReadInt16();
+        int y = reader.ReadInt16();
+
+        short flags1 = reader.ReadInt16();
+        byte flags2 = reader.ReadByte();
+
+        if (TileManipulationReceived is not null)
+        {
+            TileManipulationAction action = new TileManipulationAction()
+            {
+                Type = type,
+                X = x,
+                Y = y,
+                Flags1 = flags1,
+                Flags2 = flags2
+            };
+
+            TileManipulationReceived(action);
+        }
+    }
+
     [IncomingMessage(MessageType.InitialSpawn)]
     internal async ValueTask HandleInitialSpawn(BinaryReader reader)
     {
