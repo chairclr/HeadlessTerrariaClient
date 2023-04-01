@@ -12,11 +12,9 @@ public partial class HeadlessClient
     {
         ConnectionState = ConnectionState.None;
 
-        WasKicked = true;
-
-        KickReason = reader.ReadNetworkText().ToString();
-
         await TCPNetworkClient.DisconnectAsync();
+
+        Kicked?.Invoke(reader.ReadNetworkText().ToString());
     }
 
     [IncomingMessage(MessageType.PlayerInfo)]

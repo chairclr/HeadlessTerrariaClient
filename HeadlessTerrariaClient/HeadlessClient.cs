@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection.PortableExecutable;
 using HeadlessTerrariaClient.Game;
 using HeadlessTerrariaClient.Messages;
 using HeadlessTerrariaClient.Network;
@@ -21,17 +22,13 @@ public partial class HeadlessClient : IDisposable
 
     public ConnectionState ConnectionState { get; private set; } = ConnectionState.None;
 
-    public World World = new World();
+    public World World;
 
     public int LocalPlayerIndex = 0;
 
     public Player LocalPlayer => World.Players[LocalPlayerIndex];
 
     public string ClientUUID = Guid.NewGuid().ToString();
-
-    public bool WasKicked { get; private set; }
-
-    public string? KickReason { get; private set; }
 
     private bool Disposed;
 
@@ -67,9 +64,57 @@ public partial class HeadlessClient : IDisposable
 
         TCPNetworkClient.OnReceiveCallback = MessageHandler.ReceiveMessage;
 
+        TCPNetworkClient.OnDisconnectCallback += () =>
+        {
+            Kicked?.Invoke(null);
+        };
+
         MessageWriter = new TerrariaMessageWriter(TCPNetworkClient.Writer);
+
+        World = new World();
     }
 
+    public HeadlessClient(string ip, int port, World sharedWorld)
+    {
+        IPAddress? foundIp = null;
+
+        if (IPAddress.TryParse(ip, out IPAddress? parsed))
+        {
+            foundIp = parsed;
+        }
+        else
+        {
+            IPAddress[] foundIps = Dns.GetHostAddresses(ip);
+
+            for (int i = 0; i < foundIps.Length; i++)
+            {
+                if (foundIps[i].AddressFamily == AddressFamily.InterNetwork)
+                {
+                    foundIp = foundIps[i];
+                }
+            }
+        }
+
+        if (foundIp is null)
+        {
+            throw new ArgumentException(null, nameof(ip));
+        }
+
+        TCPNetworkClient = new TCPNetworkClient(foundIp, port);
+
+        MessageHandler = new TerrariaMessageHandler(this);
+
+        TCPNetworkClient.OnReceiveCallback = MessageHandler.ReceiveMessage;
+
+        TCPNetworkClient.OnDisconnectCallback += () =>
+        {
+            Kicked?.Invoke(null);
+        };
+
+        MessageWriter = new TerrariaMessageWriter(TCPNetworkClient.Writer);
+
+        World = sharedWorld;
+    }
 
     public void Connect()
     {

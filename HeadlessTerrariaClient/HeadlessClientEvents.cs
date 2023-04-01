@@ -5,6 +5,8 @@ namespace HeadlessTerrariaClient;
 
 public partial class HeadlessClient
 {
+    public event Action<string?>? Kicked;
+
     public event Action<int, NetworkText>? ChatMessageReceived;
 
     public event Action<TileManipulationAction>? TileManipulationReceived;

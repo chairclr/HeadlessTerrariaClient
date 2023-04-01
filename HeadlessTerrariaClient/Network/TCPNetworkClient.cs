@@ -22,6 +22,8 @@ public class TCPNetworkClient : INetworkClient, IDisposable
 
     public ReceiveCallback? OnReceiveCallback;
 
+    public Action? OnDisconnectCallback;
+
     private readonly MemoryStream ReadBuffer = new MemoryStream(new byte[131070], 0, 131070, false, true);
 
     private readonly MemoryStream WriteBuffer = new MemoryStream(new byte[131070], 0, 131070, true, true);
@@ -124,6 +126,8 @@ public class TCPNetworkClient : INetworkClient, IDisposable
         NetworkStream?.Dispose();
 
         Connected = false;
+
+        OnDisconnectCallback?.Invoke();
     }
 
     public async ValueTask DisconnectAsync()
@@ -141,6 +145,8 @@ public class TCPNetworkClient : INetworkClient, IDisposable
         NetworkStream?.Dispose();
 
         Connected = false;
+
+        OnDisconnectCallback?.Invoke();
     }
 
     private void ReceiveLoop()
@@ -176,6 +182,8 @@ public class TCPNetworkClient : INetworkClient, IDisposable
 
             Socket.Dispose();
             NetworkStream?.Dispose();
+
+            OnDisconnectCallback?.Invoke();
         }
     }
 
@@ -185,6 +193,8 @@ public class TCPNetworkClient : INetworkClient, IDisposable
         {
             if (disposing)
             {
+                Connected = false;
+
                 Socket.Dispose();
                 NetworkStream?.Dispose();
 
@@ -193,6 +203,8 @@ public class TCPNetworkClient : INetworkClient, IDisposable
 
                 WriteBuffer.Dispose();
                 Writer.Dispose();
+
+                OnDisconnectCallback?.Invoke();
             }
 
             Disposed = true;
