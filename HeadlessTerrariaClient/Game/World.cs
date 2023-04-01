@@ -456,7 +456,7 @@ public class World
 
     private void HandleSectionTiles(BinaryReader reader, int xStart, int yStart, int width, int height)
     {
-        ref TileData tileCache = ref Unsafe.NullRef<TileData>();
+        ref TileData tile = ref Unsafe.NullRef<TileData>();
         int num = 0;
         for (int i = yStart; i < yStart + height; i++)
         {
@@ -465,121 +465,181 @@ public class World
                 if (num != 0)
                 {
                     num--;
-                    Tile.GetTileRef(j, i).CopyFrom(ref tileCache);
+                    Tile.GetTileRef(j, i).CopyFrom(ref tile);
                     continue;
                 }
+
+                byte b2;
                 byte b;
-                byte b2 = (b = 0);
-                tileCache = ref Tile.GetTileRef(j, i);
-                tileCache.ClearEverything();
-                byte b3 = reader.ReadByte();
-                if ((b3 & 1) == 1)
+                byte b3 = (b2 = (b = 0));
+                tile = ref Tile.GetTileRef(j, i);
+                tile.ClearEverything();
+
+                byte b4 = reader.ReadByte();
+                bool flag = false;
+                if ((b4 & 1) == 1)
                 {
-                    b2 = reader.ReadByte();
-                    if ((b2 & 1) == 1)
-                    {
-                        b = reader.ReadByte();
-                    }
+                    flag = true;
+                    b3 = reader.ReadByte();
                 }
-                byte b4;
-                if ((b3 & 2) == 2)
+
+                bool flag2 = false;
+                if (flag && (b3 & 1) == 1)
                 {
-                    tileCache.Active = true;
-                    ushort type = tileCache.Type;
+                    flag2 = true;
+                    b2 = reader.ReadByte();
+                }
+
+                if (flag2 && (b2 & 1) == 1)
+                {
+                    b = reader.ReadByte();
+                }
+
+                bool flag3 = tile.Active;
+                byte b5;
+                if ((b4 & 2) == 2)
+                {
+                    tile.Active = true;
+                    ushort type = tile.Type;
                     int num2;
-                    if ((b3 & 0x20) == 32)
+                    if ((b4 & 0x20) == 32)
                     {
-                        b4 = reader.ReadByte();
+                        b5 = reader.ReadByte();
                         num2 = reader.ReadByte();
-                        num2 = (num2 << 8) | b4;
+                        num2 = (num2 << 8) | b5;
                     }
                     else
                     {
                         num2 = reader.ReadByte();
                     }
-                    tileCache.Type = (ushort)num2;
+
+                    tile.Type = (ushort)num2;
                     if (TileFrame.TileFrameImportant[num2])
                     {
-                        tileCache.FrameX = reader.ReadInt16();
-                        tileCache.FrameY = reader.ReadInt16();
+                        tile.FrameX = reader.ReadInt16();
+                        tile.FrameY = reader.ReadInt16();
                     }
-                    if ((b & 8) == 8)
+                    else if (!flag3 || tile.Type != type)
                     {
-                        tileCache.Color = (reader.ReadByte());
+                        tile.FrameX = -1;
+                        tile.FrameY = -1;
                     }
-                }
-                if ((b3 & 4) == 4)
-                {
-                    tileCache.Wall = reader.ReadByte();
-                    if ((b & 0x10) == 16)
+
+                    if ((b2 & 8) == 8)
                     {
-                        tileCache.WallColor = (reader.ReadByte());
+                        tile.Color = reader.ReadByte();
                     }
                 }
-                b4 = (byte)((b3 & 0x18) >> 3);
-                if (b4 != 0)
+
+                if ((b4 & 4) == 4)
                 {
-                    tileCache.LiquidAmount = reader.ReadByte();
-                    if (b4 > 1)
+                    tile.Wall = reader.ReadByte();
+                    if ((b2 & 0x10) == 16)
                     {
-                        if (b4 == 2)
+                        tile.WallColor = reader.ReadByte();
+                    }
+                }
+
+                b5 = (byte)((b4 & 0x18) >> 3);
+                if (b5 != 0)
+                {
+                    tile.LiquidAmount = reader.ReadByte();
+                    if ((b2 & 0x80) == 128)
+                    {
+                        tile.Shimmer = true;
+                    }
+                    else if (b5 > 1)
+                    {
+                        if (b5 == 2)
                         {
-                            tileCache.Lava = true;
+                            tile.Lava = true;
                         }
                         else
                         {
-                            tileCache.Honey = (true);
+                            tile.Honey = true;
                         }
                     }
                 }
+
+                if (b3 > 1)
+                {
+                    if ((b3 & 2) == 2)
+                    {
+                        tile.Wire = true;
+                    }
+
+                    if ((b3 & 4) == 4)
+                    {
+                        tile.Wire2 = true;
+                    }
+
+                    if ((b3 & 8) == 8)
+                    {
+                        tile.Wire3 = true;
+                    }
+
+                    b5 = (byte)((b3 & 0x70) >> 4);
+                    if (b5 != 0/* && Main.tileSolid[tile.type]*/)
+                    {
+                        if (b5 == 1)
+                        {
+                            tile.HalfBrick = true;
+                        }
+                        else
+                        {
+                            tile.Slope = (byte)(b5 - 1);
+                        }
+                    }
+                }
+
                 if (b2 > 1)
                 {
                     if ((b2 & 2) == 2)
                     {
-                        tileCache.Wire = true;
+                        tile.Actuator = true;
                     }
+
                     if ((b2 & 4) == 4)
                     {
-                        tileCache.Wire2 = true;
+                        tile.InActive = true;
                     }
-                    if ((b2 & 8) == 8)
+
+                    if ((b2 & 0x20) == 32)
                     {
-                        tileCache.Wire3 = true;
+                        tile.Wire4 = true;
                     }
-                    b4 = (byte)((b2 & 0x70) >> 4);
-                    if (b4 != 0)
+
+                    if ((b2 & 0x40) == 64)
                     {
-                        if (b4 == 1)
-                        {
-                            tileCache.HalfBrick = true;
-                        }
-                        else
-                        {
-                            tileCache.Slope = ((byte)(b4 - 1));
-                        }
+                        b5 = reader.ReadByte();
+                        tile.Wall = (ushort)((b5 << 8) | tile.Wall);
                     }
                 }
-                if (b > 0)
+
+                if (b > 1)
                 {
                     if ((b & 2) == 2)
                     {
-                        tileCache.Actuator = true;
+                        tile.InvisibleBlock = true;
                     }
+
                     if ((b & 4) == 4)
                     {
-                        tileCache.InActive = true;
+                        tile.InvisibleWall = true;
                     }
-                    if ((b & 0x20) == 32)
+
+                    if ((b & 8) == 8)
                     {
-                        tileCache.Wire4 = true;
+                        tile.FullbrightBlock = true;
                     }
-                    if ((b & 0x40) == 64)
+
+                    if ((b & 0x10) == 16)
                     {
-                        b4 = reader.ReadByte();
-                        tileCache.Wall = (ushort)((b4 << 8) | tileCache.Wall);
+                        tile.FullbrightWall = true;
                     }
                 }
-                num = (byte)((b3 & 0xC0) >> 6) switch
+
+                num = (byte)((b4 & 0xC0) >> 6) switch
                 {
                     0 => 0,
                     1 => reader.ReadByte(),

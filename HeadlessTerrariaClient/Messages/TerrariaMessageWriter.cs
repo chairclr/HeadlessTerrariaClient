@@ -51,7 +51,7 @@ public class TerrariaMessageWriter
 
         builder.Append(" }");
 
-        Console.WriteLine($"↑ {builder.ToString()}");
+        //Console.WriteLine($"↑ {builder.ToString()}");
 #endif
 
         return InternalBuffer.AsMemory(0, length);

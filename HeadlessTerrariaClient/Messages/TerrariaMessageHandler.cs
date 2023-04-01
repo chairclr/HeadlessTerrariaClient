@@ -47,7 +47,7 @@ internal partial class TerrariaMessageHandler
 
         builder.Append(" }");
 
-        Console.WriteLine($"↓ {builder.ToString()}");
+        //Console.WriteLine($"↓ {builder.ToString()}");
 #endif
 
         await HandleIncomingMessageAsync(messageType, Reader);
