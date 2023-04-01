@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -9,8 +10,6 @@ namespace HeadlessTerrariaClient.Generators;
 [Generator]
 public class OutgoingMessagesGenerator : ISourceGenerator
 {
-    private static readonly string AttributeName = "OutgoingMessageAttribute";
-
     public void Initialize(GeneratorInitializationContext context)
     {
 
@@ -60,7 +59,14 @@ public class OutgoingMessagesGenerator : ISourceGenerator
                             }
                             else
                             {
-                                source.Append(parameter.ExplicitDefaultValue!.ToString());
+                                if (parameter.ExplicitDefaultValue is bool booleanValue)
+                                {
+                                    source.Append(booleanValue ? "true" : "false");
+                                }
+                                else
+                                {
+                                    source.Append(parameter.ExplicitDefaultValue!.ToString());
+                                }
                             }
                         }
 
@@ -113,7 +119,14 @@ public class OutgoingMessagesGenerator : ISourceGenerator
                             }
                             else
                             {
-                                source.Append(parameter.ExplicitDefaultValue!.ToString());
+                                if (parameter.ExplicitDefaultValue is bool booleanValue)
+                                {
+                                    source.Append(booleanValue ? "true" : "false");
+                                }
+                                else
+                                {
+                                    source.Append(parameter.ExplicitDefaultValue!.ToString());
+                                }
                             }
                         }
 

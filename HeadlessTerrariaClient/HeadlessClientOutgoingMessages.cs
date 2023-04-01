@@ -324,6 +324,61 @@ public partial class HeadlessClient
         }
     }
 
+    [OutgoingMessage(MessageType.TileManipulation)]
+    private void WriteArbitraryTileManipulation(TileManipulationType type, int x, int y, short flags1, byte flags2)
+    {
+        MessageWriter.Writer.Write((byte)type);
+
+        MessageWriter.Writer.Write((short)x);
+
+        MessageWriter.Writer.Write((short)y);
+
+        MessageWriter.Writer.Write(flags1);
+
+        MessageWriter.Writer.Write(flags2);
+    }
+
+    #region Tile Manipulation
+    [OutgoingMessage(MessageType.TileManipulation)]
+    private void WriteKillTile(int x, int y, bool fail = false) => WriteArbitraryTileManipulation(TileManipulationType.KillTile, x, y, (short)(fail ? 1 : 0), 0);
+
+    /// <summary>
+    /// Similar in function to KillTile, just a bit different
+    /// "trykill gets used when the client doesnt know if the tile can actually break"
+    /// "for example when you hit a tile entity"
+    /// "the client doesnt know if its empty or not"
+    /// </summary>
+    /// <code>
+    /// int typeBefore = Main.tile[x, y].type;
+    /// WorldGen.KillTile(x, y, fail_bool);
+    /// fail_short = (short)((Main.tile[x, y].active() && Main.tile[x, y].type == typeBefore) ? 1 : 0);
+    /// if (Main.netMode == 2)
+    /// {
+    ///     NetMessage.TrySendData(TileManipulation, KillTile2, x, y, fail_short, lastByte);
+    /// }
+    /// </code>
+    [OutgoingMessage(MessageType.TileManipulation)]
+    private void WriteTryKillTile(int x, int y, bool fail = false, byte extraByte = 0) => WriteArbitraryTileManipulation(TileManipulationType.TryKillTile, x, y, (short)(fail ? 1 : 0), extraByte);
+
+    [OutgoingMessage(MessageType.TileManipulation)]
+    private void WriteKillTileNoItem(int x, int y, bool fail = false) => WriteArbitraryTileManipulation(TileManipulationType.KillTileNoItem, x, y, (short)(fail ? 1 : 0), 0);
+
+    [OutgoingMessage(MessageType.TileManipulation)]
+    private void WritePlaceTile(int x, int y, int type, int style) => WriteArbitraryTileManipulation(TileManipulationType.PlaceTile, x, y, (short)(type), (byte)style);
+
+    [OutgoingMessage(MessageType.TileManipulation)]
+    private void WriteReplaceTile(int x, int y, int type, int style) => WriteArbitraryTileManipulation(TileManipulationType.ReplaceTile, x, y, (short)(type), (byte)style);
+
+    [OutgoingMessage(MessageType.TileManipulation)]
+    private void WriteKillWall(int x, int y, bool fail = false) => WriteArbitraryTileManipulation(TileManipulationType.KillWall, x, y, (short)(fail ? 1 : 0), 0);
+
+    [OutgoingMessage(MessageType.TileManipulation)]
+    private void WritePlaceWall(int x, int y, int type) => WriteArbitraryTileManipulation(TileManipulationType.KillWall, x, y, (short)(type), 0);
+
+    [OutgoingMessage(MessageType.TileManipulation)]
+    private void WriteReplaceWall(int x, int y, int type) => WriteArbitraryTileManipulation(TileManipulationType.ReplaceWall, x, y, (short)(type), 0);
+    #endregion
+
     [OutgoingMessage(MessageType.PlayerMana)]
     private void WritePlayerMana()
     {
