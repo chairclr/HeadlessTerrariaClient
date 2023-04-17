@@ -2,180 +2,134 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.FlowAnalysis;
 
 namespace HeadlessTerrariaClient.Generators;
 
-[Generator]
-public class OutgoingMessagesGenerator : ISourceGenerator
+[Generator(LanguageNames.CSharp)]
+public class OutgoingMessagesGenerator : IIncrementalGenerator
 {
-    public void Initialize(GeneratorInitializationContext context)
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-
-    }
-
-    public void Execute(GeneratorExecutionContext context)
-    {
-        Compilation compilation = context.Compilation;
-
-        INamedTypeSymbol headlessClientSymbol = compilation.GetTypeByMetadataName("HeadlessTerrariaClient.HeadlessClient")!;
-        INamedTypeSymbol outgoingMessagesAttributeSymbol = compilation.GetTypeByMetadataName("HeadlessTerrariaClient.Messages.OutgoingMessageAttribute")!;
-
-        IEnumerable<IMethodSymbol> methodsWithAttribute = headlessClientSymbol.GetMembers()
-            .Where(x => x.Kind == SymbolKind.Method)
-            .Cast<IMethodSymbol>()
-            .Where(x => x.GetAttributes().Any(x => SymbolEqualityComparer.Default.Equals(x.AttributeClass, outgoingMessagesAttributeSymbol)));
-
-        StringBuilder source = new StringBuilder();
-
-        source.AppendLine("namespace HeadlessTerrariaClient;");
-        source.AppendLine("public partial class HeadlessClient");
-        source.AppendLine("{");
-
-        foreach (IMethodSymbol method in methodsWithAttribute)
+        bool Filter(SyntaxNode node, CancellationToken cancellationToken)
         {
-            if (method.Name.StartsWith("Write") && method.Name.Length > 5)
+            if (node is not MethodDeclarationSyntax methodSyntax)
             {
-                string messageTypeString = GetOutgoingMessageTypeFromAttribute(method, outgoingMessagesAttributeSymbol);
-
-                source.Append("public void Send");
-                source.Append(method.Name.Remove(0, 5));
-                source.Append("(");
-                if (method.Parameters.Length > 0)
-                {
-                    for (int i = 0; i < method.Parameters.Length; i++)
-                    {
-                        IParameterSymbol parameter = method.Parameters[i];
-
-                        source.Append(parameter.ToString());
-
-                        if (parameter.HasExplicitDefaultValue)
-                        {
-                            source.Append(" = ");
-                            if (parameter.ExplicitDefaultValue is null)
-                            {
-                                source.Append("null");
-                            }
-                            else
-                            {
-                                if (parameter.ExplicitDefaultValue is bool booleanValue)
-                                {
-                                    source.Append(booleanValue ? "true" : "false");
-                                }
-                                else
-                                {
-                                    source.Append(parameter.ExplicitDefaultValue!.ToString());
-                                }
-                            }
-                        }
-
-                        if (i + 1 < method.Parameters.Length)
-                        {
-                            source.Append(", ");
-                        }
-                    }
-                }
-                source.Append(") ");
-                source.Append("{ ");
-                source.Append($"MessageWriter.BeginMessage({messageTypeString}); ");
-                source.Append(method.Name);
-                source.Append("(");
-                if (method.Parameters.Length > 0)
-                {
-                    for (int i = 0; i < method.Parameters.Length; i++)
-                    {
-                        IParameterSymbol parameter = method.Parameters[i];
-
-                        source.Append(parameter.Name.ToString());
-
-                        if (i + 1 < method.Parameters.Length)
-                        {
-                            source.Append(", ");
-                        }
-                    }
-                }
-                source.Append("); TCPNetworkClient.Send(MessageWriter.EndMessage());");
-                source.AppendLine(" }");
-
-                source.Append("public async ValueTask Send");
-                source.Append(method.Name.Remove(0, 5));
-                if (method.Parameters.Length > 0)
-                {
-                    source.Append("Async(");
-
-                    for (int i = 0; i < method.Parameters.Length; i++)
-                    {
-                        IParameterSymbol parameter = method.Parameters[i];
-
-                        source.Append(parameter.ToString());
-
-                        if (parameter.HasExplicitDefaultValue)
-                        {
-                            source.Append(" = ");
-                            if (parameter.ExplicitDefaultValue is null)
-                            {
-                                source.Append("null");
-                            }
-                            else
-                            {
-                                if (parameter.ExplicitDefaultValue is bool booleanValue)
-                                {
-                                    source.Append(booleanValue ? "true" : "false");
-                                }
-                                else
-                                {
-                                    source.Append(parameter.ExplicitDefaultValue!.ToString());
-                                }
-                            }
-                        }
-
-                        if (i + 1 < method.Parameters.Length)
-                        {
-                            source.Append(", ");
-                        }
-                    }
-
-                    source.Append(") ");
-                }
-                else
-                {
-                    source.Append("Async() ");
-                }
-                source.Append("{ ");
-                source.Append($"MessageWriter.BeginMessage({messageTypeString}); ");
-                source.Append(method.Name);
-                source.Append("(");
-                if (method.Parameters.Length > 0)
-                {
-                    for (int i = 0; i < method.Parameters.Length; i++)
-                    {
-                        IParameterSymbol parameter = method.Parameters[i];
-
-                        source.Append(parameter.Name.ToString());
-
-                        if (i + 1 < method.Parameters.Length)
-                        {
-                            source.Append(", ");
-                        }
-                    }
-                }
-                source.Append("); await TCPNetworkClient.SendAsync(MessageWriter.EndMessage());");
-                source.AppendLine(" }");
+                return false;
             }
-        }
 
-        source.AppendLine("}");
+            return true;
+        };
 
-        context.AddSource("HeadlessClientOutgoingMessages.g.cs", source.ToString());
-    }
+        (string fullyQualifiedMessageType, string sendMethodName, string writeMethodName, string sendMethodParameters, string callWriteParameters) TransformMessageAttribute(GeneratorAttributeSyntaxContext attributeSyntaxContext, CancellationToken cancellationToken)
+        {
+            IMethodSymbol method = (IMethodSymbol)attributeSyntaxContext.TargetSymbol;
 
-    private string GetOutgoingMessageTypeFromAttribute(IMethodSymbol methodSymbol, INamedTypeSymbol outgoingMessagesAttributeSymbol)
-    {
-        AttributeData attribute = methodSymbol.GetAttributes().Single(x => SymbolEqualityComparer.Default.Equals(x.AttributeClass, outgoingMessagesAttributeSymbol));
+            string messageType = attributeSyntaxContext.Attributes.Single().ConstructorArguments.Single().ToCSharpString();
 
-        TypedConstant constant = attribute.ConstructorArguments.First();
+            string writeMethodName = method.Name;
 
-        return constant.ToCSharpString();
+            string sendMethodName = "Send" + (writeMethodName.StartsWith("Write") ? writeMethodName.Remove(0, 5) : writeMethodName);
+
+            StringBuilder sendMethodParameters = new StringBuilder();
+
+            StringBuilder callWriteParameters = new StringBuilder();
+
+            if (method.Parameters.Length > 0)
+            {
+                for (int i = 0; i < method.Parameters.Length; i++)
+                {
+                    IParameterSymbol parameter = method.Parameters[i];
+
+                    sendMethodParameters.Append(parameter.ToString());
+
+                    if (parameter.HasExplicitDefaultValue)
+                    {
+                        sendMethodParameters.Append(" = ");
+                        if (parameter.ExplicitDefaultValue is null)
+                        {
+                            sendMethodParameters.Append("null");
+                        }
+                        else
+                        {
+                            if (parameter.ExplicitDefaultValue is bool booleanValue)
+                            {
+                                sendMethodParameters.Append(booleanValue ? "true" : "false");
+                            }
+                            else
+                            {
+                                sendMethodParameters.Append(parameter.ExplicitDefaultValue!.ToString());
+                            }
+                        }
+                    }
+
+                    if (i + 1 < method.Parameters.Length)
+                    {
+                        sendMethodParameters.Append(", ");
+                    }
+                }
+
+                for (int i = 0; i < method.Parameters.Length; i++)
+                {
+                    IParameterSymbol parameter = method.Parameters[i];
+
+                    callWriteParameters.Append(parameter.Name.ToString());
+
+                    if (i + 1 < method.Parameters.Length)
+                    {
+                        callWriteParameters.Append(", ");
+                    }
+                }
+            }
+
+
+            return (messageType, sendMethodName, writeMethodName, sendMethodParameters.ToString(), callWriteParameters.ToString());
+        };
+
+
+        IncrementalValuesProvider<(string fullyQualifiedMessageType, string sendMethodName, string writeMethodName, string sendMethodParameters, string callWriteParameters)> messages = context.SyntaxProvider.ForAttributeWithMetadataName("HeadlessTerrariaClient.Messages.OutgoingMessageAttribute", Filter, TransformMessageAttribute);
+
+        Dictionary<string, int> overloadFileNameBuckets = new Dictionary<string, int>();
+
+        context.RegisterSourceOutput(messages, (spc, message) =>
+        {
+            string? overloadNumber = null;
+
+            if (overloadFileNameBuckets.ContainsKey(message.sendMethodName))
+            {
+                overloadFileNameBuckets[message.sendMethodName]++;
+                overloadNumber = overloadFileNameBuckets[message.sendMethodName].ToString();
+            }
+            else
+            {
+                overloadFileNameBuckets.Add(message.sendMethodName, 0);
+            }
+
+            spc.AddSource($"OutgoingMessages.{message.sendMethodName}{overloadNumber}.g.cs", $$"""
+                                                                             /// Auto-generated ///
+                                                                             namespace HeadlessTerrariaClient;
+
+                                                                             public partial class HeadlessClient
+                                                                             {
+                                                                                public void {{message.sendMethodName}}({{message.sendMethodParameters}}) { MessageWriter.BeginMessage({{message.fullyQualifiedMessageType}}); {{message.writeMethodName}}({{message.callWriteParameters}}); TCPNetworkClient.Send(MessageWriter.EndMessage()); }
+                                                                             }
+                                                                             """);
+
+
+
+            spc.AddSource($"OutgoingMessages.{message.sendMethodName}Async{overloadNumber}.g.cs", $$"""
+                                                                             /// Auto-generated ///
+                                                                             namespace HeadlessTerrariaClient;
+
+                                                                             public partial class HeadlessClient
+                                                                             {
+                                                                                public async ValueTask {{message.sendMethodName}}Async({{message.sendMethodParameters}}) { MessageWriter.BeginMessage({{message.fullyQualifiedMessageType}}); {{message.writeMethodName}}({{message.callWriteParameters}}); await TCPNetworkClient.SendAsync(MessageWriter.EndMessage()); }
+                                                                             }
+                                                                             """);
+        });
     }
 }

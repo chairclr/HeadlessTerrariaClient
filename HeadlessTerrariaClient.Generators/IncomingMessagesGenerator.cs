@@ -1,95 +1,130 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace HeadlessTerrariaClient.Generators;
 
-[Generator]
-public class IncomingMessagesGenerator : ISourceGenerator
+[Generator(LanguageNames.CSharp)]
+public partial class IncomingMessagesGenerator : IIncrementalGenerator
 {
-    public void Execute(GeneratorExecutionContext context)
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        Compilation compilation = context.Compilation;
-
-        INamedTypeSymbol headlessClientSymbol = compilation.GetTypeByMetadataName("HeadlessTerrariaClient.HeadlessClient")!;
-        INamedTypeSymbol incomingMessagesAttributeSymbol = compilation.GetTypeByMetadataName("HeadlessTerrariaClient.Messages.IncomingMessageAttribute")!;
-        INamedTypeSymbol taskSymbol = compilation.GetTypeByMetadataName("System.Threading.Tasks.Task")!;
-        INamedTypeSymbol valueTaskSymbol = compilation.GetTypeByMetadataName("System.Threading.Tasks.ValueTask")!;
-
-        IEnumerable<IMethodSymbol> methodsWithAttribute = headlessClientSymbol.GetMembers()
-            .Where(x => x.Kind == SymbolKind.Method)
-            .Cast<IMethodSymbol>()
-            .Where(x => x.GetAttributes().Any(x => SymbolEqualityComparer.Default.Equals(x.AttributeClass, incomingMessagesAttributeSymbol)));
-
-        StringBuilder source = new StringBuilder();
-
-        source.AppendLine("namespace HeadlessTerrariaClient.Messages;");
-        source.AppendLine("internal partial class TerrariaMessageHandler");
-        source.AppendLine("{");
-
-        source.AppendLine("public async ValueTask HandleIncomingMessageAsync(HeadlessTerrariaClient.Messages.MessageType type, System.IO.BinaryReader reader)");
-        source.AppendLine("{");
-
-        source.AppendLine("switch (type)");
-        source.AppendLine("{");
-        foreach (IMethodSymbol method in methodsWithAttribute.Where(x => SymbolEqualityComparer.Default.Equals(x.ReturnType, taskSymbol) || SymbolEqualityComparer.Default.Equals(x.ReturnType, valueTaskSymbol)))
+        bool FilterSync(SyntaxNode node, CancellationToken cancellationToken)
         {
-            source.Append("case ");
+            if (node is not MethodDeclarationSyntax methodSyntax)
+            {
+                return false;
+            }
 
-            source.Append(GetIncomingMessageTypeFromAttribute(method, incomingMessagesAttributeSymbol));
+            if (methodSyntax.ReturnType is not PredefinedTypeSyntax predefinedType)
+            {
+                return false;
+            }
 
-            source.Append(": await Client.");
+            if (predefinedType.Keyword.ToString() != "void")
+            {
+                return false;
+            }
 
-            source.Append(method.Name);
+            return true;
+        };
 
-            source.AppendLine("(reader); break;");
-        }
-        source.AppendLine("}");
-
-        source.AppendLine("}");
-
-
-        source.AppendLine("public void HandleIncomingMessage(HeadlessTerrariaClient.Messages.MessageType type, System.IO.BinaryReader reader)");
-        source.AppendLine("{");
-
-        source.AppendLine("switch (type)");
-        source.AppendLine("{");
-        foreach (IMethodSymbol method in methodsWithAttribute.Where(x => SymbolEqualityComparer.Default.Equals(x.ReturnType, compilation.GetSpecialType(SpecialType.System_Void))))
+        bool FilterAsync(SyntaxNode node, CancellationToken cancellationToken)
         {
-            source.Append("case ");
+            if (node is not MethodDeclarationSyntax methodSyntax)
+            {
+                return false;
+            }
 
-            source.Append(GetIncomingMessageTypeFromAttribute(method, incomingMessagesAttributeSymbol));
+            if (methodSyntax.ReturnType is not IdentifierNameSyntax identifierName)
+            {
+                return false;
+            }
 
-            source.Append(": Client.");
+            if (identifierName.Identifier.ToString() != "ValueTask" && identifierName.Identifier.ToString() != "Task")
+            {
+                return false;
+            }
 
-            source.Append(method.Name);
+            return true;
+        };
 
-            source.AppendLine("(reader); break;");
-        }
-        source.AppendLine("}");
+        (string fullyQualifiedMessageType, string messageHandlerName) TransformMessageAttribute(GeneratorAttributeSyntaxContext attributeSyntaxContext, CancellationToken cancellationToken)
+        {
+            string messageType = attributeSyntaxContext.Attributes.Single().ConstructorArguments.Single().ToCSharpString();
 
-        source.AppendLine("}");
+            string name = attributeSyntaxContext.TargetSymbol.Name;
 
-        source.AppendLine("}");
-        context.AddSource("TerrariaMessageHandlerIncomingMessageMappings.g.cs", source.ToString());
+            return (messageType, name);
+        };
 
-    }
 
-    public void Initialize(GeneratorInitializationContext context)
-    {
+        IncrementalValuesProvider<(string fullyQualifiedMessageType, string messageHandlerName)> syncMessages = context.SyntaxProvider.ForAttributeWithMetadataName("HeadlessTerrariaClient.Messages.IncomingMessageAttribute", FilterSync, TransformMessageAttribute);
 
-    }
+        context.RegisterSourceOutput(syncMessages.Collect(), (spc, messages) =>
+        {
+            StringBuilder source = new StringBuilder();
 
-    private string GetIncomingMessageTypeFromAttribute(IMethodSymbol methodSymbol, INamedTypeSymbol incomingMessagesAttributeSymbol)
-    {
-        AttributeData attribute = methodSymbol.GetAttributes().Single(x => SymbolEqualityComparer.Default.Equals(x.AttributeClass, incomingMessagesAttributeSymbol));
+            source.AppendLine("/// Auto-generated ///");
 
-        TypedConstant constant = attribute.ConstructorArguments.First();
+            source.AppendLine(@"
+namespace HeadlessTerrariaClient.Messages;
+internal partial class TerrariaMessageHandler
+{
+public void HandleIncomingMessage(HeadlessTerrariaClient.Messages.MessageType type, System.IO.BinaryReader reader)
+{
+switch (type)
+{");
 
-        return constant.ToCSharpString();
+
+            foreach ((string fullyQualifiedMessageType, string messageHandlerName) in messages)
+            {
+                source.AppendLine($@"case {fullyQualifiedMessageType}: Client.{messageHandlerName}(reader); break;");
+            }
+
+            source.AppendLine(@"}
+}
+}");
+
+            spc.AddSource("IncomingMessageHandler.g.cs", source.ToString());
+        });
+
+
+        IncrementalValuesProvider<(string fullyQualifiedMessageType, string messageHandlerName)> asyncMessages = context.SyntaxProvider.ForAttributeWithMetadataName("HeadlessTerrariaClient.Messages.IncomingMessageAttribute", FilterAsync, TransformMessageAttribute);
+
+        context.RegisterSourceOutput(asyncMessages.Collect(), (spc, messages) =>
+        {
+            StringBuilder source = new StringBuilder();
+
+            source.AppendLine("/// Auto-generated ///");
+
+            source.AppendLine(@"
+namespace HeadlessTerrariaClient.Messages;
+internal partial class TerrariaMessageHandler
+{
+public async ValueTask HandleIncomingMessageAsync(HeadlessTerrariaClient.Messages.MessageType type, System.IO.BinaryReader reader)
+{
+switch (type)
+{");
+
+
+            foreach ((string fullyQualifiedMessageType, string messageHandlerName) in messages)
+            {
+                source.AppendLine($@"case {fullyQualifiedMessageType}: await Client.{messageHandlerName}(reader); break;");
+            }
+
+            source.AppendLine(@"}
+}
+}");
+
+            spc.AddSource("IncomingMessageAsyncHandler.g.cs", source.ToString());
+        });
     }
 }
